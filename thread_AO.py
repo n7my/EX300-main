@@ -212,19 +212,20 @@ class AOThread(QObject):
             # self.can_start()
             time.sleep(1)
             self.testNum = self.testNum - 1
-            self.m_transmitData = [0x55, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-            # self.m_transmitData[0] = 0x55
-            # self.m_transmitData[1] = 0x00
-            # self.m_transmitData[2] = 0x00
-            # self.m_transmitData[3] = 0x00
-            # self.m_transmitData[4] = 0x00
-            # self.m_transmitData[5] = 0x00
-            # self.m_transmitData[6] = 0x00
-            # self.m_transmitData[7] = 0x00
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x203, self.m_transmitData)
+            self.m_transmitData = [0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200+self.CANAddr_relay, self.m_transmitData)
             if not bool_transmit:
-                self.result_signal.emit('继电器切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
-                print('继电器切换错误，请停止检查设备！')
+                self.result_signal.emit('继电器1切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
+                print('继电器1切换错误，请停止检查设备！')
+                # self.work_thread.stopFlag.isSet()
+                # self.isStop()
+                return False
+
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay+1, self.m_transmitData)
+            if not bool_transmit:
+                self.result_signal.emit('继电器2切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
+                print('继电器2切换错误，请停止检查设备！')
                 # self.work_thread.stopFlag.isSet()
                 # self.isStop()
                 return False
@@ -234,17 +235,24 @@ class AOThread(QObject):
             # self.m_transmitData[0] = 0x00
             # CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
             # self.can_start()
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x203, self.m_transmitData)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay, self.m_transmitData)
             if not bool_transmit:
                 self.pauseOption()
                 if not self.is_running:
                     return False
-                self.result_signal.emit('继电器切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
-                print('继电器切换错误，请停止检查设备！')
+                self.result_signal.emit('继电器1切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
+                print('继电器1切换错误，请停止检查设备！')
                 return False
-                # self.work_thread.stopFlag.isSet()
-                # self.isStop()
-                # return
+
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay + 1, self.m_transmitData)
+            if not bool_transmit:
+                self.pauseOption()
+                if not self.is_running:
+                    return False
+                self.result_signal.emit('继电器2切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
+                print('继电器2切换错误，请停止检查设备！')
+                return False
+
         if testType == 'AOCurrent':
             self.pauseOption()
             if not self.is_running:
@@ -253,34 +261,45 @@ class AOThread(QObject):
 
             time.sleep(1)
             self.testNum = self.testNum - 1
-            self.m_transmitData = [0xaa, 0x0f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-            # self.m_transmitData[0] = 0xaa
-            # self.m_transmitData[1] = 0x0f
-            # self.m_transmitData[2] = 0x00
-            # self.m_transmitData[3] = 0x00
-            # self.m_transmitData[4] = 0x00
-            # self.m_transmitData[5] = 0x00
-            # self.m_transmitData[6] = 0x00
-            # self.m_transmitData[7] = 0x00
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x203, self.m_transmitData)
+            self.m_transmitData = [0x06, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200+self.CANAddr_relay, self.m_transmitData)
             if not bool_transmit:
                 self.pauseOption()
                 if not self.is_running:
                     return False
-                self.result_signal.emit('继电器切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
-                print('继电器切换错误，请停止检查设备！')
+                self.result_signal.emit('继电器1切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
+                print('继电器1切换错误，请停止检查设备！')
                 return False
+
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay + 1, self.m_transmitData)
+            if not bool_transmit:
+                self.pauseOption()
+                if not self.is_running:
+                    return False
+                self.result_signal.emit('继电器2切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
+                print('继电器2切换错误，请停止检查设备！')
+                return False
+
             if not self.AOTestLoop(testType):
                 return False
 
             self.m_transmitData = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x203, self.m_transmitData)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200+self.CANAddr_relay, self.m_transmitData)
             if not bool_transmit:
                 self.pauseOption()
                 if not self.is_running:
                     return False
-                self.result_signal.emit('继电器切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
-                print('继电器切换错误，请停止检查设备！')
+                self.result_signal.emit('继电器1切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
+                print('继电器1切换错误，请停止检查设备！')
+                return False
+
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay + 1, self.m_transmitData)
+            if not bool_transmit:
+                self.pauseOption()
+                if not self.is_running:
+                    return False
+                self.result_signal.emit('继电器2切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
+                print('继电器2切换错误，请停止检查设备！')
                 return False
 
         return True
@@ -536,18 +555,25 @@ class AOThread(QObject):
             self.result_signal.emit('切换到电压模式' + self.HORIZONTAL_LINE)
 
             # self.testNum = self.testNum - 1
-            self.m_transmitData = [0x55, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+            self.m_transmitData = [0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
             try:
-                bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x203, self.m_transmitData)
-                # if not bool_transmit:
-                #     self.result_signal.emit('继电器切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
-                #     print('继电器切换错误，请停止检查设备！')
+                bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200+self.CANAddr_relay, self.m_transmitData)
                 if not bool_transmit:
                     return False
             except:
-                self.messageBox_signal.emit(['错误提示', '继电器切换错误，请停止检查设备！'])
+                self.messageBox_signal.emit(['错误提示', '继电器1切换错误，请停止检查设备！'])
                 # QMessageBox(QMessageBox.Critical, '错误提示', '继电器切换错误，请停止检查设备！').exec_()
                 return False
+
+            try:
+                bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200+self.CANAddr_relay+1, self.m_transmitData)
+                if not bool_transmit:
+                    return False
+            except:
+                self.messageBox_signal.emit(['错误提示', '继电器2切换错误，请停止检查设备！'])
+                # QMessageBox(QMessageBox.Critical, '错误提示', '继电器切换错误，请停止检查设备！').exec_()
+                return False
+
             self.pauseOption()
             if not self.is_running:
                 return False
@@ -572,26 +598,24 @@ class AOThread(QObject):
             self.item_signal.emit([5, 2, 1, f'{calibrateTest_time}'])
             # self.itemOperation(mTable, 5, 2, 1, f'{calibrateTest_time}')
             self.m_transmitData = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-            # self.m_transmitData[0] = 0x00
-            # self.m_transmitData[1] = 0x00
-            # self.m_transmitData[2] = 0x00
-            # self.m_transmitData[3] = 0x00
-            # self.m_transmitData[4] = 0x00
-            # self.m_transmitData[5] = 0x00
-            # self.m_transmitData[6] = 0x00
-            # self.m_transmitData[7] = 0x00
-            # CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
-            # self.can_start()
+
             time.sleep(1)
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x203, self.m_transmitData)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200+self.CANAddr_relay, self.m_transmitData)
             if not bool_transmit:
                 self.pauseOption()
                 if not self.is_running:
                     return False
-                self.result_signal.emit('继电器切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
-                print('继电器切换错误，请停止检查设备！')
-                # self.work_thread.stopFlag.isSet()
-                # self.isStop()
+                self.result_signal.emit('继电器1切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
+                print('继电器1切换错误，请停止检查设备！')
+                return False
+
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay + 1, self.m_transmitData)
+            if not bool_transmit:
+                self.pauseOption()
+                if not self.is_running:
+                    return False
+                self.result_signal.emit('继电器2切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
+                print('继电器2切换错误，请停止检查设备！')
                 return False
 
         elif not self.isCalibrateVol:
@@ -610,27 +634,25 @@ class AOThread(QObject):
             # self.can_start()
             time.sleep(1)
             # self.testNum = self.testNum - 1
-            self.m_transmitData = [0xaa, 0x0f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-            # self.m_transmitData[0] = 0xaa
-            # self.m_transmitData[1] = 0x0f
-            # self.m_transmitData[2] = 0x00
-            # self.m_transmitData[3] = 0x00
-            # self.m_transmitData[4] = 0x00
-            # self.m_transmitData[5] = 0x00
-            # self.m_transmitData[6] = 0x00
-            # self.m_transmitData[7] = 0x00
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x203, self.m_transmitData)
+            self.m_transmitData = [0x06, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200+self.CANAddr_relay, self.m_transmitData)
             if not bool_transmit:
                 self.pauseOption()
                 if not self.is_running:
                     return False
-                self.result_signal.emit('继电器切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
-                print('继电器切换错误，请停止检查设备！')
-                # self.work_thread.stopFlag.isSet()
-                # self.isStop()
+                self.result_signal.emit('继电器1切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
+                print('继电器1切换错误，请停止检查设备！')
                 return False
 
-            # self.itemOperation(mTable, 6, 1, 0, '')
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay + 1, self.m_transmitData)
+            if not bool_transmit:
+                self.pauseOption()
+                if not self.is_running:
+                    return False
+                self.result_signal.emit('继电器2切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
+                print('继电器2切换错误，请停止检查设备！')
+                return False
+
             self.pauseOption()
             if not self.is_running:
                 return False
@@ -656,24 +678,25 @@ class AOThread(QObject):
             # CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
             # self.can_start()
             time.sleep(1)
-            self.m_transmitData[0] = 0x00
-            self.m_transmitData[1] = 0x00
-            self.m_transmitData[2] = 0x00
-            self.m_transmitData[3] = 0x00
-            self.m_transmitData[4] = 0x00
-            self.m_transmitData[5] = 0x00
-            self.m_transmitData[6] = 0x00
-            self.m_transmitData[7] = 0x00
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x203, self.m_transmitData)
+            self.m_transmitData = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200+self.CANAddr_relay, self.m_transmitData)
             if not bool_transmit:
                 self.pauseOption()
                 if not self.is_running:
                     return False
-                self.result_signal.emit('继电器切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
-                print('继电器切换错误，请停止检查设备！')
-                # self.work_thread.stopFlag.isSet()
-                # self.isStop()
+                self.result_signal.emit('继电器1切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
+                print('继电器1切换错误，请停止检查设备！')
                 return False
+
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay + 1, self.m_transmitData)
+            if not bool_transmit:
+                self.pauseOption()
+                if not self.is_running:
+                    return False
+                self.result_signal.emit('继电器2切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
+                print('继电器2切换错误，请停止检查设备！')
+                return False
+
         elif not self.isCalibrateCur:
             self.pauseOption()
             if not self.is_running:
