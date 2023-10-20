@@ -25,7 +25,7 @@ from thread_AO import AOThread
 from thread_DIDO import DIDOThread
 import threading
 import queue
-import config
+
 
 
 q = queue.Queue()
