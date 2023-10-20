@@ -25,6 +25,7 @@ from thread_AO import AOThread
 from thread_DIDO import DIDOThread
 import threading
 import queue
+import config
 
 
 q = queue.Queue()
@@ -211,6 +212,10 @@ class Ui_Control(QMainWindow,Ui_Form):
     asciiCode_rev = []
     testFlag = ''
 
+    config_param = { }
+
+    current_dir = os.getcwd().replace('\\','/')+"/_internal"
+
     def __init__(self,parent = None):
         super(Ui_Control,self).__init__(parent)
         self.setupUi(self)
@@ -220,6 +225,10 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.label.setStyleSheet(self.testState_qss['stop'])
         self.label.setText('UNTESTED')
         self.label_41.setAlignment(QtCore.Qt.AlignLeft|Qt.AlignVCenter)
+
+        # 读页面配置
+        self.loadConfig()
+
 
         #显示当前时间
         self.update_time()
@@ -329,6 +338,7 @@ class Ui_Control(QMainWindow,Ui_Form):
 
         self.pushButton_8.clicked.connect(self.killUi)
         self.pushButton_11.clicked.connect(self.showMinimized)
+        self.pushButton_11.clicked.connect(self.saveConfig)
 
         self.tableWidget_DIDO.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.tableWidget_AI.setStyleSheet("background-color: rgb(255, 255, 255);")
@@ -400,17 +410,20 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.tableWidget_AO.horizontalHeader().setStyleSheet("background-color: #11826C;")
         self.tableWidget_DIDO.horizontalHeader().setStyleSheet("background-color: #11826C;")
 
-        self.checkBox_5.setEnabled(False)
-        self.checkBox_6.setEnabled(False)
-        self.checkBox_7.setEnabled(False)
-        self.checkBox_8.setEnabled(False)
-        self.checkBox_9.setEnabled(False)
-        self.checkBox_10.setEnabled(False)
+        self.checkBox_5.setEnabled(not self.radioButton.isChecked())
+        self.checkBox_6.setEnabled(not self.radioButton.isChecked())
+        self.checkBox_7.setEnabled(self.radioButton_5.isChecked())
+        self.checkBox_8.setEnabled(self.radioButton_5.isChecked())
+        self.checkBox_9.setEnabled(self.radioButton_5.isChecked())
+        self.checkBox_10.setEnabled(self.radioButton_5.isChecked())
 
-        self.checkBox_29.setEnabled(False)
-        self.checkBox_30.setEnabled(False)
-        self.checkBox_31.setEnabled(False)
-        self.checkBox_32.setEnabled(False)
+        self.checkBox_29.setEnabled(self.radioButton_17.isChecked())
+        self.checkBox_30.setEnabled(self.radioButton_17.isChecked())
+        self.checkBox_31.setEnabled(self.radioButton_17.isChecked())
+        self.checkBox_32.setEnabled(self.radioButton_17.isChecked())
+
+        self.checkBox_35.setEnabled(not self.radioButton_18.isChecked())
+        self.checkBox_36.setEnabled(not self.radioButton_18.isChecked())
 
         self.pushButton_5.clicked.connect(self.changeSaveDir)
         self.pushButton_6.clicked.connect(self.openSaveDir)
@@ -438,14 +451,14 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.pushButton_9.setEnabled(True)
         self.pushButton_9.clicked.connect(self.uiResize)
 
-        self.checkBox_27.setChecked(False)
+        # self.checkBox_27.setChecked(False)
         self.checkBox_27.stateChanged.connect(self.DIDOCANAddr_stateChanged)
         self.lineEdit_6.setEnabled(self.checkBox_27.isChecked())
         self.label_16.setEnabled(self.checkBox_27.isChecked())
         self.lineEdit_7.setEnabled(self.checkBox_27.isChecked())
         self.label_17.setEnabled(self.checkBox_27.isChecked())
 
-        self.checkBox_28.setChecked(False)
+        # self.checkBox_28.setChecked(False)
         self.checkBox_28.stateChanged.connect(self.DIDOAdPara_stateChanged)
         self.lineEdit_13.setEnabled(self.checkBox_28.isChecked())
         self.label_22.setEnabled(self.checkBox_28.isChecked())
@@ -456,7 +469,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.label_25.setEnabled(self.checkBox_28.isChecked())
         self.label_24.setEnabled(self.checkBox_28.isChecked())
 
-        self.checkBox_3.setChecked(False)
+        # self.checkBox_3.setChecked(False)
         self.checkBox_3.stateChanged.connect(self.AIAdPara_stateChanged)
         self.lineEdit_15.setEnabled(self.checkBox_3.isChecked())
         self.label_42.setEnabled(self.checkBox_3.isChecked())
@@ -467,7 +480,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.label_45.setEnabled(self.checkBox_3.isChecked())
         self.label_46.setEnabled(self.checkBox_3.isChecked())
 
-        self.checkBox_4.setChecked(False)
+        # self.checkBox_4.setChecked(False)
         self.checkBox_4.stateChanged.connect(self.AICANAddr_stateChanged)
         self.lineEdit_18.setEnabled(self.checkBox_4.isChecked())
         self.label_48.setEnabled(self.checkBox_4.isChecked())
@@ -476,28 +489,28 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.lineEdit_23.setEnabled(self.checkBox_4.isChecked())
         self.label_54.setEnabled(self.checkBox_4.isChecked())
 
-        self.radioButton.setChecked(True)
+        # self.radioButton.setChecked(True)
         self.radioButton.toggled.connect(self.AI_NotCalibrate)
 
-        self.radioButton_2.setChecked(False)
+        # self.radioButton_2.setChecked(False)
         self.radioButton_2.toggled.connect(self.AI_Calibrate)
 
-        self.radioButton_3.setChecked(False)
+        # self.radioButton_3.setChecked(False)
         self.radioButton_3.toggled.connect(self.AI_Calibrate)
 
-        self.radioButton_4.setChecked(True)
+        # self.radioButton_4.setChecked(True)
         self.radioButton_4.toggled.connect(self.AI_NotTest)
 
-        self.radioButton_5.setChecked(False)
+        # self.radioButton_5.setChecked(False)
         self.radioButton_5.toggled.connect(self.AI_Test)
 
-        self.radioButton_16.setChecked(True)
+        # self.radioButton_16.setChecked(True)
         self.radioButton_16.toggled.connect(self.AO_NotTest)
 
         self.horizontalLayout_52.addWidget(self.radioButton_17)
         self.radioButton_17.toggled.connect(self.AO_Test)
 
-        self.checkBox_33.setChecked(False)
+        # self.checkBox_33.setChecked(False)
         self.checkBox_33.stateChanged.connect(self.AOCANAddr_stateChanged)
         self.lineEdit_39.setEnabled(self.checkBox_33.isChecked())
         self.label_74.setEnabled(self.checkBox_33.isChecked())
@@ -506,7 +519,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.lineEdit_41.setEnabled(self.checkBox_33.isChecked())
         self.label_76.setEnabled(self.checkBox_33.isChecked())
 
-        self.checkBox_34.setChecked(False)
+        # self.checkBox_34.setChecked(False)
         self.checkBox_34.stateChanged.connect(self.AOAdPara_stateChanged)
         self.lineEdit_42.setEnabled(self.checkBox_34.isChecked())
         self.label_77.setEnabled(self.checkBox_34.isChecked())
@@ -519,7 +532,7 @@ class Ui_Control(QMainWindow,Ui_Form):
 
         self.radioButton_18.toggled.connect(self.AO_NotCalibrate)
 
-        self.radioButton_19.setChecked(True)
+        # self.radioButton_19.setChecked(True)
         self.radioButton_19.toggled.connect(self.AO_Calibrate)
 
         self.radioButton_20.toggled.connect(self.AO_Calibrate)
@@ -527,20 +540,20 @@ class Ui_Control(QMainWindow,Ui_Form):
         # self.pushButton_9.clicked.connect(self.sendMessage)
         self.pushbutton_allScreen.setStyleSheet(f"""
                                     QPushButton {{
-                                        image: url(./全屏按钮.png);
+                                        image: url({self.current_dir}/全屏按钮.png);
 
                                     }}
                                     QPushButton:hover {{
-                                        image: url(./全屏按钮2.png);
+                                        image: url({self.current_dir}/全屏按钮2.png);
                                     }}
                                 """)
         self.pushbutton_cancelAllScreen.setStyleSheet(f"""
                                      QPushButton {{
-                                         image: url(./取消全屏按钮.png);
+                                         image: url({self.current_dir}/取消全屏按钮.png);
 
                                      }}
                                      QPushButton:hover {{
-                                         image: url(./取消全屏按钮2.png);
+                                         image: url({self.current_dir}/取消全屏按钮2.png);
                                      }}
                                  """)
         self.pushButton_8.setStyleSheet(f"""
@@ -605,17 +618,198 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.checkBox_36.toggled.connect(self.setFocusLineEdit)
         self.checkBox_35.toggled.connect(self.setFocusLineEdit)
 
+        self.radioButton.toggled.connect(self.saveConfig)
+        self.radioButton_2.toggled.connect(self.saveConfig)
+        self.radioButton_3.toggled.connect(self.saveConfig)
+        self.radioButton_4.toggled.connect(self.saveConfig)
+        self.radioButton_5.toggled.connect(self.saveConfig)
+        self.radioButton_16.toggled.connect(self.saveConfig)
+        self.radioButton_17.toggled.connect(self.saveConfig)
+        self.radioButton_18.toggled.connect(self.saveConfig)
+        self.radioButton_19.toggled.connect(self.saveConfig)
+        self.radioButton_20.toggled.connect(self.saveConfig)
+        self.checkBox_29.toggled.connect(self.saveConfig)
+        self.checkBox_30.toggled.connect(self.saveConfig)
+        self.checkBox_31.toggled.connect(self.saveConfig)
+        self.checkBox_32.toggled.connect(self.saveConfig)
+        self.checkBox_36.toggled.connect(self.saveConfig)
+        self.checkBox_35.toggled.connect(self.saveConfig)
+        self.checkBox.toggled.connect(self.saveConfig)
+        self.checkBox_2.toggled.connect(self.saveConfig)
+        self.checkBox_5.toggled.connect(self.saveConfig)
+        self.checkBox_6.toggled.connect(self.saveConfig)
+        self.checkBox_7.toggled.connect(self.saveConfig)
+        self.checkBox_8.toggled.connect(self.saveConfig)
+        self.checkBox_9.toggled.connect(self.saveConfig)
+        self.checkBox_10.toggled.connect(self.saveConfig)
+        self.comboBox.currentIndexChanged.connect(self.saveConfig)
+        self.comboBox_3.currentIndexChanged.connect(self.saveConfig)
+        self.comboBox_5.currentIndexChanged.connect(self.saveConfig)
+
+        self.lineEdit_6.textChanged.connect(self.saveConfig)
+        self.lineEdit_7.textChanged.connect(self.saveConfig)
+        self.lineEdit_12.textChanged.connect(self.saveConfig)
+        self.lineEdit_13.textChanged.connect(self.saveConfig)
+        self.lineEdit_14.textChanged.connect(self.saveConfig)
+        self.lineEdit_15.textChanged.connect(self.saveConfig)
+        self.lineEdit_16.textChanged.connect(self.saveConfig)
+        self.lineEdit_17.textChanged.connect(self.saveConfig)
+        self.lineEdit_18.textChanged.connect(self.saveConfig)
+        self.lineEdit_19.textChanged.connect(self.saveConfig)
+        self.lineEdit_23.textChanged.connect(self.saveConfig)
+        self.lineEdit_39.textChanged.connect(self.saveConfig)
+        self.lineEdit_40.textChanged.connect(self.saveConfig)
+        self.lineEdit_41.textChanged.connect(self.saveConfig)
+        self.lineEdit_42.textChanged.connect(self.saveConfig)
+        self.lineEdit_43.textChanged.connect(self.saveConfig)
+        self.lineEdit_44.textChanged.connect(self.saveConfig)
+        self.tabWidget.currentChanged.connect(self.saveConfig)
+        self.pushButton.clicked.connect(self.saveConfig)
+        self.pushButton_2.clicked.connect(self.saveConfig)
+        self.pushButton_3.clicked.connect(self.saveConfig)
+        self.pushButton_4.clicked.connect(self.saveConfig)
+
         self.pushButton_12.setEnabled(False)
         self.pushButton_12.setVisible(False)
         self.pushButton_12.clicked.connect(self.uiRecovery)
         global isMainRunning
         isMainRunning = True
 
+    def loadConfig(self):
+        with open(f'{self.current_dir}/config.txt','r+',encoding='utf-8') as file:
+            config_content = file.read()
+        self.config_param = eval(config_content)
+        self.label_41.setText(self.config_param["savePath"])
+        self.tabWidget.setCurrentIndex(self.config_param["currentIndex"])
+
+        # AO页面配置
+        self.comboBox_5.setCurrentIndex(self.config_param["AO_型号"])
+        self.checkBox_33.setChecked(self.config_param["AO_CAN_修改参数"])
+        self.lineEdit_39.setText(self.config_param["AO_CAN_工装"])
+        self.lineEdit_40.setText(self.config_param["AO_CAN_待检"])
+        self.lineEdit_41.setText(self.config_param["AO_CAN_继电器"])
+        self.checkBox_34.setChecked(self.config_param["AO_附加_修改参数"])
+        self.lineEdit_42.setText(self.config_param["AO_附加_波特率"])
+        self.lineEdit_43.setText(self.config_param["AO_附加_等待时间"])
+        self.lineEdit_44.setText(self.config_param["AO_附加_接收次数"])
+        self.radioButton_18.setChecked(self.config_param["AO_不标定"])
+        self.radioButton_19.setChecked(self.config_param["AO_仅标定1"])
+        self.radioButton_20.setChecked(self.config_param["AO_标定all"])
+        self.checkBox_35.setChecked(self.config_param["AO_标定电压"])
+        self.checkBox_36.setChecked(self.config_param["AO_标定电流"])
+        self.radioButton_16.setChecked(self.config_param["AO_不检测"])
+        self.radioButton_17.setChecked(self.config_param["AO_检测"])
+        self.checkBox_29.setChecked(self.config_param["AO_检测电压"])
+        self.checkBox_30.setChecked(self.config_param["AO_检测电流"])
+        self.checkBox_31.setChecked(self.config_param["AO_检测CAN"])
+        self.checkBox_32.setChecked(self.config_param["AO_检测run"])
+        # AI页面配置
+        self.comboBox_3.setCurrentIndex(self.config_param["AI_型号"])
+        self.checkBox_4.setChecked(self.config_param["AI_CAN_修改参数"])
+        self.lineEdit_18.setText(self.config_param["AI_CAN_工装"])
+        self.lineEdit_19.setText(self.config_param["AI_CAN_待检"])
+        self.lineEdit_23.setText(self.config_param["AI_CAN_继电器"])
+        self.checkBox_3.setChecked(self.config_param["AI_附加_修改参数"])
+        self.lineEdit_16.setText(self.config_param["AI_附加_波特率"])
+        self.lineEdit_17.setText(self.config_param["AI_附加_等待时间"])
+        self.lineEdit_15.setText(self.config_param["AI_附加_接收次数"])
+        self.radioButton.setChecked(self.config_param["AI_不标定"])
+        self.radioButton_2.setChecked(self.config_param["AI_仅标定1"])
+        self.radioButton_3.setChecked(self.config_param["AI_标定all"])
+        self.checkBox_5.setChecked(self.config_param["AI_标定电压"])
+        self.checkBox_6.setChecked(self.config_param["AI_标定电流"])
+        self.radioButton_4.setChecked(self.config_param["AI_不检测"])
+        self.radioButton_5.setChecked(self.config_param["AI_检测"])
+        self.checkBox_9.setChecked(self.config_param["AI_检测电压"])
+        self.checkBox_10.setChecked(self.config_param["AI_检测电流"])
+        self.checkBox_8.setChecked(self.config_param["AI_检测CAN"])
+        self.checkBox_7.setChecked(self.config_param["AI_检测run"])
+        # DIDO页面配置
+        self.comboBox.setCurrentIndex(self.config_param["DIDO_型号"])
+        self.checkBox_27.setChecked(self.config_param["DIDO_CAN_修改参数"])
+        self.lineEdit_6.setText(self.config_param["DIDO_CAN_工装"])
+        self.lineEdit_7.setText(self.config_param["DIDO_CAN_待检"])
+        self.checkBox_28.setChecked(self.config_param["DIDO_附加_修改参数"])
+        self.lineEdit_13.setText(self.config_param["DIDO_附加_波特率"])
+        self.lineEdit_12.setText(self.config_param["DIDO_附加_间隔时间"])
+        self.lineEdit_14.setText(self.config_param["DIDO_附加_循环次数"])
+        self.checkBox.setChecked(self.config_param["DIDO_检测CAN"])
+        self.checkBox_2.setChecked(self.config_param["DIDO_检测run"])
+
+    def saveConfig(self):
+        self.config_param["savePath"] = self.label_41.text()
+        self.config_param["currentIndex"] = self.tabWidget.currentIndex()
+
+        # AO页面配置
+        self.config_param["AO_型号"] = self.comboBox_5.currentIndex()
+        self.config_param["AO_CAN_修改参数"] = self.checkBox_33.isChecked()
+        self.config_param["AO_CAN_工装"] = self.lineEdit_39.text()
+        self.config_param["AO_CAN_待检"] = self.lineEdit_40.text()
+        self.config_param["AO_CAN_继电器"] = self.lineEdit_41.text()
+        self.config_param["AO_附加_修改参数"] = self.checkBox_34.isChecked()
+        self.config_param["AO_附加_波特率"] = self.lineEdit_42.text()
+        self.config_param["AO_附加_等待时间"] = self.lineEdit_43.text()
+        self.config_param["AO_附加_接收次数"] = self.lineEdit_44.text()
+        self.config_param["AO_不标定"] = self.radioButton_18.isChecked()
+        self.config_param["AO_仅标定1"] = self.radioButton_19.isChecked()
+        self.config_param["AO_标定all"] = self.radioButton_20.isChecked()
+        self.config_param["AO_标定电压"] = self.checkBox_35.isChecked()
+        self.config_param["AO_标定电流"] = self.checkBox_36.isChecked()
+        self.config_param["AO_不检测"] = self.radioButton_16.isChecked()
+        self.config_param["AO_检测"] = self.radioButton_17.isChecked()
+        self.config_param["AO_检测电压"] = self.checkBox_29.isChecked()
+        self.config_param["AO_检测电流"] = self.checkBox_30.isChecked()
+        self.config_param["AO_检测CAN"] = self.checkBox_31.isChecked()
+        self.config_param["AO_检测run"] = self.checkBox_32.isChecked()
+        # AI页面配置
+        self.config_param["AI_型号"] = self.comboBox_3.currentIndex()
+        self.config_param["AI_CAN_修改参数"] = self.checkBox_4.isChecked()
+        self.config_param["AI_CAN_工装"] = self.lineEdit_18.text()
+        self.config_param["AI_CAN_待检"] = self.lineEdit_19.text()
+        self.config_param["AI_CAN_继电器"] = self.lineEdit_23.text()
+        self.config_param["AI_附加_修改参数"] = self.checkBox_3.isChecked()
+        self.config_param["AI_附加_波特率"] = self.lineEdit_16.text()
+        self.config_param["AI_附加_等待时间"] = self.lineEdit_17.text()
+        self.config_param["AI_附加_接收次数"] = self.lineEdit_15.text()
+        self.config_param["AI_不标定"] = self.radioButton.isChecked()
+        self.config_param["AI_仅标定1"] = self.radioButton_2.isChecked()
+        self.config_param["AI_标定all"] = self.radioButton_3.isChecked()
+        self.config_param["AI_标定电压"] = self.checkBox_5.isChecked()
+        self.config_param["AI_标定电流"] = self.checkBox_6.isChecked()
+        self.config_param["AI_不检测"] = self.radioButton_4.isChecked()
+        self.config_param["AI_检测"] = self.radioButton_5.isChecked()
+        self.config_param["AI_检测电压"] = self.checkBox_9.isChecked()
+        self.config_param["AI_检测电流"] = self.checkBox_10.isChecked()
+        self.config_param["AI_检测CAN"] = self.checkBox_8.isChecked()
+        self.config_param["AI_检测run"] = self.checkBox_7.isChecked()
+        # DIDO页面配置
+        self.config_param["DIDO_型号"] = self.comboBox.currentIndex()
+        self.config_param["DIDO_CAN_修改参数"] = self.checkBox_27.isChecked()
+        self.config_param["DIDO_CAN_工装"] = self.lineEdit_6.text()
+        self.config_param["DIDO_CAN_待检"] = self.lineEdit_7.text()
+        self.config_param["DIDO_附加_修改参数"] = self.checkBox_28.isChecked()
+        self.config_param["DIDO_附加_波特率"] = self.lineEdit_13.text()
+        self.config_param["DIDO_附加_间隔时间"] = self.lineEdit_12.text()
+        self.config_param["DIDO_附加_循环次数"] = self.lineEdit_14.text()
+        self.config_param["DIDO_检测CAN"] = self.checkBox.isChecked()
+        self.config_param["DIDO_检测run"] = self.checkBox_2.isChecked()
+        config_str = str(self.config_param)
+        config_str1=''
+        pos=0
+        while pos>=0:
+            pos=config_str.find(',')
+            config_str1=config_str1+config_str[:pos+1]+'\n'
+            config_str=config_str[pos+1:]
+        config_str=config_str1+config_str
+        self.configFile = open(f'{self.current_dir}/config.txt', 'w',encoding='utf-8')
+        self.configFile.write(config_str)
+        self.configFile.close()
     def update_time(self):
         self.label_47.setText(datetime.datetime.now().strftime('%m/%d %H:%M:%S'))
         QTimer.singleShot(1000, self.update_time)
 
     def killUi(self):
+        self.saveConfig()
         self.close()
         try:
             os.kill(os.getpid(), signal.SIGTERM)
@@ -1383,6 +1577,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.label_16.setEnabled(self.checkBox_27.isChecked())
         self.lineEdit_7.setEnabled(self.checkBox_27.isChecked())
         self.label_17.setEnabled(self.checkBox_27.isChecked())
+        self.saveConfig()
 
     def DIDOAdPara_stateChanged(self):
         self.lineEdit_13.setEnabled(self.checkBox_28.isChecked())
@@ -1393,7 +1588,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.label_26.setEnabled(self.checkBox_28.isChecked())
         self.label_25.setEnabled(self.checkBox_28.isChecked())
         self.label_24.setEnabled(self.checkBox_28.isChecked())
-
+        self.saveConfig()
     """
 
     AI
@@ -1407,6 +1602,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.label_49.setEnabled(self.checkBox_4.isChecked())
         self.lineEdit_23.setEnabled(self.checkBox_4.isChecked())
         self.label_54.setEnabled(self.checkBox_4.isChecked())
+        self.saveConfig()
 
     def AIAdPara_stateChanged(self):
         self.lineEdit_15.setEnabled(self.checkBox_3.isChecked())
@@ -1417,6 +1613,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.label_44.setEnabled(self.checkBox_3.isChecked())
         self.label_45.setEnabled(self.checkBox_3.isChecked())
         self.label_46.setEnabled(self.checkBox_3.isChecked())
+        self.saveConfig()
 
     def AI_NotCalibrate(self):
         self.checkBox_5.setEnabled(False)
@@ -1451,6 +1648,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.label_75.setEnabled(self.checkBox_33.isChecked())
         self.lineEdit_41.setEnabled(self.checkBox_33.isChecked())
         self.label_76.setEnabled(self.checkBox_33.isChecked())
+        self.saveConfig()
 
     def AOAdPara_stateChanged(self):
         self.lineEdit_42.setEnabled(self.checkBox_34.isChecked())
@@ -1461,6 +1659,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.label_79.setEnabled(self.checkBox_34.isChecked())
         self.label_80.setEnabled(self.checkBox_34.isChecked())
         self.label_81.setEnabled(self.checkBox_34.isChecked())
+        self.saveConfig()
 
     def AO_NotCalibrate(self):
         self.checkBox_35.setEnabled(False)
