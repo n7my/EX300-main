@@ -215,7 +215,7 @@ class Ui_Control(QMainWindow,Ui_Form):
     config_param = { }
 
     current_dir = os.getcwd().replace('\\','/')+"/_internal"
-
+    # current_dir = os.getcwd().replace('\\', '/')
     def __init__(self,parent = None):
         super(Ui_Control,self).__init__(parent)
         self.setupUi(self)
@@ -225,7 +225,8 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.label.setStyleSheet(self.testState_qss['stop'])
         self.label.setText('UNTESTED')
         self.label_41.setAlignment(QtCore.Qt.AlignLeft|Qt.AlignVCenter)
-
+        #屏蔽pushbutton_9
+        self.pushButton_9.setVisible(False)
         # 读页面配置
         self.loadConfig()
 
@@ -1217,7 +1218,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                 self.testFlag = 'DI'
 
             elif self.comboBox.currentIndex() == 3 or self.comboBox.currentIndex() == 4 \
-                                      or self.comboBox.currentIndex() == 5:
+                    or self.comboBox.currentIndex() == 5 or self.comboBox.currentIndex() == 6:
                 self.testFlag = 'DO'
 
             self.DIDO_thread = QThread()
@@ -1231,8 +1232,8 @@ class Ui_Control(QMainWindow,Ui_Form):
             # self.DIDO_option.excel_signal.connect(self.generateExcel)
             self.DIDO_option.allFinished_signal.connect(self.allFinished)
             self.DIDO_option.labe_signal.connect(self.labelChange)
-            self.DIDO_option.saveExcel_signal.connect(self.saveExcel)
-            self.DIDO_option.print_signal.connect(self.printResult)
+            # self.DIDO_option.saveExcel_signal.connect(self.saveExcel)
+            # self.DIDO_option.print_signal.connect(self.printResult)
 
             self.pushButton_3.clicked.connect(self.DIDO_option.stop_work)
             self.pushButton_pause.clicked.connect(self.DIDO_option.pause_work)
@@ -1313,8 +1314,8 @@ class Ui_Control(QMainWindow,Ui_Form):
                 # self.AI_option.excel_signal.connect(self.generateExcel)
                 self.AI_option.allFinished_signal.connect(self.allFinished)
                 self.AI_option.labe_signal.connect(self.labelChange)
-                self.AI_option.saveExcel_signal.connect(self.saveExcel)
-                self.AI_option.print_signal.connect(self.printResult)
+                self.AI_option.saveExcel_signal.connect(self.saveExcel)#保存测试报告
+                self.AI_option.print_signal.connect(self.printResult)#打印测试标签
                 # self.AI_option.print_signal.connect(self.passp)
 
                 self.pushButton_3.clicked.connect(self.AI_option.stop_work)
@@ -2576,7 +2577,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.reInputPNSNREV()
 
     def saveExcel(self,saveList):
-        saveList[0].save(self.label_41.text() + saveList[1])
+        saveList[0].save(str(self.label_41.text()) + saveList[1])
         # book.save(self.label_41.text() + saveDir)
 
     def printResult(self,list):
@@ -2629,7 +2630,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         default_section.left_margin = Cm(0.5)
 
         # 添加图片（注意路径和图片必须要存在）
-        document.add_picture(self.label_41.text()+'/logo.png', width=Cm(6.1))
+        document.add_picture(self.current_dir+'/logo.png', width=Cm(6.1))
 
         # # 添加带样式的段落
         p = document.add_paragraph('')
@@ -2670,7 +2671,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         Time.bold = True
         if list[1] == 'FAIL':
             # 添加图片（注意路径和图片必须要存在）
-            document.add_picture(self.label_41.text()+'/fail.png', width=Cm(5.5))
+            document.add_picture(self.current_dir+'/fail.png', width=Cm(5.5))
             pFail = document.add_paragraph('')
             pFail.paragraph_format.line_spacing = 1
             Fail = pFail.add_run('FAILED ITEMS：')
@@ -2685,7 +2686,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             fail_inf.font.size = Pt(10)
         elif list[1] == 'PASS':
             # 添加图片（注意路径和图片必须要存在）
-            document.add_picture(self.label_41.text()+'/pass.png', width=Cm(5.5))
+            document.add_picture(self.current_dir+'/pass.png', width=Cm(5.5))
         document.paragraphs[6].alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
 

@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1440</width>
-    <height>845</height>
+    <width>1436</width>
+    <height>863</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -33,8 +33,8 @@
     <rect>
      <x>763</x>
      <y>314</y>
-     <width>671</width>
-     <height>501</height>
+     <width>641</width>
+     <height>521</height>
     </rect>
    </property>
    <property name="sizePolicy">
@@ -47,10 +47,11 @@
     <enum>Qt::NoFocus</enum>
    </property>
    <property name="styleSheet">
-    <string notr="true">background-color: rgb(208, 208, 208);</string>
+    <string notr="true">background-color: rgb(208, 208, 208);
+background-color: rgb(245, 189, 61);</string>
    </property>
    <property name="tabPosition">
-    <enum>QTabWidget::West</enum>
+    <enum>QTabWidget::North</enum>
    </property>
    <property name="tabShape">
     <enum>QTabWidget::Rounded</enum>
@@ -64,6 +65,581 @@
      <height>16</height>
     </size>
    </property>
+   <widget class="QWidget" name="tab_3">
+    <attribute name="title">
+     <string>AO</string>
+    </attribute>
+    <widget class="QGroupBox" name="groupBox_14">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>400</y>
+       <width>621</width>
+       <height>81</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>检测</string>
+     </property>
+     <widget class="QWidget" name="layoutWidget_38">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>20</y>
+        <width>121</width>
+        <height>18</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_52">
+       <item>
+        <widget class="QRadioButton" name="radioButton_16">
+         <property name="text">
+          <string>不检测</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="radioButton_17">
+         <property name="text">
+          <string>检测</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="layoutWidget_39">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>50</y>
+        <width>105</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_53">
+       <item>
+        <widget class="QCheckBox" name="checkBox_29">
+         <property name="text">
+          <string>电压</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="checkBox_30">
+         <property name="text">
+          <string>电流</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="layoutWidget_40">
+      <property name="geometry">
+       <rect>
+        <x>120</x>
+        <y>50</y>
+        <width>285</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_54">
+       <item>
+        <widget class="QCheckBox" name="checkBox_31">
+         <property name="text">
+          <string>CAN_Run+CAN_Error指示灯</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="checkBox_32">
+         <property name="text">
+          <string>Run+Error指示灯</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+    <widget class="QGroupBox" name="groupBox_15">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>90</y>
+       <width>621</width>
+       <height>81</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>CAN地址</string>
+     </property>
+     <widget class="QWidget" name="layoutWidget_41">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>40</y>
+        <width>75</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_55">
+       <item>
+        <widget class="QLabel" name="label_74">
+         <property name="text">
+          <string>工装</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_39">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(255, 255, 255);</string>
+         </property>
+         <property name="text">
+          <string>1</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="layoutWidget_43">
+      <property name="geometry">
+       <rect>
+        <x>100</x>
+        <y>40</y>
+        <width>99</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_58">
+       <item>
+        <widget class="QLabel" name="label_75">
+         <property name="text">
+          <string>待检模块</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_40">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(255, 255, 255);</string>
+         </property>
+         <property name="text">
+          <string>2</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="layoutWidget_44">
+      <property name="geometry">
+       <rect>
+        <x>210</x>
+        <y>40</y>
+        <width>99</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_59">
+       <item>
+        <widget class="QLabel" name="label_76">
+         <property name="text">
+          <string>继电器</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_41">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(255, 255, 255);</string>
+         </property>
+         <property name="text">
+          <string>3</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_33">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>20</y>
+        <width>71</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>修改参数</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QGroupBox" name="groupBox_8">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>190</y>
+       <width>621</width>
+       <height>91</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>附加参数</string>
+     </property>
+     <widget class="QWidget" name="layoutWidget_45">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>45</y>
+        <width>101</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_60">
+       <item>
+        <widget class="QLabel" name="label_77">
+         <property name="text">
+          <string>波特率</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_42">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(255, 255, 255);</string>
+         </property>
+         <property name="text">
+          <string>1000</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_78">
+         <property name="text">
+          <string>k</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="layoutWidget_46">
+      <property name="geometry">
+       <rect>
+        <x>130</x>
+        <y>45</y>
+        <width>142</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_61">
+       <item>
+        <widget class="QLabel" name="label_79">
+         <property name="text">
+          <string>信号等待时间</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_43">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(255, 255, 255);</string>
+         </property>
+         <property name="text">
+          <string>5000</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_80">
+         <property name="text">
+          <string>ms</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QLineEdit" name="lineEdit_44">
+      <property name="geometry">
+       <rect>
+        <x>383</x>
+        <y>50</y>
+        <width>31</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color: rgb(255, 255, 255);</string>
+      </property>
+      <property name="text">
+       <string>8</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_81">
+      <property name="geometry">
+       <rect>
+        <x>281</x>
+        <y>50</y>
+        <width>96</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>标定接收信号次数</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_34">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>20</y>
+        <width>71</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>修改参数</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QGroupBox" name="groupBox_16">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>621</width>
+       <height>61</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>产品信息</string>
+     </property>
+     <widget class="Line" name="line_8">
+      <property name="geometry">
+       <rect>
+        <x>163</x>
+        <y>10</y>
+        <width>20</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+     </widget>
+     <widget class="QWidget" name="layoutWidget_47">
+      <property name="geometry">
+       <rect>
+        <x>530</x>
+        <y>20</y>
+        <width>69</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_62">
+       <item>
+        <widget class="QLabel" name="label_82">
+         <property name="text">
+          <string>REV</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_45">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(255, 255, 255);</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="layoutWidget_48">
+      <property name="geometry">
+       <rect>
+        <x>380</x>
+        <y>20</y>
+        <width>111</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_63">
+       <item>
+        <widget class="QLabel" name="label_83">
+         <property name="text">
+          <string>SN</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_46">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(255, 255, 255);</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="layoutWidget_49">
+      <property name="geometry">
+       <rect>
+        <x>190</x>
+        <y>20</y>
+        <width>153</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_64">
+       <item>
+        <widget class="QLabel" name="label_84">
+         <property name="text">
+          <string>PN</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_47">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(255, 255, 255);</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="layoutWidget_50">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>20</y>
+        <width>141</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_65">
+       <item>
+        <widget class="QLabel" name="label_85">
+         <property name="text">
+          <string>模块型号</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="comboBox_5">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(255, 255, 255);</string>
+         </property>
+         <item>
+          <property name="text">
+           <string>AQ0004</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>AQ0008</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+    <widget class="QGroupBox" name="groupBox_17">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>300</y>
+       <width>621</width>
+       <height>81</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>标定</string>
+     </property>
+     <widget class="QWidget" name="layoutWidget_51">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>20</y>
+        <width>281</width>
+        <height>18</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_66">
+       <item>
+        <widget class="QRadioButton" name="radioButton_18">
+         <property name="text">
+          <string>不标定</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="radioButton_19">
+         <property name="text">
+          <string>仅标定第一通道</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="radioButton_20">
+         <property name="text">
+          <string>标定所有通道</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="layoutWidget_52">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>50</y>
+        <width>105</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_67">
+       <item>
+        <widget class="QCheckBox" name="checkBox_35">
+         <property name="text">
+          <string>电压</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="checkBox_36">
+         <property name="text">
+          <string>电流</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </widget>
    <widget class="QWidget" name="tab">
     <property name="styleSheet">
      <string notr="true">background-color: rgb(208, 208, 208);</string>
@@ -600,7 +1176,7 @@
        <rect>
         <x>130</x>
         <y>45</y>
-        <width>141</width>
+        <width>142</width>
         <height>31</height>
        </rect>
       </property>
@@ -1013,7 +1589,7 @@
        <rect>
         <x>10</x>
         <y>50</y>
-        <width>102</width>
+        <width>105</width>
         <height>21</height>
        </rect>
       </property>
@@ -1078,7 +1654,7 @@
        <rect>
         <x>10</x>
         <y>50</y>
-        <width>102</width>
+        <width>105</width>
         <height>21</height>
        </rect>
       </property>
@@ -1104,7 +1680,7 @@
        <rect>
         <x>120</x>
         <y>50</y>
-        <width>282</width>
+        <width>285</width>
         <height>21</height>
        </rect>
       </property>
@@ -1127,581 +1703,6 @@
      </widget>
     </widget>
    </widget>
-   <widget class="QWidget" name="tab_3">
-    <attribute name="title">
-     <string>AO</string>
-    </attribute>
-    <widget class="QGroupBox" name="groupBox_14">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>400</y>
-       <width>621</width>
-       <height>81</height>
-      </rect>
-     </property>
-     <property name="title">
-      <string>检测</string>
-     </property>
-     <widget class="QWidget" name="layoutWidget_38">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>20</y>
-        <width>121</width>
-        <height>18</height>
-       </rect>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_52">
-       <item>
-        <widget class="QRadioButton" name="radioButton_16">
-         <property name="text">
-          <string>不检测</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QRadioButton" name="radioButton_17">
-         <property name="text">
-          <string>检测</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="layoutWidget_39">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>50</y>
-        <width>102</width>
-        <height>21</height>
-       </rect>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_53">
-       <item>
-        <widget class="QCheckBox" name="checkBox_29">
-         <property name="text">
-          <string>电压</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="checkBox_30">
-         <property name="text">
-          <string>电流</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="layoutWidget_40">
-      <property name="geometry">
-       <rect>
-        <x>120</x>
-        <y>50</y>
-        <width>282</width>
-        <height>21</height>
-       </rect>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_54">
-       <item>
-        <widget class="QCheckBox" name="checkBox_31">
-         <property name="text">
-          <string>CAN_Run+CAN_Error指示灯</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="checkBox_32">
-         <property name="text">
-          <string>Run+Error指示灯</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-    </widget>
-    <widget class="QGroupBox" name="groupBox_15">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>90</y>
-       <width>621</width>
-       <height>81</height>
-      </rect>
-     </property>
-     <property name="title">
-      <string>CAN地址</string>
-     </property>
-     <widget class="QWidget" name="layoutWidget_41">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>40</y>
-        <width>75</width>
-        <height>31</height>
-       </rect>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_55">
-       <item>
-        <widget class="QLabel" name="label_74">
-         <property name="text">
-          <string>工装</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="lineEdit_39">
-         <property name="styleSheet">
-          <string notr="true">background-color: rgb(255, 255, 255);</string>
-         </property>
-         <property name="text">
-          <string>1</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="layoutWidget_43">
-      <property name="geometry">
-       <rect>
-        <x>100</x>
-        <y>40</y>
-        <width>99</width>
-        <height>31</height>
-       </rect>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_58">
-       <item>
-        <widget class="QLabel" name="label_75">
-         <property name="text">
-          <string>待检模块</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="lineEdit_40">
-         <property name="styleSheet">
-          <string notr="true">background-color: rgb(255, 255, 255);</string>
-         </property>
-         <property name="text">
-          <string>2</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="layoutWidget_44">
-      <property name="geometry">
-       <rect>
-        <x>210</x>
-        <y>40</y>
-        <width>99</width>
-        <height>31</height>
-       </rect>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_59">
-       <item>
-        <widget class="QLabel" name="label_76">
-         <property name="text">
-          <string>继电器</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="lineEdit_41">
-         <property name="styleSheet">
-          <string notr="true">background-color: rgb(255, 255, 255);</string>
-         </property>
-         <property name="text">
-          <string>3</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QCheckBox" name="checkBox_33">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>20</y>
-        <width>71</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>修改参数</string>
-      </property>
-     </widget>
-    </widget>
-    <widget class="QGroupBox" name="groupBox_8">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>190</y>
-       <width>621</width>
-       <height>91</height>
-      </rect>
-     </property>
-     <property name="title">
-      <string>附加参数</string>
-     </property>
-     <widget class="QWidget" name="layoutWidget_45">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>45</y>
-        <width>101</width>
-        <height>31</height>
-       </rect>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_60">
-       <item>
-        <widget class="QLabel" name="label_77">
-         <property name="text">
-          <string>波特率</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="lineEdit_42">
-         <property name="styleSheet">
-          <string notr="true">background-color: rgb(255, 255, 255);</string>
-         </property>
-         <property name="text">
-          <string>1000</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="label_78">
-         <property name="text">
-          <string>k</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="layoutWidget_46">
-      <property name="geometry">
-       <rect>
-        <x>130</x>
-        <y>45</y>
-        <width>141</width>
-        <height>31</height>
-       </rect>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_61">
-       <item>
-        <widget class="QLabel" name="label_79">
-         <property name="text">
-          <string>信号等待时间</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="lineEdit_43">
-         <property name="styleSheet">
-          <string notr="true">background-color: rgb(255, 255, 255);</string>
-         </property>
-         <property name="text">
-          <string>5000</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="label_80">
-         <property name="text">
-          <string>ms</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QLineEdit" name="lineEdit_44">
-      <property name="geometry">
-       <rect>
-        <x>383</x>
-        <y>50</y>
-        <width>31</width>
-        <height>21</height>
-       </rect>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">background-color: rgb(255, 255, 255);</string>
-      </property>
-      <property name="text">
-       <string>8</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_81">
-      <property name="geometry">
-       <rect>
-        <x>281</x>
-        <y>50</y>
-        <width>96</width>
-        <height>21</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>标定接收信号次数</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="checkBox_34">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>20</y>
-        <width>71</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>修改参数</string>
-      </property>
-     </widget>
-    </widget>
-    <widget class="QGroupBox" name="groupBox_16">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>10</y>
-       <width>621</width>
-       <height>61</height>
-      </rect>
-     </property>
-     <property name="title">
-      <string>产品信息</string>
-     </property>
-     <widget class="Line" name="line_8">
-      <property name="geometry">
-       <rect>
-        <x>163</x>
-        <y>10</y>
-        <width>20</width>
-        <height>41</height>
-       </rect>
-      </property>
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-     </widget>
-     <widget class="QWidget" name="layoutWidget_47">
-      <property name="geometry">
-       <rect>
-        <x>530</x>
-        <y>20</y>
-        <width>69</width>
-        <height>31</height>
-       </rect>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_62">
-       <item>
-        <widget class="QLabel" name="label_82">
-         <property name="text">
-          <string>REV</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="lineEdit_45">
-         <property name="styleSheet">
-          <string notr="true">background-color: rgb(255, 255, 255);</string>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="layoutWidget_48">
-      <property name="geometry">
-       <rect>
-        <x>380</x>
-        <y>20</y>
-        <width>111</width>
-        <height>31</height>
-       </rect>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_63">
-       <item>
-        <widget class="QLabel" name="label_83">
-         <property name="text">
-          <string>SN</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="lineEdit_46">
-         <property name="styleSheet">
-          <string notr="true">background-color: rgb(255, 255, 255);</string>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="layoutWidget_49">
-      <property name="geometry">
-       <rect>
-        <x>190</x>
-        <y>20</y>
-        <width>153</width>
-        <height>31</height>
-       </rect>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_64">
-       <item>
-        <widget class="QLabel" name="label_84">
-         <property name="text">
-          <string>PN</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="lineEdit_47">
-         <property name="styleSheet">
-          <string notr="true">background-color: rgb(255, 255, 255);</string>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="layoutWidget_50">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>20</y>
-        <width>141</width>
-        <height>31</height>
-       </rect>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_65">
-       <item>
-        <widget class="QLabel" name="label_85">
-         <property name="text">
-          <string>模块型号</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QComboBox" name="comboBox_5">
-         <property name="styleSheet">
-          <string notr="true">background-color: rgb(255, 255, 255);</string>
-         </property>
-         <item>
-          <property name="text">
-           <string>AQ0004</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>AQ0008</string>
-          </property>
-         </item>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-    </widget>
-    <widget class="QGroupBox" name="groupBox_17">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>300</y>
-       <width>621</width>
-       <height>81</height>
-      </rect>
-     </property>
-     <property name="title">
-      <string>标定</string>
-     </property>
-     <widget class="QWidget" name="layoutWidget_51">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>20</y>
-        <width>281</width>
-        <height>18</height>
-       </rect>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_66">
-       <item>
-        <widget class="QRadioButton" name="radioButton_18">
-         <property name="text">
-          <string>不标定</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QRadioButton" name="radioButton_19">
-         <property name="text">
-          <string>仅标定第一通道</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QRadioButton" name="radioButton_20">
-         <property name="text">
-          <string>标定所有通道</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="layoutWidget_52">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>50</y>
-        <width>102</width>
-        <height>21</height>
-       </rect>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_67">
-       <item>
-        <widget class="QCheckBox" name="checkBox_35">
-         <property name="text">
-          <string>电压</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="checkBox_36">
-         <property name="text">
-          <string>电流</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-    </widget>
-   </widget>
   </widget>
   <widget class="QPushButton" name="pushButton">
    <property name="enabled">
@@ -1709,7 +1710,7 @@
    </property>
    <property name="geometry">
     <rect>
-     <x>763</x>
+     <x>753</x>
      <y>94</y>
      <width>100</width>
      <height>100</height>
@@ -1738,7 +1739,7 @@ background-color: rgb(76, 165, 132);
   <widget class="QPushButton" name="pushButton_2">
    <property name="geometry">
     <rect>
-     <x>953</x>
+     <x>943</x>
      <y>94</y>
      <width>100</width>
      <height>100</height>
@@ -1757,7 +1758,7 @@ background-color: rgb(76, 165, 132);</string>
   <widget class="QPushButton" name="pushButton_3">
    <property name="geometry">
     <rect>
-     <x>1333</x>
+     <x>1323</x>
      <y>94</y>
      <width>100</width>
      <height>100</height>
@@ -1776,8 +1777,8 @@ background-color: rgb(76, 165, 132);</string>
   <widget class="QPushButton" name="pushButton_4">
    <property name="geometry">
     <rect>
-     <x>1143</x>
-     <y>94</y>
+     <x>1150</x>
+     <y>100</y>
      <width>100</width>
      <height>100</height>
     </rect>
@@ -1795,10 +1796,10 @@ background-color: rgb(76, 165, 132);</string>
   <widget class="QLabel" name="label_29">
    <property name="geometry">
     <rect>
-     <x>140</x>
-     <y>824</y>
+     <x>1080</x>
+     <y>850</y>
      <width>61</width>
-     <height>21</height>
+     <height>20</height>
     </rect>
    </property>
    <property name="text">
@@ -1808,10 +1809,10 @@ background-color: rgb(76, 165, 132);</string>
   <widget class="QLabel" name="label_30">
    <property name="geometry">
     <rect>
-     <x>280</x>
-     <y>818</y>
+     <x>10</x>
+     <y>850</y>
      <width>61</width>
-     <height>31</height>
+     <height>20</height>
     </rect>
    </property>
    <property name="text">
@@ -1821,9 +1822,9 @@ background-color: rgb(76, 165, 132);</string>
   <widget class="QLabel" name="label_31">
    <property name="geometry">
     <rect>
-     <x>340</x>
-     <y>824</y>
-     <width>41</width>
+     <x>70</x>
+     <y>850</y>
+     <width>81</width>
      <height>20</height>
     </rect>
    </property>
@@ -1841,10 +1842,10 @@ background-color: rgb(255, 255, 255);</string>
   <widget class="QLabel" name="label_32">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>818</y>
+     <x>870</x>
+     <y>850</y>
      <width>61</width>
-     <height>31</height>
+     <height>20</height>
     </rect>
    </property>
    <property name="text">
@@ -1854,9 +1855,9 @@ background-color: rgb(255, 255, 255);</string>
   <widget class="QLabel" name="label_33">
    <property name="geometry">
     <rect>
-     <x>70</x>
-     <y>824</y>
-     <width>61</width>
+     <x>930</x>
+     <y>850</y>
+     <width>81</width>
      <height>20</height>
     </rect>
    </property>
@@ -1874,9 +1875,9 @@ background-color: rgb(255, 255, 255);</string>
   <widget class="QLabel" name="label_34">
    <property name="geometry">
     <rect>
-     <x>200</x>
-     <y>824</y>
-     <width>71</width>
+     <x>1140</x>
+     <y>850</y>
+     <width>81</width>
      <height>20</height>
     </rect>
    </property>
@@ -1894,22 +1895,22 @@ background-color: rgb(255, 255, 255);</string>
   <widget class="QLabel" name="label_35">
    <property name="geometry">
     <rect>
-     <x>390</x>
-     <y>818</y>
+     <x>240</x>
+     <y>850</y>
      <width>61</width>
-     <height>31</height>
+     <height>20</height>
     </rect>
    </property>
    <property name="text">
-    <string>合格数：</string>
+    <string>合格数  ：</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_36">
    <property name="geometry">
     <rect>
-     <x>440</x>
-     <y>824</y>
-     <width>41</width>
+     <x>300</x>
+     <y>850</y>
+     <width>81</width>
      <height>20</height>
     </rect>
    </property>
@@ -1927,9 +1928,9 @@ background-color: rgb(255, 255, 255);</string>
   <widget class="QLabel" name="label_37">
    <property name="geometry">
     <rect>
-     <x>540</x>
-     <y>824</y>
-     <width>41</width>
+     <x>510</x>
+     <y>850</y>
+     <width>81</width>
      <height>20</height>
     </rect>
    </property>
@@ -1947,35 +1948,35 @@ background-color: rgb(255, 255, 255);</string>
   <widget class="QLabel" name="label_38">
    <property name="geometry">
     <rect>
-     <x>490</x>
-     <y>825</y>
-     <width>51</width>
+     <x>450</x>
+     <y>850</y>
+     <width>61</width>
      <height>20</height>
     </rect>
    </property>
    <property name="text">
-    <string>不良数：</string>
+    <string>不良数  ：</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_39">
    <property name="geometry">
     <rect>
-     <x>600</x>
-     <y>824</y>
-     <width>51</width>
+     <x>660</x>
+     <y>850</y>
+     <width>61</width>
      <height>20</height>
     </rect>
    </property>
    <property name="text">
-    <string>合格率：</string>
+    <string>合格率  ：</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_40">
    <property name="geometry">
     <rect>
-     <x>650</x>
-     <y>824</y>
-     <width>41</width>
+     <x>720</x>
+     <y>850</y>
+     <width>81</width>
      <height>20</height>
     </rect>
    </property>
@@ -1993,7 +1994,7 @@ background-color: rgb(255, 255, 255);</string>
   <widget class="QLabel" name="label_8">
    <property name="geometry">
     <rect>
-     <x>763</x>
+     <x>753</x>
      <y>44</y>
      <width>671</width>
      <height>41</height>
@@ -2013,9 +2014,9 @@ color: rgb(0, 170, 127);</string>
   <widget class="QPushButton" name="pushButton_10">
    <property name="geometry">
     <rect>
-     <x>793</x>
+     <x>1093</x>
      <y>264</y>
-     <width>641</width>
+     <width>331</width>
      <height>31</height>
     </rect>
    </property>
@@ -2031,7 +2032,7 @@ background-color: rgb(76, 165, 132);</string>
   <widget class="QLabel" name="label_4">
    <property name="geometry">
     <rect>
-     <x>1074</x>
+     <x>1064</x>
      <y>220</y>
      <width>24</width>
      <height>20</height>
@@ -2044,7 +2045,7 @@ background-color: rgb(76, 165, 132);</string>
   <widget class="QLabel" name="label_5">
    <property name="geometry">
     <rect>
-     <x>1304</x>
+     <x>1294</x>
      <y>220</y>
      <width>24</width>
      <height>20</height>
@@ -2057,7 +2058,7 @@ background-color: rgb(76, 165, 132);</string>
   <widget class="QLabel" name="label_3">
    <property name="geometry">
     <rect>
-     <x>763</x>
+     <x>753</x>
      <y>220</y>
      <width>24</width>
      <height>20</height>
@@ -2129,7 +2130,7 @@ color: rgb(255, 255, 255);
   <widget class="QLineEdit" name="lineEdit_2">
    <property name="geometry">
     <rect>
-     <x>794</x>
+     <x>784</x>
      <y>215</y>
      <width>259</width>
      <height>29</height>
@@ -2142,7 +2143,7 @@ color: rgb(255, 255, 255);
   <widget class="QLineEdit" name="lineEdit_4">
    <property name="geometry">
     <rect>
-     <x>1104</x>
+     <x>1094</x>
      <y>215</y>
      <width>179</width>
      <height>29</height>
@@ -2155,7 +2156,7 @@ color: rgb(255, 255, 255);
   <widget class="QLineEdit" name="lineEdit_8">
    <property name="geometry">
     <rect>
-     <x>1340</x>
+     <x>1330</x>
      <y>215</y>
      <width>93</width>
      <height>29</height>
@@ -2191,9 +2192,9 @@ background-color: rgb(208, 208, 208);
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>200</y>
+     <y>240</y>
      <width>711</width>
-     <height>421</height>
+     <height>381</height>
     </rect>
    </property>
    <property name="styleSheet">
@@ -2523,9 +2524,9 @@ background-color: rgb(255, 255, 255);</string>
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>630</y>
+     <y>628</y>
      <width>81</width>
-     <height>21</height>
+     <height>30</height>
     </rect>
    </property>
    <property name="font">
@@ -2539,6 +2540,7 @@ background-color: rgb(255, 255, 255);</string>
    </property>
    <property name="styleSheet">
     <string notr="true">color: rgb(0, 0, 0);
+background-color: rgb(80, 255, 95);
 font: bold 12pt &quot;Arial Black&quot;;
 </string>
    </property>
@@ -2570,7 +2572,7 @@ background-color: rgb(76, 165, 132);</string>
      <x>10</x>
      <y>658</y>
      <width>711</width>
-     <height>151</height>
+     <height>181</height>
     </rect>
    </property>
    <property name="maximumSize">
@@ -2586,16 +2588,16 @@ background-color: rgb(76, 165, 132);</string>
     <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'SimSun'; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'SimSun'; font-size:7.2pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:9pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
   </widget>
   <widget class="QLabel" name="label">
    <property name="geometry">
     <rect>
-     <x>10</x>
+     <x>120</x>
      <y>40</y>
-     <width>711</width>
+     <width>600</width>
      <height>100</height>
     </rect>
    </property>
@@ -2636,13 +2638,130 @@ background-color: rgb(76, 165, 132);</string>
     <string>打开文件夹</string>
    </property>
   </widget>
+  <widget class="QLabel" name="label_7">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>210</y>
+     <width>192</width>
+     <height>30</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: rgb(17, 130, 108);
+color: rgb(33, 43, 54);</string>
+   </property>
+   <property name="text">
+    <string>AO</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_47">
+   <property name="geometry">
+    <rect>
+     <x>1330</x>
+     <y>850</y>
+     <width>100</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">border:1px solid black;
+background-color: rgb(255, 255, 255);</string>
+   </property>
+   <property name="text">
+    <string>06/21 16:15:20</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_55">
+   <property name="geometry">
+    <rect>
+     <x>1270</x>
+     <y>850</y>
+     <width>61</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>当前时间：</string>
+   </property>
+  </widget>
+  <widget class="Line" name="line_3">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>838</y>
+     <width>1421</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Horizontal</enum>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pushButton_12">
+   <property name="geometry">
+    <rect>
+     <x>784</x>
+     <y>264</y>
+     <width>261</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: rgb(126, 126, 126);
+color: rgb(255, 255, 255);
+background-color: rgb(76, 165, 132);</string>
+   </property>
+   <property name="text">
+    <string>写入三码</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_11">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>40</y>
+     <width>100</width>
+     <height>100</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="pixmap">
+    <pixmap>beast5.png</pixmap>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="Line" name="line_4">
+   <property name="geometry">
+    <rect>
+     <x>730</x>
+     <y>30</y>
+     <width>20</width>
+     <height>811</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Vertical</enum>
+   </property>
+  </widget>
+  <zorder>pushButton_9</zorder>
+  <zorder>line_3</zorder>
+  <zorder>label_39</zorder>
   <zorder>label_38</zorder>
+  <zorder>label_29</zorder>
+  <zorder>label_55</zorder>
   <zorder>tabWidget</zorder>
   <zorder>pushButton</zorder>
   <zorder>pushButton_2</zorder>
   <zorder>pushButton_3</zorder>
   <zorder>pushButton_4</zorder>
-  <zorder>label_29</zorder>
   <zorder>label_30</zorder>
   <zorder>label_31</zorder>
   <zorder>label_32</zorder>
@@ -2651,7 +2770,6 @@ background-color: rgb(76, 165, 132);</string>
   <zorder>label_35</zorder>
   <zorder>label_36</zorder>
   <zorder>label_37</zorder>
-  <zorder>label_39</zorder>
   <zorder>label_40</zorder>
   <zorder>label_8</zorder>
   <zorder>pushButton_10</zorder>
@@ -2664,7 +2782,6 @@ background-color: rgb(76, 165, 132);</string>
   <zorder>lineEdit_2</zorder>
   <zorder>lineEdit_4</zorder>
   <zorder>lineEdit_8</zorder>
-  <zorder>pushButton_9</zorder>
   <zorder>tableWidget_2</zorder>
   <zorder>label_2</zorder>
   <zorder>pushButton_7</zorder>
@@ -2675,9 +2792,14 @@ background-color: rgb(76, 165, 132);</string>
   <zorder>textBrowser_5</zorder>
   <zorder>label</zorder>
   <zorder>pushButton_6</zorder>
+  <zorder>label_7</zorder>
+  <zorder>label_47</zorder>
+  <zorder>pushButton_12</zorder>
+  <zorder>label_11</zorder>
+  <zorder>line_4</zorder>
  </widget>
  <resources>
-  <include location="pushbutton.qrc"/>
+  <include location="../../Desktop/EX300_x64_python/pushbutton.qrc"/>
  </resources>
  <connections/>
  <buttongroups>

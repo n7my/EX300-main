@@ -7,6 +7,7 @@ from typing import Type
 import os
 
 current_dir = os.getcwd().replace('\\','/')+"/_internal"
+# current_dir = os.getcwd().replace('\\','/')
 # from DIDOAIAOControl import Ui_Control
 STATUS_OK = 1
 RESERVED = 0  # 保留字段

@@ -186,12 +186,13 @@ class AOThread(QObject):
                     isExcel = False
                     self.pass_signal.emit(False)
 
-        if isExcel:
-            self.result_signal.emit('开始生成校准校验表…………' + self.HORIZONTAL_LINE)
-            self.generateExcel(self.isAOPassTest, 'AO')
-            self.result_signal.emit('生成校准校验表成功' + self.HORIZONTAL_LINE)
-        elif not isExcel:
-            self.result_signal.emit('测试停止，校准校验表生成失败…………' + self.HORIZONTAL_LINE)
+        # if isExcel:
+        #     self.result_signal.emit('开始生成校准校验表…………' + self.HORIZONTAL_LINE)
+        #     self.generateExcel(self.isAOPassTest, 'AO')
+        #     self.result_signal.emit('生成校准校验表成功' + self.HORIZONTAL_LINE)
+        #
+        # elif not isExcel:
+        #     self.result_signal.emit('测试停止，校准校验表生成失败…………' + self.HORIZONTAL_LINE)
 
         self.allFinished_signal.emit()
         self.pass_signal.emit(True)
@@ -731,18 +732,12 @@ class AOThread(QObject):
 
         """3.设置AO量程"""
         for i in range(self.m_Channels):
-            # self.isPause()
-            # if not self.isStop():
-            #     return
             channel = i + 1
             if not self.setAIInputType(channel, type):
                 return False
 
         """4.设置AO量程"""
         for i in range(self.m_Channels):
-            # self.isPause()
-            # if not self.isStop():
-            #     return
             channel = i + 1
             if not self.setAOInputType(channel, type):
                 return False
@@ -752,7 +747,9 @@ class AOThread(QObject):
         if not self.is_running:
             return False
         self.result_signal.emit(f'进入标定模式\n' + self.HORIZONTAL_LINE)
-        self.setAOChInCalibrate()
+        if not self.setAOChInCalibrate():
+            self.result_signal.emit('进入标定模式失败，测试结束。' + self.HORIZONTAL_LINE)
+            return False
 
         """6.向AO模块写输出值，并接收配套AI模块的测量值"""
         channelNum = 1
@@ -953,8 +950,8 @@ class AOThread(QObject):
                     self.pauseOption()
                     if not self.is_running:
                         return False, 0
-                    self.result_signal.emit(f'{j + 1}.AI模块通道{j + 1}接收数据超时。\n\n')
-                    print(f'{j + 1}.AI模块通道{j + 1}接收数据超时。\n\n')
+                    self.result_signal.emit(f'{j + 1}.AI模块通道{j + 1}未在规定时间内接收到正确数据，请检查该通道是否损坏。\n\n')
+                    print(f'{j + 1}.AI模块通道{j + 1}未在规定时间内接收到正确数据，请检查该通道是否损坏。\n\n')
                     valReceive_num -= 1
                     break
                     # return False,0

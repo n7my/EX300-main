@@ -8,13 +8,16 @@ import threading
 from  CAN_option import *
 
 class AIThread(QObject):
+    #result_signal：在运行日志框中显示信息
     result_signal = pyqtSignal(str)
+    #item_signal：修改表格状态信号
     item_signal = pyqtSignal(list)
     pass_signal = pyqtSignal(bool)
     # RunErr_signal = pyqtSignal(int)
     # CANRunErr_signal = pyqtSignal(int)
+    #messageBox_signal：显示对话框信号
     messageBox_signal= pyqtSignal(list)
-    # excel_signal = pyqtSignal(list)
+    #allFinished_signal：所有测试结束信号
     allFinished_signal = pyqtSignal()
     labe_signal = pyqtSignal(list)
     saveExcel_signal = pyqtSignal(list)
@@ -105,6 +108,8 @@ class AIThread(QObject):
     errorLED = True
     runLED = True
 
+    #是否生成检测报告
+    isExcel = True
     def __init__(self,inf_AIlist:list,result_queue,appearance):
         super().__init__()
         self.result_queue = result_queue
@@ -159,7 +164,7 @@ class AIThread(QObject):
         # while True:
         #     self.result_signal.emit(f"第{testLoopNum}次循环")
         #     self.labe_signal.emit(['testing', '正在测试'])
-        isExcel = True
+        self.isExcel = True
         # CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
         # self.pauseOption()
         # if not self.is_running:
@@ -226,7 +231,7 @@ class AIThread(QObject):
         if self.isTest:
             if self.isAITestVol:
                 if not self.testAI('AIVoltage'):
-                    isExcel = False
+                    self.isExcel = False
                     self.pass_signal.emit(False)
                     #return
             # elif not self.isAITestVol:
@@ -243,25 +248,14 @@ class AIThread(QObject):
                     isExcel = False
                     self.pass_signal.emit(False)
                     #return
-            # elif not self.isAITestCur:
-            #     # self.isAIPassTest = True
-            #     self.pauseOption()
-            #     if not self.is_running:
-            #         isExcel = False
-            #         self.pass_signal.emit(False)
-            #         #return
-            #     self.item_signal.emit([8, 0, 0, ''])
-        # elif not self.isTest:
-        #     self.item_signal.emit([7, 0, 0, ''])
-        #     self.item_signal.emit([8, 0, 0, ''])
-        if isExcel:
-            self.result_signal.emit('开始生成校准校验表…………' + self.HORIZONTAL_LINE)
-            self.generateExcel(self.isAIPassTest, 'AI')
-            self.result_signal.emit('生成校准校验表成功' + self.HORIZONTAL_LINE)
-        elif not isExcel:
-            self.result_signal.emit('测试停止，校准校验表生成失败…………' + self.HORIZONTAL_LINE)
-        # time.sleep(1)
-        # print(f'testLoopNum={testLoopNum}')
+
+        # if isExcel:
+        #     self.result_signal.emit('开始生成校准校验表…………' + self.HORIZONTAL_LINE)
+        #     self.generateExcel(self.isAIPassTest, 'AI')
+        #     self.result_signal.emit('生成校准校验表成功' + self.HORIZONTAL_LINE)
+        # elif not isExcel:
+        #     self.result_signal.emit('测试停止，校准校验表生成失败…………' + self.HORIZONTAL_LINE)
+
         self.allFinished_signal.emit()
         self.pass_signal.emit(True)
         # testLoopNum +=1
@@ -818,19 +812,19 @@ class AIThread(QObject):
         return True
 
     def calibrateAI_vol_cur(self,type):
-        # if type == 'AOVoltage':
-        #     pass
         maxRange = 0
         lowValue = 0
         highValue = 0
         if type == 'AIVoltage':
+            #-10V~10V
             highValue = self.voltageTheory[0]
             lowValue = self.voltageTheory[4]
-            maxRange = 209715 + 500 #允许差值比最大量程大一点
+            maxRange = 367422 - 156866 #上限最大值- 下限最小值
         if type == 'AICurrent':
+            #0mA~20mA
             highValue = self.currentTheory[0]
             lowValue = self.currentTheory[4]
-            maxRange = 53078 + 100 #允许差值比最大量程大一点
+            maxRange = 315115 - 262037 #上限最大值- 下限最小值
 
         #self.CAN_init()
 
@@ -838,23 +832,17 @@ class AIThread(QObject):
         self.channelZero()
 
         """2.初始化模式"""
-        self.setAIChOutCalibrate()
-        time.sleep(0.5)
+        self.setAIChOutCalibrate() #退出标定模式
+        time.sleep(0.1)
 
         """3.设置AI量程"""
         for i in range(self.m_Channels):
-            # self.isPause()
-            # if not self.isStop():
-            #     return
             channel = i + 1
             if not self.setAIInputType(channel, type):
                 return False
 
         """4.设置AO量程"""
         for i in range(self.m_Channels):
-            # self.isPause()
-            # if not self.isStop():
-            #     return
             channel = i + 1
             if not self.setAOInputType(channel, type):
                 return False
@@ -864,12 +852,13 @@ class AIThread(QObject):
         if not self.is_running:
             return False
         self.result_signal.emit(f'进入标定模式\n'+self.HORIZONTAL_LINE)
-        self.setAIChInCalibrate()
-
+        if not self.setAIChInCalibrate():
+            self.result_signal.emit('进入标定模式失败，测试结束。' + self.HORIZONTAL_LINE)
+            return False
 
         """6.向AO模块写输出值，并接收配套AI模块的测量值"""
         channelNum = 1
-        if self.oneOrAll == 2:
+        if self.oneOrAll == 2:#2:标定所有通道
             channelNum = self.m_Channels
             self.pauseOption()
             if not self.is_running:
@@ -1029,8 +1018,8 @@ class AIThread(QObject):
                     self.pauseOption()
                     if not self.is_running:
                         return False,0
-                    self.result_signal.emit(f'{j + 1}.AI模块通道{j + 1}接收数据超时。\n\n')
-                    print(f'{j + 1}.AI模块通道{j + 1}接收数据超时。\n\n')
+                    self.result_signal.emit(f'{j + 1}.AI模块通道{j + 1}未在规定时间内接收到正确数据，请检查该通道是否损坏。\n\n')
+                    print(f'{j + 1}.AI模块通道{j + 1}未在规定时间内接收到正确数据，请检查该通道是否损坏。\n\n')
                     valReceive_num -= 1
                     # return False,0
                 # self.isPause()

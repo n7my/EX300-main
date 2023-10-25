@@ -5,7 +5,7 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[('ControlCAN.dll', '.'), ('config.txt', '.'), ('取消全屏按钮.png', '.'), ('取消全屏按钮2.png', '.'), ('全屏按钮.png', '.'), ('全屏按钮2.png', '.')],
+    datas=[('ControlCAN.dll', '.'), ('config.txt', '.'), ('取消全屏按钮.png', '.'), ('取消全屏按钮2.png', '.'), ('全屏按钮.png', '.'), ('全屏按钮2.png', '.'), ('logo.png', '.'), ('pass.png', '.'), ('fail.png', '.'), ('ControlCAN.lib', '.'), ('pushbutton.qrc', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
