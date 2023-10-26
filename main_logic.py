@@ -337,6 +337,8 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.dragging = False
         self.offset = QPoint()
 
+
+        self.lineEdit_PN.setReadOnly(True)
         self.pushButton_8.clicked.connect(self.killUi)
         self.pushButton_11.clicked.connect(self.showMinimized)
         self.pushButton_11.clicked.connect(self.saveConfig)
@@ -436,16 +438,29 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.tableWidget_AI.setVisible(False)
             self.tableWidget_AO.setVisible(False)
             self.label_7.setText("DI/DO")
+            if self.comboBox.currentIndex()==1:
+                self.lineEdit_PN.setText('P0000010391877')
+            elif self.comboBox.currentIndex()==4:
+                self.lineEdit_PN.setText('P0000010392086')
+            elif self.comboBox.currentIndex()==5:
+                self.lineEdit_PN.setText('P0000010392121')
+            self.lineEdit.setText(self.lineEdit_PN.text())
         elif self.tabIndex == 1:
             self.tableWidget_DIDO.setVisible(False)
             self.tableWidget_AI.setVisible(True)
             self.tableWidget_AO.setVisible(False)
             self.label_7.setText("AI")
+            if self.comboBox_3.currentIndex()==0:
+                self.lineEdit_PN.setText('P0000010392361')
+            self.lineEdit_22.setText(self.lineEdit_PN.text())
         elif self.tabIndex == 2:
             self.tableWidget_DIDO.setVisible(False)
             self.tableWidget_AI.setVisible(False)
             self.tableWidget_AO.setVisible(True)
             self.label_7.setText("AO")
+            if self.comboBox_5.currentIndex()==0:
+                self.lineEdit_PN.setText('P0000010392365')
+            self.lineEdit_47.setText(self.lineEdit_PN.text())
         self.saveDir = self.label_41.text()
         self.tabWidget.currentChanged.connect(self.tabChange)
 
@@ -596,16 +611,19 @@ class Ui_Control(QMainWindow,Ui_Form):
         # self.lineEdit_SN.setInputMethodHints(Qt.ImhLatinOnly)
         # self.lineEdit_REV.setInputMethodHints(Qt.ImhLatinOnly)
 
-        self.lineEdit_PN.setPlaceholderText('请输入PN码')
+        # self.lineEdit_PN.setPlaceholderText('请输入PN码')
         self.lineEdit_SN.setPlaceholderText('请输入SN码')
-        self.lineEdit_SN.setReadOnly(True)
+        # self.lineEdit_SN.setReadOnly(True)
         self.lineEdit_REV.setPlaceholderText('请输入REV码')
         self.lineEdit_REV.setReadOnly(True)
-        self.lineEdit_PN.setFocus()
-        self.lineEdit_PN.editingFinished.connect(self.inputPN)
+        # self.lineEdit_PN.setFocus()
+        # self.lineEdit_PN.editingFinished.connect(self.inputPN)
+        self.lineEdit_SN.setFocus()
         self.lineEdit_SN.editingFinished.connect(self.inputSN)
         self.lineEdit_REV.editingFinished.connect(self.inputREV)
         self.pushButton_10.clicked.connect(self.reInputPNSNREV)
+
+        self.lineEdit_PN.textChanged.connect(self.changeTabWidgetPN)
 
         self.radioButton_16.toggled.connect(self.setFocusLineEdit)
         self.radioButton_17.toggled.connect(self.setFocusLineEdit)
@@ -646,6 +664,9 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.comboBox.currentIndexChanged.connect(self.saveConfig)
         self.comboBox_3.currentIndexChanged.connect(self.saveConfig)
         self.comboBox_5.currentIndexChanged.connect(self.saveConfig)
+        self.comboBox.currentIndexChanged.connect(self.changePN)
+        self.comboBox_3.currentIndexChanged.connect(self.changePN)
+        self.comboBox_5.currentIndexChanged.connect(self.changePN)
 
         self.lineEdit_6.textChanged.connect(self.saveConfig)
         self.lineEdit_7.textChanged.connect(self.saveConfig)
@@ -805,6 +826,30 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.configFile = open(f'{self.current_dir}/config.txt', 'w',encoding='utf-8')
         self.configFile.write(config_str)
         self.configFile.close()
+
+    def changePN(self):
+        if self.tabIndex == 0:
+            if self.comboBox.currentIndex() == 1:
+                self.lineEdit_PN.setText('P0000010391877')
+            elif self.comboBox.currentIndex() == 4:
+                self.lineEdit_PN.setText('P0000010392086')
+            elif self.comboBox.currentIndex() == 5:
+                self.lineEdit_PN.setText('P0000010392121')
+        elif self.tabIndex == 1:
+            if self.comboBox_3.currentIndex() == 0:
+                self.lineEdit_PN.setText('P0000010392361')
+        elif self.tabIndex == 2:
+            if self.comboBox_5.currentIndex() == 0:
+                self.lineEdit_PN.setText('P0000010392365')
+
+    def changeTabWidgetPN(self):
+        if self.tabIndex == 0:
+            self.lineEdit.setText(self.lineEdit_PN.text())
+        elif self.tabIndex == 1:
+            self.lineEdit_22.setText(self.lineEdit_PN.text())
+        elif self.tabIndex == 2:
+            self.lineEdit_47.setText(self.lineEdit_PN.text())
+
     def update_time(self):
         self.label_47.setText(datetime.datetime.now().strftime('%m/%d %H:%M:%S'))
         QTimer.singleShot(1000, self.update_time)
@@ -854,19 +899,22 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.pushButton_9.setVisible(True)
 
     def setFocusLineEdit(self):
-        if len(self.lineEdit_PN.text()) == 0 and len(self.lineEdit_SN.text()) == 0 and len(self.lineEdit_REV.text()) == 0:
-            self.lineEdit_PN.setReadOnly(False)
-            self.lineEdit_PN.setFocus()
+        # if len(self.lineEdit_PN.text()) == 0 and len(self.lineEdit_SN.text()) == 0 and len(self.lineEdit_REV.text()) == 0:
+        #     self.lineEdit_PN.setReadOnly(False)
+        #     self.lineEdit_PN.setFocus()
+        if len(self.lineEdit_SN.text()) == 0 and len(self.lineEdit_REV.text()) == 0:
+            self.lineEdit_SN.setReadOnly(False)
+            self.lineEdit_SN.setFocus()
 
     def reInputPNSNREV(self):
         # self.textBrowser_5.clear()
-        self.lineEdit_PN.clear()
+        # self.lineEdit_PN.clear()
         self.lineEdit_SN.clear()
         self.lineEdit_REV.clear()
-        self.lineEdit_PN.setReadOnly(False)
-        self.lineEdit_SN.setReadOnly(True)
+        # self.lineEdit_PN.setReadOnly(False)
+        self.lineEdit_SN.setReadOnly(False)
         self.lineEdit_REV.setReadOnly(True)
-        self.lineEdit_PN.setFocus()
+        self.lineEdit_SN.setFocus()
 
         self.lineEdit.clear()
         self.lineEdit_3.clear()
@@ -974,16 +1022,26 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.tableWidget_AI.setVisible(False)
             self.tableWidget_AO.setVisible(False)
             self.label_7.setText("DIDO")
+            if self.comboBox.currentIndex() == 1:
+                self.lineEdit_PN.setText('P0000010391877')
+            elif self.comboBox.currentIndex() == 4:
+                self.lineEdit_PN.setText('P0000010392086')
+            elif self.comboBox.currentIndex() == 5:
+                self.lineEdit_PN.setText('P0000010392121')
         elif self.tabIndex == 1 and not self.isAllScreen:
             self.tableWidget_DIDO.setVisible(False)
             self.tableWidget_AI.setVisible(True)
             self.tableWidget_AO.setVisible(False)
             self.label_7.setText("AI")
+            if self.comboBox_3.currentIndex() == 0:
+                self.lineEdit_PN.setText('P0000010392361')
         elif self.tabIndex == 2 and not self.isAllScreen:
             self.tableWidget_DIDO.setVisible(False)
             self.tableWidget_AI.setVisible(False)
             self.tableWidget_AO.setVisible(True)
             self.label_7.setText("AO")
+            if self.comboBox_5.currentIndex() == 0:
+                self.lineEdit_PN.setText('P0000010392365')
         # self.reInputPNSNREV()
 
     def start_button(self):
@@ -1481,10 +1539,10 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.showInf(f'本轮测试总时间：{total_time} 秒' + self.HORIZONTAL_LINE)
         # 关闭CAN分析仪
         # CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
-        self.lineEdit_PN.clear()
+        # self.lineEdit_PN.clear()
         self.lineEdit_SN.clear()
         self.lineEdit_REV.clear()
-        self.lineEdit_PN.setReadOnly(False)
+        # self.lineEdit_PN.setReadOnly(False)
         self.lineEdit_SN.setReadOnly(False)
         self.lineEdit_REV.setReadOnly(False)
         if self.tabWidget.currentIndex() == 0:
@@ -1499,7 +1557,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.lineEdit_45.clear()
             self.lineEdit_46.clear()
             self.lineEdit_47.clear()
-        self.lineEdit_PN.setFocus()
+        self.lineEdit_SN.setFocus()
         self.endOfTest()
 
     def showMessageBox(self,list):
