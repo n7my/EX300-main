@@ -27,17 +27,72 @@ class AIThread(QObject):
     #                -/+10V       0-10V       0-5V        1-5V       4-20mA      0-20mA      -/+5V
     AORangeArray = [0x0b, 0x00, 0xe8, 0x03, 0xe9, 0x03, 0xea, 0x03, 0x15, 0x00, 0xeb, 0x03, 0xec, 0x03]
     AIRangeArray = [0x29, 0x00, 0x2a, 0x00, 0x10, 0x27, 0x11, 0x27, 0x33, 0x00, 0x34, 0x00, 0x12, 0x27]
+    # AO量程
+    #                    -/+10V        -/+5V        0-5V       0-10V       1-5V
+    vol_AORangeArray = [0x0b, 0x00, 0xec, 0x03, 0xe9, 0x03, 0xe8, 0x03, 0xea, 0x03]
+    #                     4-20mA      0-20mA
+    cur_AORangeArray = [0x15, 0x00, 0xeb, 0x03]
+    # AI量程
+    #                    -/+10V        -/+5V        0-5V       0-10V       1-5V
+    vol_AIRangeArray = [0x29, 0x00, 0x12, 0x27, 0x10, 0x27, 0x2a, 0x00, 0x11, 0x27]
+    #                     4-20mA      0-20mA
+    cur_AIRangeArray = [0x33, 0x00, 0x34, 0x00]
 
-    currentTheory = [0x6c00, (int)(0x6c00 * 0.75), (int)(0x6c00 * 0.5), (int)(0x6c00 * 0.25), 0]  # 0x6c00 =>27648
-    arrayCur = ["20mA测试", "15mA测试", "10mA测试", "5mA测试", "0mA测试"]
-    highCurrent = 59849
-    lowCurrent = 32768
+    vol_name_array = ['电压+/-10V', '电压+/-5V', '电压0-5V', '电压0-10V', '电压1-5V']
+    cur_name_array = ['电流4-20mA', '电流0-20mA']
 
-    voltageTheory = [0x6c00, 0x3600, 0x00, 0xca00, 0x9400]  # 0x6c00 =>27648
-    arrayVol = ["10V测试", "5V测试", "0V测试", "-5V测试", "-10V测试"]
+    # 0mA-20mA的理论值
+    currentTheory_0020 = [0x6c00, (int)(0x6c00 * 0.75), (int)(0x6c00 * 0.5), (int)(0x6c00 * 0.25), 0]  # 0x6c00 =>27648
+    arrayCur_0020 = ["20mA测试", "15mA测试", "10mA测试", "5mA测试", "0mA测试"]
+    # 0mA-20mA的rawData
+    highCurrent_0020 = 59849
+    highCurrent_0020 = 32768
 
-    highVoltage = 59849
-    lowVoltage = 5687
+    # 4mA-20mA的理论值
+    currentTheory_0420 = [0x6c00, (int)(0x6c00 * 0.75), (int)(0x6c00 * 0.5), (int)(0x6c00 * 0.25), 0]  # 0x6c00 =>27648
+    arrayCur_0420 = ["20mA测试", "16mA测试", "12mA测试", "8mA测试", "4mA测试"]
+    # 4mA-20mA的rawData
+    highCurrent_0420 = 54162
+    lowCurrent_0420 = 10832
+
+    # -10v~10v的理论值
+    voltageTheory_1010 = [0x6c00, 0x3600, 0x00, -13824, -27648]  # 0x6c00 =>27648
+    arrayVol_1010 = ["10V测试", "5V测试", "0V测试", "-5V测试", "-10V测试"]
+    # -10v~10v的rawData
+    highVoltage_1010 = 59849
+    lowVoltage_1010 = 5687
+
+    # -5v~5v的理论值
+    voltageTheory_0505 = [0x6c00, 0x3600, 0x00, -13824, -27648]  # 0x6c00 =>27648
+    arrayVol_0505 = ["5V测试", "2.5V测试", "0V测试", "-2.5V测试", "-5V测试"]
+    # -5v~5v的rawData
+    highVoltage_0505 = 59849
+    lowVoltage_0505 = 5687
+
+    # 0v-5v的理论值
+    voltageTheory_0005 = [0x6c00, (int)(0x6c00 * 0.75), (int)(0x6c00 * 0.5), (int)(0x6c00 * 0.25), 0]  # 0x6c00 =>27648
+    arrayVol_0005 = ["5V测试", "3.75V测试", "2.50V测试", "1.25V测试", "0V测试"]
+    # 0v-5v的rawData
+    highVoltage_0005 = 59849
+    lowVoltage_0005 = 32768
+
+    # 0v-10v的理论值
+    voltageTheory_0010 = [0x6c00, (int)(0x6c00 * 0.75), (int)(0x6c00 * 0.5), (int)(0x6c00 * 0.25), 0]  # 0x6c00 =>27648
+    arrayVol_0010 = ["10V测试", "7.5V测试", "5V测试", "2.5V测试", "0V测试"]
+    # 0v-10v的rawData
+    highVoltage_0010 = 59849
+    lowVoltage_0010 = 32768
+
+    # 1v-5v的理论值
+    voltageTheory_0105 = [0x6c00, (int)(0x6c00 * 0.75), (int)(0x6c00 * 0.5), (int)(0x6c00 * 0.25), 0]  # 0x6c00 =>27648
+    arrayVol_0105 = ["5V测试", "4V测试", "3V测试", "2V测试", "1V测试"]
+    # 1v-5v的rawData
+    highVoltage_0105 = 54162
+    lowVoltage_0105 = 10832
+
+    # voltageTheory_1010 = [0x6c00, 0x3600, 0x00, 0xca00, -27648]  # 0x6c00 =>27648
+    voltageTheory_1010 = [0x6c00, 0x3600, 0x00, -13824, -27648]  # 0x6c00 =>27648
+    arrayVol_1010 = ["10V测试", "5V测试", "0V测试", "-5V测试", "-10V测试"]
 
     # CAN帧结构体
     # 发送帧ID
@@ -380,8 +435,8 @@ class AIThread(QObject):
             self.item_signal.emit([7, 1, 0, ''])
             if not self.channelZero():
                 return False
-            m_valueTheory = self.voltageTheory
-            m_arrayVal = self.arrayVol
+            m_valueTheory = self.voltageTheory_1010
+            m_arrayVal = self.arrayVol_1010
             m_range = 0x6c00 + 0x6c00
             # #修改AI量程
             for i in range(self.m_Channels):
@@ -403,8 +458,8 @@ class AIThread(QObject):
             self.result_signal.emit('AI模块电流测试开始......' + self.HORIZONTAL_LINE)
             print('AI模块电流测试开始......' + self.HORIZONTAL_LINE)
             self.item_signal.emit([8, 1, 0, ''])
-            m_valueTheory = self.currentTheory
-            m_arrayVal = self.arrayCur
+            m_valueTheory = self.currentTheory_0420
+            m_arrayVal = self.arrayCur_0420
             m_range = 0x6c00 - 0
             # #修改AI量程
             for i in range(self.m_Channels):
@@ -817,13 +872,13 @@ class AIThread(QObject):
         highValue = 0
         if type == 'AIVoltage':
             #-10V~10V
-            highValue = self.voltageTheory[0]
-            lowValue = self.voltageTheory[4]
+            highValue = self.voltageTheory_1010[0]
+            lowValue = self.voltageTheory_1010[4]
             maxRange = 367422 - 156866 #上限最大值- 下限最小值
         if type == 'AICurrent':
             #0mA~20mA
-            highValue = self.currentTheory[0]
-            lowValue = self.currentTheory[4]
+            highValue = self.currentTheory_0420[0]
+            lowValue = self.currentTheory_0420[4]
             maxRange = 315115 - 262037 #上限最大值- 下限最小值
 
         #self.CAN_init()
@@ -997,13 +1052,13 @@ class AIThread(QObject):
                 standardValue = 367002
             elif value == 37888:
                 standardValue = 157286
-            # headInf = self.arrayVol
+            # headInf = self.arrayVol_1010
         elif type == 'AICurrent':
             if value == 27648:
                 standardValue = 314777
             elif value == 0:
                 standardValue = 262144
-            # headInf = self.arrayCur
+            # headInf = self.arrayCur_0420
 
         inf = '接收到的AI数据：'
         inf_average = '接收到AI数据的平均值：'
@@ -2649,7 +2704,7 @@ class AIThread(QObject):
                     # 通道号
                     sheet.write_merge(self.AI_row + 2 + j, self.AI_row + 2 + j, 2, 3, f'CH{j + 1}', pass_style)
                     # 理论值
-                    sheet.write(self.AI_row + 2 + j, 3 + 3 * i + 1, f'{self.voltageTheory[i]}', pass_style)
+                    sheet.write(self.AI_row + 2 + j, 3 + 3 * i + 1, f'{self.voltageTheory_1010[i]}', pass_style)
                     # 测试值
                     sheet.write(self.AI_row + 2 + j, 4 + 3 * i + 1, f'{self.volReceValue[i][j]}', pass_style)
                     # 精度
@@ -2668,7 +2723,7 @@ class AIThread(QObject):
                     # 通道号
                     sheet.write_merge(self.AI_row + 2 +self.AI_Channels + j,self.AI_row + 6 + j, 2, 3, f'CH{j + 1}', pass_style)
                     # 理论值
-                    sheet.write(self.AI_row + 2 +self.AI_Channels + j, 3 + 3 * i + 1, f'{self.currentTheory[i]}', pass_style)
+                    sheet.write(self.AI_row + 2 +self.AI_Channels + j, 3 + 3 * i + 1, f'{self.currentTheory_0420[i]}', pass_style)
                     # 测试值
                     sheet.write(self.AI_row + 2 +self.AI_Channels + j, 4 + 3 * i + 1, f'{self.curReceValue[i][j]}', pass_style)
                     # 精度
@@ -2686,7 +2741,7 @@ class AIThread(QObject):
                     # 通道号
                     sheet.write_merge(self.AI_row + 2 + j, self.AI_row + 2 + j, 2, 3, f'CH{j + 1}', pass_style)
                     # 理论值
-                    sheet.write(self.AI_row + 2 + j, 3 + 3 * i + 1, f'{self.currentTheory[i]}', pass_style)
+                    sheet.write(self.AI_row + 2 + j, 3 + 3 * i + 1, f'{self.currentTheory_0420[i]}', pass_style)
                     # 测试值
                     # print(j)
                     sheet.write(self.AI_row + 2 + j, 4 + 3 * i + 1, f'{self.curReceValue[i][j]}', pass_style)
