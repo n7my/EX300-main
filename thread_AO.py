@@ -90,8 +90,8 @@ class AOThread(QObject):
     lowVoltage_0105 = 10832
 
     # voltageTheory_1010 = [0x6c00, 0x3600, 0x00, 0xca00, -27648]  # 0x6c00 =>27648
-    voltageTheory_1010 = [0x6c00, 0x3600, 0x00, -13824, -27648]  # 0x6c00 =>27648
-    arrayVol_1010 = ["10V测试", "5V测试", "0V测试", "-5V测试", "-10V测试"]
+    # voltageTheory_1010 = [0x6c00, 0x3600, 0x00, -13824, -27648]  # 0x6c00 =>27648
+    # arrayVol_1010 = ["10V测试", "5V测试", "0V测试", "-5V测试", "-10V测试"]
 
 
     # CAN帧结构体

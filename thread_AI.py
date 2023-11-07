@@ -6,6 +6,7 @@ from PyQt5.QtCore import QThread, pyqtSignal
 from main_logic import *
 import threading
 from  CAN_option import *
+import struct
 
 class AIThread(QObject):
     #result_signal：在运行日志框中显示信息
@@ -137,11 +138,16 @@ class AIThread(QObject):
     RESERVED_3 = ubyte_array_3(0, 0, 0)
     m_can_obj = CAN_option.VCI_CAN_OBJ(RECEIVE_ID, TIME_STAMP, TIME_FLAG, RECEIVE_SEND_TYPE,
                                        REMOTE_FLAG, EXTERN_FLAG, DATA_LEN, DATA, RESERVED_3)
-
-    volReceValue = [0, 0, 0, 0, 0]
-    curReceValue = [0, 0, 0, 0, 0]
-    volPrecision = [0, 0, 0, 0, 0]
-    curPrecision = [0, 0, 0, 0, 0]
+    # 5个量程 -> 每个量程5个点 -> 每个点4个通道
+    volReceValue = [[[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []],
+                    [[], [], [], [], []]]
+    volPrecision = [[[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []],
+                    [[], [], [], [], []]]
+    # 2个量程 -> 每个量程5个点 -> 每个点4个通道
+    curReceValue = [[[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []],
+                    [[], [], [], [], []]]
+    curPrecision = [[[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []],
+                    [[], [], [], [], []]]
 
     # AI测试是否通过
     isAIPassTest = True
@@ -324,8 +330,9 @@ class AIThread(QObject):
         CAN_option.start(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_option.CAN_INDEX)
 
     def testAI(self,testType):
-        """.1退出标定模式"""
+        #1.退出标定模式
         self.setAIChOutCalibrate()
+        #2.判断测试类型
         if testType == 'AIVoltage':
             self.result_signal.emit('切换到电压模式' + self.HORIZONTAL_LINE)
             #CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
@@ -345,7 +352,7 @@ class AIThread(QObject):
                 self.result_signal.emit('继电器2切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
                 print('继电器2切换错误，请停止检查设备！')
                 return False
-
+            #3-1.测试程序
             if not self.AITestLoop(testType):
                 return False
             self.m_transmitData = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
@@ -420,13 +427,20 @@ class AIThread(QObject):
 
         return True
 
-    def AITestLoop(self,type):
+    def AITestLoop(self,type:str):
 
         testStart_time = time.time()
         m_valueTheory = []
         m_arrayVal = []
+        vol_cur_testNum = 0 #电压/电流的量程数
         # isPass = True
         if type == 'AIVoltage':
+            vol_cur_testNum = 5 #电压有5种量程
+            volValue_array=[self.voltageTheory_1010,self.voltageTheory_0505,self.voltageTheory_0005,
+                            self.voltageTheory_0010,self.voltageTheory_0105]
+            volName_array=[self.arrayVol_1010,self.arrayVol_0505,self.arrayVol_0005,
+                            self.arrayVol_0010,self.arrayVol_0105]
+            volRange_array=[27648*2,27648*2,27648,27648,27648]
             self.pauseOption()
             if not self.is_running:
                 return False
@@ -435,23 +449,29 @@ class AIThread(QObject):
             self.item_signal.emit([7, 1, 0, ''])
             if not self.channelZero():
                 return False
-            m_valueTheory = self.voltageTheory_1010
-            m_arrayVal = self.arrayVol_1010
-            m_range = 0x6c00 + 0x6c00
-            # #修改AI量程
-            for i in range(self.m_Channels):
-                if not self.setAIInputType(i + 1, type):
-                    return False
-                # self.isPause()
-                # if not self.isStop():
-                #     return
-            # 修改AO量程
-            for i in range(self.m_Channels):
-                if not self.setAOInputType(i + 1, type):
-                    return False
+
+            for typeNum in range(vol_cur_testNum): #对每个量程进行测试
+                m_valueTheory = volValue_array[typeNum]
+                m_arrayVal = volName_array[typeNum]
+                m_range = volRange_array[typeNum]
+                # #修改AI量程
+                for i in range(self.m_Channels):
+                    if not self.setAIInputType(i + 1, type, typeNum):
+                        return False
+                    # self.isPause()
+                    # if not self.isStop():
+                    #     return
+                # 修改AO量程
+                for i in range(self.m_Channels):
+                    if not self.setAOInputType(i + 1, type, typeNum):
+                        return False
+
+                self.vol_cur_test(type,m_valueTheory, m_arrayVal, m_range,typeNum)
+
 
 
         elif type == 'AICurrent':
+            vol_cur_testNum = 2 #电流有2种量程
             self.pauseOption()
             if not self.is_running:
                 return False
@@ -476,6 +496,206 @@ class AIThread(QObject):
                 if not self.setAOInputType(i + 1, type):
                     return False
 
+        # for i in range(5):
+        #     self.pauseOption()
+        #     if not self.is_running:
+        #         return False
+        #     self.result_signal.emit(f'{m_arrayVal[i]}\n\n')
+        #     print(f'{m_arrayVal[i]}\n\n')
+        #     # for n in range(10):
+        #     if not self.normal_writeValuetoAO(m_valueTheory[i]):
+        #         return False
+        #     self.pauseOption()
+        #     if not self.is_running:
+        #         return False
+        #     self.result_signal.emit(f'发送的数据：{m_valueTheory[i]}')
+        #     print(f'{m_valueTheory[i]}\n\n')
+        #
+        #     self.result_signal.emit(f'等待{int(self.waiting_time/1000)}秒,等待信号稳定\n')
+        #     tt=time.time()
+        #     while True:
+        #         if time.time()-tt >= int(self.waiting_time/1000):
+        #             break
+        #         waitFlag, rece_wait = self.receiveAIData()
+        #         if waitFlag == 'stopReceive':
+        #             return False
+        #
+        #     time1 = time.time()
+        #     reReceiveNum = 0
+        #
+        #     while True:
+        #         if (time.time() - time1)*1000 > self.waiting_time:
+        #             self.messageBox_signal.emit(['警告', '数据接收超时！'])
+        #             break
+        #
+        #         bool_receiveAI,usReceValue = self.receiveAIData()
+        #         if not bool_receiveAI:
+        #             self.pauseOption()
+        #             if not self.is_running:
+        #                 return False
+        #             self.messageBox_signal.emit(['警告', '数据接收出错，请检查设备'])
+        #             return False
+        #         elif bool_receiveAI == 'stopReceive':
+        #             return False
+        #         else:
+        #             self.pauseOption()
+        #             if not self.is_running:
+        #                 return False
+        #             self.result_signal.emit('数据接收成功!\n\n')
+        #             print(f'time:{time.time()}\nusReceValue={usReceValue}\nm_valueTheory[i]={m_valueTheory[i]}\n\n')
+        #             break
+        #
+        #
+        #     # while True:
+        #     #     isOK = False
+        #     #     if (time.time() - time1)*1000 > self.waiting_time:
+        #     #         self.messageBox_signal.emit(['警告', '数据接收超时！'])
+        #     #         break
+        #     #     #CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
+        #     #     #self.CAN_init()
+        #     #     bool_receiveAI,usReceValue = self.receiveAIData()
+        #     #     if not bool_receiveAI:
+        #     #         self.pauseOption()
+        #     #         if not self.is_running:
+        #     #             return False
+        #     #         self.messageBox_signal.emit(['警告', '数据接收出错，请检查设备'])
+        #     #         return False
+        #     #     print(f'usReceValue={usReceValue}\nm_valueTheory[i]={m_valueTheory[i]}')
+        #     #     for k in range(self.m_Channels):
+        #     #         if int(m_valueTheory[i]) != 0:
+        #     #             if abs(usReceValue[k] - m_valueTheory[i]) < 500:
+        #     #                 isOK = True
+        #     #             else:
+        #     #                 if reReceiveNum == 0:
+        #     #                     self.result_signal.emit('接收的数据不在误差范围内，重新开始接收……\n\n')
+        #     #                     reReceiveNum += 1
+        #     #                     # isOK = False
+        #     #         else:
+        #     #             if abs(usReceValue[k] - 65535) < 500 or abs(usReceValue[k] - m_valueTheory[i]) < 500:
+        #     #                 isOK = True
+        #     #             else:
+        #     #                 if reReceiveNum == 0:
+        #     #                     self.result_signal.emit('接收的数据不在误差范围内，重新开始接收……\n\n')
+        #     #     if isOK == True:
+        #     #         break
+        #
+        #     chPrecision = [0 for x in range(self.m_Channels)]
+        #     for j in range(self.m_Channels):
+        #         # self.isPause()
+        #         # if not self.isStop():
+        #         #     return
+        #         self.pauseOption()
+        #         if not self.is_running:
+        #             return False
+        #         if (i == 4 and abs(usReceValue[j] - 65535) < 100) or (i == 2 and abs(usReceValue[j] - 65535) < 100):
+        #             fPrecision = round(self.GetPrecision(usReceValue[j],65535, m_range), 2)
+        #             usReceValue[j] = (usReceValue[j] - 65535) -1
+        #         else:
+        #             fPrecision = round(self.GetPrecision(usReceValue[j], m_valueTheory[i], m_range), 2)
+        #         self.result_signal.emit(f'\n接收到AO通道 {j + 1} 数据:{usReceValue[j]}\n\n')
+        #         print(f'\n接收到AO通道 {j + 1} 数据:{usReceValue[j]}\n\n')
+        #         chPrecision[j] = fPrecision
+        #         self.pauseOption()
+        #         if not self.is_running:
+        #             return False
+        #         self.result_signal.emit(f'----------精度(‰)：{fPrecision}  ')
+        #         print(f'----------精度(‰)：{fPrecision}')
+        #         if abs(fPrecision) < 1:
+        #             self.pauseOption()
+        #             if not self.is_running:
+        #                 return False
+        #             self.result_signal.emit('\t满足精度\n\n')
+        #             print('满足精度\n\n')
+        #             if type == 'AIVoltage':
+        #                 self.isAIVolPass &= True
+        #                 self.pauseOption()
+        #                 if not self.is_running:
+        #                     return False
+        #                 self.result_signal.emit(f'满足精度：{self.isAIVolPass}')
+        #             else:
+        #                 self.isAICurPass &= True
+        #                 self.pauseOption()
+        #                 if not self.is_running:
+        #                     return False
+        #                 self.result_signal.emit(f'满足精度：{self.isAICurPass}')
+        #         else:
+        #             print('\t不满足精度\n\n')
+        #             self.pauseOption()
+        #             if not self.is_running:
+        #                 return False
+        #             self.result_signal.emit('不满足精度\n\n')
+        #             if type == 'AIVoltage':
+        #                 self.isAIVolPass &= False
+        #                 self.pauseOption()
+        #                 if not self.is_running:
+        #                     return False
+        #                 self.result_signal.emit(f'不满足精度：{self.isAIVolPass}')
+        #             else:
+        #                 self.isAICurPass &= False
+        #                 self.pauseOption()
+        #                 if not self.is_running:
+        #                     return False
+        #                 self.result_signal.emit(f'不满足精度：{self.isAICurPass}')
+        #         if j == self.m_Channels - 1:
+        #             self.pauseOption()
+        #             if not self.is_running:
+        #                 return False
+        #             self.result_signal.emit(self.HORIZONTAL_LINE)
+        #         time.sleep(0.1)
+        #         if type == 'AIVoltage':
+        #             self.volReceValue[i] = usReceValue
+        #             self.volPrecision[i] = chPrecision
+        #         elif type == 'AICurrent':
+        #             self.curReceValue[i] = usReceValue
+        #             self.curPrecision[i] = chPrecision
+            # print(f'self.curPrecision[{i}]:{self.curPrecision[i]}')
+        # 数据清零
+        if not self.normal_writeValuetoAO(0):
+            return False
+        self.pauseOption()
+        if not self.is_running:
+            return False
+        self.result_signal.emit('测试结束' + self.HORIZONTAL_LINE)
+
+        testEnd_time = time.time()
+        testTest_time = round(testEnd_time - testStart_time,2)
+        if self.isAIVolPass and type == 'AIVoltage':
+            self.pauseOption()
+            if not self.is_running:
+                return False
+            self.result_signal.emit(f'电压通过：{self.isAIVolPass}')
+            self.item_signal.emit([7, 2, 1, f'{testTest_time}'])
+        elif not self.isAIVolPass and type == 'AIVoltage':
+            self.pauseOption()
+            if not self.is_running:
+                return False
+            self.result_signal.emit(f'电压不通过：{self.isAIVolPass}')
+            self.item_signal.emit([7, 2, 2, f'{testTest_time}'])
+        if self.isAICurPass and type == 'AICurrent':
+            self.pauseOption()
+            if not self.is_running:
+                return False
+            self.result_signal.emit(f'电流通过：{self.isAICurPass}')
+            self.item_signal.emit([8, 2, 1, f'{testTest_time}'])
+        elif not self.isAICurPass and type == 'AICurrent':
+            self.pauseOption()
+            if not self.is_running:
+                return False
+            self.result_signal.emit(f'电流不通过：{self.isAICurPass}')
+            self.item_signal.emit([8, 2, 2, f'{testTest_time}'])
+        self.isAIPassTest = self.isAIVolPass & self.isAICurPass
+        # return self.isAIPassTest
+        return True
+
+
+    def vol_cur_test(self,type:str,m_valueTheory,m_arrayVal,m_range,typeNum:int):
+        """
+        单个量程测试
+        :param m_valueTheory: list
+        :param m_arrayVal: list
+        :param m_range: list
+        :return:
+        """
         for i in range(5):
             self.pauseOption()
             if not self.is_running:
@@ -524,42 +744,9 @@ class AIThread(QObject):
                     self.result_signal.emit('数据接收成功!\n\n')
                     print(f'time:{time.time()}\nusReceValue={usReceValue}\nm_valueTheory[i]={m_valueTheory[i]}\n\n')
                     break
-
-
-            # while True:
-            #     isOK = False
-            #     if (time.time() - time1)*1000 > self.waiting_time:
-            #         self.messageBox_signal.emit(['警告', '数据接收超时！'])
-            #         break
-            #     #CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
-            #     #self.CAN_init()
-            #     bool_receiveAI,usReceValue = self.receiveAIData()
-            #     if not bool_receiveAI:
-            #         self.pauseOption()
-            #         if not self.is_running:
-            #             return False
-            #         self.messageBox_signal.emit(['警告', '数据接收出错，请检查设备'])
-            #         return False
-            #     print(f'usReceValue={usReceValue}\nm_valueTheory[i]={m_valueTheory[i]}')
-            #     for k in range(self.m_Channels):
-            #         if int(m_valueTheory[i]) != 0:
-            #             if abs(usReceValue[k] - m_valueTheory[i]) < 500:
-            #                 isOK = True
-            #             else:
-            #                 if reReceiveNum == 0:
-            #                     self.result_signal.emit('接收的数据不在误差范围内，重新开始接收……\n\n')
-            #                     reReceiveNum += 1
-            #                     # isOK = False
-            #         else:
-            #             if abs(usReceValue[k] - 65535) < 500 or abs(usReceValue[k] - m_valueTheory[i]) < 500:
-            #                 isOK = True
-            #             else:
-            #                 if reReceiveNum == 0:
-            #                     self.result_signal.emit('接收的数据不在误差范围内，重新开始接收……\n\n')
-            #     if isOK == True:
-            #         break
-
+            # 各通道的精度数组
             chPrecision = [0 for x in range(self.m_Channels)]
+            #计算4个通道的精度
             for j in range(self.m_Channels):
                 # self.isPause()
                 # if not self.isStop():
@@ -567,8 +754,10 @@ class AIThread(QObject):
                 self.pauseOption()
                 if not self.is_running:
                     return False
+                #取量程中的5个点进行精度计算，正向量程的第5个点和双向量程的第3个点为0，若有一点误差收到值有可能会为在65535附近
                 if (i == 4 and abs(usReceValue[j] - 65535) < 100) or (i == 2 and abs(usReceValue[j] - 65535) < 100):
                     fPrecision = round(self.GetPrecision(usReceValue[j],65535, m_range), 2)
+                    #将接收到的值转换到0附近进行显示
                     usReceValue[j] = (usReceValue[j] - 65535) -1
                 else:
                     fPrecision = round(self.GetPrecision(usReceValue[j], m_valueTheory[i], m_range), 2)
@@ -591,13 +780,13 @@ class AIThread(QObject):
                         self.pauseOption()
                         if not self.is_running:
                             return False
-                        self.result_signal.emit(f'满足精度：{self.isAIVolPass}')
+                        # self.result_signal.emit(f'满足精度：{self.isAIVolPass}')
                     else:
                         self.isAICurPass &= True
                         self.pauseOption()
                         if not self.is_running:
                             return False
-                        self.result_signal.emit(f'满足精度：{self.isAICurPass}')
+                        # self.result_signal.emit(f'满足精度：{self.isAICurPass}')
                 else:
                     print('\t不满足精度\n\n')
                     self.pauseOption()
@@ -609,13 +798,13 @@ class AIThread(QObject):
                         self.pauseOption()
                         if not self.is_running:
                             return False
-                        self.result_signal.emit(f'不满足精度：{self.isAIVolPass}')
+                        # self.result_signal.emit(f'不满足精度：{self.isAIVolPass}')
                     else:
                         self.isAICurPass &= False
                         self.pauseOption()
                         if not self.is_running:
                             return False
-                        self.result_signal.emit(f'不满足精度：{self.isAICurPass}')
+                        # self.result_signal.emit(f'不满足精度：{self.isAICurPass}')
                 if j == self.m_Channels - 1:
                     self.pauseOption()
                     if not self.is_running:
@@ -623,49 +812,11 @@ class AIThread(QObject):
                     self.result_signal.emit(self.HORIZONTAL_LINE)
                 time.sleep(0.1)
                 if type == 'AIVoltage':
-                    self.volReceValue[i] = usReceValue
-                    self.volPrecision[i] = chPrecision
+                    self.volReceValue[typeNum][i] = usReceValue
+                    self.volPrecision[typeNum][i] = chPrecision
                 elif type == 'AICurrent':
-                    self.curReceValue[i] = usReceValue
-                    self.curPrecision[i] = chPrecision
-            # print(f'self.curPrecision[{i}]:{self.curPrecision[i]}')
-        # 数据清零
-        if not self.normal_writeValuetoAO(0):
-            return False
-        self.pauseOption()
-        if not self.is_running:
-            return False
-        self.result_signal.emit('测试结束' + self.HORIZONTAL_LINE)
-
-        testEnd_time = time.time()
-        testTest_time = round(testEnd_time - testStart_time,2)
-        if self.isAIVolPass and type == 'AIVoltage':
-            self.pauseOption()
-            if not self.is_running:
-                return False
-            self.result_signal.emit(f'电压通过：{self.isAIVolPass}')
-            self.item_signal.emit([7, 2, 1, f'{testTest_time}'])
-        elif not self.isAIVolPass and type == 'AIVoltage':
-            self.pauseOption()
-            if not self.is_running:
-                return False
-            self.result_signal.emit(f'电压不通过：{self.isAIVolPass}')
-            self.item_signal.emit([7, 2, 2, f'{testTest_time}'])
-        if self.isAICurPass and type == 'AICurrent':
-            self.pauseOption()
-            if not self.is_running:
-                return False
-            self.result_signal.emit(f'电流通过：{self.isAICurPass}')
-            self.item_signal.emit([8, 2, 1, f'{testTest_time}'])
-        elif not self.isAICurPass and type == 'AICurrent':
-            self.pauseOption()
-            if not self.is_running:
-                return False
-            self.result_signal.emit(f'电流不通过：{self.isAICurPass}')
-            self.item_signal.emit([8, 2, 2, f'{testTest_time}'])
-        self.isAIPassTest = self.isAIVolPass & self.isAICurPass
-        # return self.isAIPassTest
-        return True
+                    self.curReceValue[typeNum][i] = usReceValue
+                    self.curPrecision[typeNum][i] = chPrecision
 
     def GetPrecision(self, receValue, theoryValue, range):
         return (receValue - theoryValue) * 1000 / range
@@ -684,12 +835,14 @@ class AIThread(QObject):
             if bool_receive:
                 break
         for i in range(self.m_Channels):
+            data = bytes([self.m_can_obj.Data[i * 2], self.m_can_obj.Data[i * 2 + 1]])
             # print(f'i= {i}')
-            recv[i] = self.m_can_obj.Data[i*2] | self.m_can_obj.Data[i*2+1] << 8
+            # recv[i] = self.m_can_obj.Data[i*2] | self.m_can_obj.Data[i*2+1] << 8
             # print(f'recv[{i}]={recv[i]}')
             # self.isPause()
             # if not self.isStop():
             #     return
+            recv[i] = value = struct.unpack('<h', data)[0]
         print(f'recv= {recv}')
         return True,recv
 
@@ -736,7 +889,7 @@ class AIThread(QObject):
             if not self.is_running:
                 return False
             self.result_signal.emit(f'开始标定AI电压：' + self.HORIZONTAL_LINE)
-            bool_calibrate = self.calibrateAI_vol_cur('AIVoltage')
+            bool_calibrate = self.calibrateAI_vol_cur('AIVoltage',0)
             if not bool_calibrate:
                 return False
             self.pauseOption()
@@ -822,7 +975,7 @@ class AIThread(QObject):
             if not self.is_running:
                 return False
             self.result_signal.emit(f'开始标定AI电流：' + self.HORIZONTAL_LINE)
-            bool_calibrate = self.calibrateAI_vol_cur('AICurrent')
+            bool_calibrate = self.calibrateAI_vol_cur('AICurrent',1)
             if not bool_calibrate:
                 return False
             self.pauseOption()
@@ -866,7 +1019,7 @@ class AIThread(QObject):
 
         return True
 
-    def calibrateAI_vol_cur(self,type):
+    def calibrateAI_vol_cur(self,type,typeNum):
         maxRange = 0
         lowValue = 0
         highValue = 0
@@ -893,13 +1046,13 @@ class AIThread(QObject):
         """3.设置AI量程"""
         for i in range(self.m_Channels):
             channel = i + 1
-            if not self.setAIInputType(channel, type):
+            if not self.setAIInputType(channel, type,typeNum):
                 return False
 
         """4.设置AO量程"""
         for i in range(self.m_Channels):
             channel = i + 1
-            if not self.setAOInputType(channel, type):
+            if not self.setAOInputType(channel, type,typeNum):
                 return False
 
         """5.进入标定模式"""
@@ -1193,7 +1346,7 @@ class AIThread(QObject):
 
 
     # 检查待检AO模块输入类型是否正确
-    def setAOInputType(self, AOChannel, type):
+    def setAOInputType(self, AOChannel, type:str, typeNum:int):
         if AOChannel == 1:
             self.pauseOption()
             if not self.is_running:
@@ -1210,8 +1363,8 @@ class AIThread(QObject):
         self.clearList(self.m_can_obj.Data)
 
         if type == 'AOVoltage' or type == 'AIVoltage':
-            self.m_transmitData[4] = self.AORangeArray[0]
-            self.m_transmitData[5] = self.AORangeArray[1]
+            self.m_transmitData[4] = self.vol_AORangeArray[2*typeNum]
+            self.m_transmitData[5] = self.vol_AORangeArray[2*typeNum+1]
             while True:
                 # self.isPause()
                 # if not self.isStop():
@@ -1225,31 +1378,34 @@ class AIThread(QObject):
                         # print(f'm_can_obj.Data[5]:{self.m_can_obj.Data[5]}')
                         # print(f'AORangeArray[0]:{self.AORangeArray[0]}')
                         # print(f'AORangeArray[1]:{self.AORangeArray[1]}')
-                        if hex(self.m_can_obj.Data[4]) == hex(self.AORangeArray[0]) and hex(
-                                self.m_can_obj.Data[5]) == hex(self.AORangeArray[1]):
-                            print(f'{AOChannel}.成功设置AO通道{AOChannel}的量程为”电压+/-10V“。\n\n')
+                        if hex(self.m_can_obj.Data[4]) == hex(self.vol_AORangeArray[2*typeNum]) and hex(
+                                self.m_can_obj.Data[5]) == hex(self.vol_AORangeArray[2*typeNum+1]):
+                            print(f'{AOChannel}.成功设置AO通道{AOChannel}的量程为”{self.vol_name_array[typeNum]}“。\n\n')
                             self.pauseOption()
                             if not self.is_running:
                                 return False
-                            self.result_signal.emit(f'{AOChannel}.成功设置AO通道{AOChannel}的量程为”电压+/-10V“。\n\n')
+                            self.result_signal.emit(f'{AOChannel}.成功设置AO通道{AOChannel}的量程为”'
+                                                    f'{self.vol_name_array[typeNum]}“。\n\n')
                             break
                         else:
                             self.pauseOption()
                             if not self.is_running:
                                 return False
-                            self.result_signal.emit(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”电压+/-10V“。\n\n')
-                            print(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”电压+/-10V“。\n\n')
+                            self.result_signal.emit(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”'
+                                                    f'{self.vol_name_array[typeNum]}“。\n\n')
+                            print(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”{self.vol_name_array[typeNum]}“。\n\n')
                             return False
                 else:
                     self.pauseOption()
                     if not self.is_running:
                         return False
-                    self.result_signal.emit(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”电压+/-10V“。\n\n')
+                    self.result_signal.emit(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”'
+                                            f'{self.vol_name_array[typeNum]}“。\n\n')
                     return False
                     # print(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”电压+/-10V“。\n\n')
         elif type == 'AOCurrent' or type == 'AICurrent':
-            self.m_transmitData[4] = self.AORangeArray[10]
-            self.m_transmitData[5] = self.AORangeArray[11]
+            self.m_transmitData[4] = self.cur_AORangeArray[2*typeNum]
+            self.m_transmitData[5] = self.cur_AORangeArray[2*typeNum+1]
             while True:
                 # self.isPause()
                 # if not self.isStop():
@@ -1263,26 +1419,30 @@ class AIThread(QObject):
                         # print(f'm_can_obj.Data[5]:{self.m_can_obj.Data[5]}')
                         # print(f'AORangeArray[0]:{self.AORangeArray[0]}')
                         # print(f'AORangeArray[1]:{self.AORangeArray[1]}')
-                        if hex(self.m_can_obj.Data[4]) == hex(self.AORangeArray[10]) and hex(
-                                self.m_can_obj.Data[5]) == hex(self.AORangeArray[11]):
-                            print(f'{AOChannel}.成功设置AO通道{AOChannel}的量程为”电流(0-20)mA“。\n\n')
+                        if hex(self.m_can_obj.Data[4]) == hex(self.cur_AORangeArray[2*typeNum]) and hex(
+                                self.m_can_obj.Data[5]) == hex(self.cur_AORangeArray[2*typeNum+1]):
+                            print(f'{AOChannel}.成功设置AO通道{AOChannel}的量程为”{self.cur_AIRangeArray[typeNum]}“。\n\n')
                             self.pauseOption()
                             if not self.is_running:
                                 return False
-                            self.result_signal.emit(f'{AOChannel}.成功设置AO通道{AOChannel}的量程为”电流(0-20)mA“。\n\n')
+                            self.result_signal.emit(f'{AOChannel}.成功设置AO通道{AOChannel}的量程为”'
+                                                    f'{self.cur_AIRangeArray[typeNum]}“。\n\n')
                             break
                         else:
                             self.pauseOption()
                             if not self.is_running:
                                 return False
-                            self.result_signal.emit(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”电流(0-20)mA“。\n\n')
-                            print(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”电流(0-20)mA“。\n\n')
+                            self.result_signal.emit(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”'
+                                                    f'{self.cur_AIRangeArray[typeNum]}“。\n\n')
+                            print(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”'
+                                  f'{self.cur_AIRangeArray[typeNum]}“。\n\n')
                             return False
                 else:
                     self.pauseOption()
                     if not self.is_running:
                         return False
-                    self.result_signal.emit(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”电流(0-20)mA“。\n\n')
+                    self.result_signal.emit(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”'
+                                            f'{self.cur_AIRangeArray[typeNum]}“。\n\n')
                     return False
 
         if AOChannel == 4:
@@ -1293,7 +1453,7 @@ class AIThread(QObject):
         return True
 
     # 检查配套AI模块输入类型是否正确
-    def setAIInputType(self, AIChannel, type):
+    def setAIInputType(self, AIChannel, type:str, typeNum:int):
         # CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
         # self.can_start()
         if AIChannel == 1:
@@ -1312,43 +1472,46 @@ class AIThread(QObject):
         self.clearList(self.m_can_obj.Data)
 
         if type == 'AOVoltage' or type == 'AIVoltage':
-            self.m_transmitData[4] = self.AIRangeArray[0]
-            self.m_transmitData[5] = self.AIRangeArray[1]
+            self.m_transmitData[4] = self.vol_AIRangeArray[2*typeNum]
+            self.m_transmitData[5] = self.vol_AIRangeArray[2*typeNum + 1]
             while True:
                 # QApplication.processEvents()
                 if CAN_option.transmitCAN(0x600 + self.CANAddr_AI, self.m_transmitData)[0]:
                     bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(0x580 + self.CANAddr_AI,
                                                                              self.waiting_time)
                     if bool_receive:
-                        # print(f'm_can_obj.Data[4]:{self.m_can_obj.Data[4]}')
-                        # print(f'm_can_obj.Data[5]:{self.m_can_obj.Data[5]}')
-                        # print(f'AIRangeArray[0]:{self.AIRangeArray[0]}')
-                        # print(f'AIRangeArray[1]:{self.AIRangeArray[1]}')
-                        if hex(self.m_can_obj.Data[4]) == hex(self.AIRangeArray[0]) and hex(
-                                self.m_can_obj.Data[5]) == hex(self.AIRangeArray[1]):
-                            print(f'{AIChannel}.成功设置AI通道{AIChannel}的量程为”电压+/-10V“。\n\n')
+                        print(f'm_can_obj.Data[4]:{self.m_can_obj.Data[4]}')
+                        print(f'm_can_obj.Data[5]:{self.m_can_obj.Data[5]}')
+                        # print(f'self.vol_AIRangeArray[2*typeNum]:{self.vol_AIRangeArray[2*typeNum]')
+                        # print(f'self.vol_AIRangeArray[2*typeNum]+1:self.vol_AIRangeArray[2*typeNum+1]')
+                        if hex(self.m_can_obj.Data[4]) == hex(self.vol_AIRangeArray[2*typeNum]) and hex(
+                                self.m_can_obj.Data[5]) == hex(self.vol_AIRangeArray[2*typeNum+1]):
+                            print(f'{AIChannel}.成功设置AI通道{AIChannel}的量程为"{self.vol_name_array[typeNum]}"。\n\n')
 
                             self.pauseOption()
                             if not self.is_running:
                                 return False
-                            self.result_signal.emit(f'{AIChannel}.成功设置AI通道{AIChannel}的量程为”电压+/-10V“。\n\n')
+                            self.result_signal.emit(f'{AIChannel}.成功设置AI通道{AIChannel}的量程为"'
+                                                    f'{self.vol_name_array[typeNum]}"。\n\n')
                             break
                         else:
                             self.pauseOption()
                             if not self.is_running:
                                 return False
-                            self.result_signal.emit(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”电压+/-10V“。\n\n')
-                            print(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”电压+/-10V“。\n\n')
+                            self.result_signal.emit(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为"'
+                                                    f'{self.vol_name_array[typeNum]}"。\n\n')
+                            print(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为{self.vol_name_array[typeNum]}。\n\n')
                 else:
                     self.pauseOption()
                     if not self.is_running:
                         return False
-                    self.result_signal.emit(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”电压+/-10V“。\n\n')
+                    self.result_signal.emit(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”'
+                                            f'{self.vol_name_array[typeNum]}“。\n\n')
                     return False
                     # print(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”电压+/-10V“。\n\n')
         elif type == 'AOCurrent' or type == 'AICurrent':
-            self.m_transmitData[4] = self.AIRangeArray[10]
-            self.m_transmitData[5] = self.AIRangeArray[11]
+            self.m_transmitData[4] = self.cur_AIRangeArray[2*typeNum]
+            self.m_transmitData[5] = self.cur_AIRangeArray[2*typeNum + 1]
             while True:
                 # self.isPause()
                 # if not self.isStop():
@@ -1362,27 +1525,30 @@ class AIThread(QObject):
                         # print(f'm_can_obj.Data[5]:{self.m_can_obj.Data[5]}')
                         # print(f'AIRangeArray[0]:{self.AIRangeArray[0]}')
                         # print(f'AIRangeArray[1]:{self.AIRangeArray[1]}')
-                        if hex(self.m_can_obj.Data[4]) == hex(self.AIRangeArray[10]) and hex(
-                                self.m_can_obj.Data[5]) == hex(self.AIRangeArray[11]):
-                            print(f'{AIChannel}.成功设置AI通道{AIChannel}的量程为”电流(0-20)mA“。\n\n')
+                        if hex(self.m_can_obj.Data[4]) == hex(self.cur_AIRangeArray[2*typeNum]) and hex(
+                                self.m_can_obj.Data[5]) == hex(self.cur_AIRangeArray[2*typeNum+1]):
+                            print(f'{AIChannel}.成功设置AI通道{AIChannel}的量程为”{self.cur_name_array[typeNum]}“。\n\n')
 
                             self.pauseOption()
                             if not self.is_running:
                                 return False
-                            self.result_signal.emit(f'{AIChannel}.成功设置AI通道{AIChannel}的量程为”电流(0-20)mA“。\n\n')
+                            self.result_signal.emit(f'{AIChannel}.成功设置AI通道{AIChannel}的量程为”'
+                                                    f'{self.cur_name_array[typeNum]}“。\n\n')
                             break
                         else:
                             self.pauseOption()
                             if not self.is_running:
                                 return False
-                            self.result_signal.emit(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”电流(0-20)mA“。\n\n')
-                            print(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”电流(0-20)mA“。\n\n')
+                            self.result_signal.emit(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为'
+                                                    f'”{self.cur_name_array[typeNum]}“。\n\n')
+                            print(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”{self.cur_name_array[typeNum]}“。\n\n')
                             return False
                 else:
                     self.pauseOption()
                     if not self.is_running:
                         return False
-                    self.result_signal.emit(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”电流(0-20)mA“。\n\n')
+                    self.result_signal.emit(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”'
+                                            f'{self.cur_name_array[typeNum]}“。\n\n')
                     return False
         if AIChannel == 4:
             self.pauseOption()
@@ -1413,20 +1579,10 @@ class AIThread(QObject):
         bool_all = True
         for i in range(self.m_Channels):
             self.m_transmitData = [0x2b,0x11,0x64,i+1,(value & 0xff),((value >> 8) & 0xff),0x00,0x00]
-            # self.m_transmitData[0] = 0x2b
-            # self.m_transmitData[1] = 0x11
-            # self.m_transmitData[2] = 0x64
-            # self.m_transmitData[3] = i+1
-            # self.m_transmitData[4] = (value & 0xff)
-            # self.m_transmitData[5] = ((value >> 8) & 0xff)
-            # self.m_transmitData[6] = 0x00
-            # self.m_transmitData[7] = 0x00
             # print(f'{self.module_1}地址:{0x600+self.CANAddr_AO}')
             bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600+self.CANAddr_AO), self.m_transmitData)
             bool_all = bool_all & bool_transmit
-            # self.isPause()
-            # if not self.isStop():
-            #     return
+
         return bool_all
 
     def channelZero(self):
