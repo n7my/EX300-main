@@ -263,7 +263,7 @@ class AIThread(QObject):
                 self.m_transmitData[5] = 0x54
                 self.m_transmitData[6] = 0x41
                 self.m_transmitData[7] = 0x52
-                isLEDTest, whatEver = CAN_option.transmitCAN((0x600 + int(self.CANAddr_DI)), self.m_transmitData)
+                isLEDTest, whatEver = CAN_option.transmitCAN((0x600 + int(self.CANAddr_AI)), self.m_transmitData)
                 if isLEDTest:
                     self.pauseOption()
                     if not self.is_running:
@@ -289,7 +289,7 @@ class AIThread(QObject):
                     self.m_transmitData[5] = 0x58
                     self.m_transmitData[6] = 0x49
                     self.m_transmitData[7] = 0x54
-                    bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + self.CANAddr_DI),
+                    bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + self.CANAddr_AI),
                                                                            self.m_transmitData)
                     if bool_transmit:
                         self.pauseOption()
@@ -310,8 +310,8 @@ class AIThread(QObject):
                     self.item_signal.emit([2, 2, 2, '进入模式失败'])
 
         if self.isCalibrate:
-            boola = self.calibrateAI()
-            if not boola:
+            bool_calibrate = self.calibrateAI()
+            if not bool_calibrate:
                 self.pass_signal.emit(False)
         # else:
         #     self.pauseOption()
@@ -706,25 +706,25 @@ class AIThread(QObject):
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.result_signal.emit(f'电压通过：{self.isAIVolPass}')
+            self.result_signal.emit(f'电压通过：{self.isAIVolPass}\n\n')
             self.item_signal.emit([7, 2, 1, f'{testTest_time}'])
         elif not self.isAIVolPass and type == 'AIVoltage':
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.result_signal.emit(f'电压不通过：{self.isAIVolPass}')
+            self.result_signal.emit(f'电压不通过：{self.isAIVolPass}\n\n')
             self.item_signal.emit([7, 2, 2, f'{testTest_time}'])
         if self.isAICurPass and type == 'AICurrent':
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.result_signal.emit(f'电流通过：{self.isAICurPass}')
+            self.result_signal.emit(f'电流通过：{self.isAICurPass}\n\n')
             self.item_signal.emit([8, 2, 1, f'{testTest_time}'])
         elif not self.isAICurPass and type == 'AICurrent':
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.result_signal.emit(f'电流不通过：{self.isAICurPass}')
+            self.result_signal.emit(f'电流不通过：{self.isAICurPass}\n\n')
             self.item_signal.emit([8, 2, 2, f'{testTest_time}'])
         self.isAIPassTest = self.isAIVolPass & self.isAICurPass
         # return self.isAIPassTest
@@ -894,7 +894,7 @@ class AIThread(QObject):
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.result_signal.emit('切换到电压模式' + self.HORIZONTAL_LINE)
+            self.result_signal.emit('切换到电压"+/-10V"量程' + self.HORIZONTAL_LINE)
 
             # self.testNum = self.testNum - 1
             self.m_transmitData = [0x01,0x01,0x00,0x00,0x00,0x00,0x00,0x00]
@@ -939,7 +939,7 @@ class AIThread(QObject):
             if not self.is_running:
                 return False
             calibrateEnd_time = time.time()
-            calibrateTest_time = round(calibrateEnd_time - calibrateStart_time, 2)
+            calibrateTest_time = round(calibrateEnd_time - calibrateStart_time, 1)
             self.pauseOption()
             if not self.is_running:
                 return False
@@ -1062,7 +1062,7 @@ class AIThread(QObject):
 
         return True
 
-    def calibrateAI_vol_cur(self,type,typeNum):
+    def calibrateAI_vol_cur(self,type:str,typeNum):
         maxRange = 0
         lowValue = 0
         highValue = 0
@@ -1244,15 +1244,15 @@ class AIThread(QObject):
             usRecValue = [0, 0, 0, 0]
 
         if type == 'AIVoltage':
-            if value == 27648:
+            if int(value) == 27648:
                 standardValue = 367002
-            elif value == 37888:
+            elif int(value) == -27648:
                 standardValue = 157286
             # headInf = self.arrayVol_1010
         elif type == 'AICurrent':
-            if value == 27648:
+            if int(value) == 27648:
                 standardValue = 314777
-            elif value == 0:
+            elif int(value) == 0:
                 standardValue = 262144
             # headInf = self.arrayCur_0420
 
@@ -1269,8 +1269,8 @@ class AIThread(QObject):
                     self.pauseOption()
                     if not self.is_running:
                         return False,0
-                    self.result_signal.emit(f'{j + 1}.AI模块通道{j + 1}未在规定时间内接收到正确数据，请检查该通道是否损坏。\n\n')
-                    print(f'{j + 1}.AI模块通道{j + 1}未在规定时间内接收到正确数据，请检查该通道是否损坏。\n\n')
+                    self.result_signal.emit(f'{j + 1}.AI模块通道{j + 1}未在规定时间内接收合理数据，请检查该通道是否损坏。\n\n')
+                    print(f'{j + 1}.AI模块通道{j + 1}未在规定时间内接收到合理数据，请检查该通道是否损坏。\n\n')
                     valReceive_num -= 1
                     # return False,0
                 # self.isPause()
@@ -1278,6 +1278,7 @@ class AIThread(QObject):
                 #     return
                 time.sleep(0.1)
                 notReceive = False
+                # usTmpValue:list
                 bool_caReceive,usTmpValue = self.calibrate_receiveAIData(channelNum)
                 if not bool_caReceive:
                     return False,0
@@ -1289,7 +1290,7 @@ class AIThread(QObject):
                     # self.isPause()
                     # if not self.isStop():
                     #     return
-                    if abs(usTmpValue[j] - standardValue) > 350:
+                    if abs(usTmpValue[j] - standardValue) > 350:#比较每个通道接收的值，有一个通道接收的值不合理都要重新再接收
                         print(f'{j + 1}.AI模块通道{j + 1}未正确接收到数据，重新获取数据。\n\n')
                         self.pauseOption()
                         if not self.is_running:
