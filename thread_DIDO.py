@@ -101,6 +101,10 @@ class DIDOThread(QObject):
     isLEDErrOK = True
     isLEDPass = True
 
+    isLEDCANRunOK = True
+    isLEDCANErrOK = True
+    isLEDCANPass = True
+
     # 发送的数据
     ubyte_array_transmit = c_ubyte * 8
     m_transmitData = ubyte_array_transmit(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
