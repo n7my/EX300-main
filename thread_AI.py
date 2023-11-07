@@ -42,19 +42,19 @@ class AIThread(QObject):
     vol_name_array = ['电压+/-10V', '电压+/-5V', '电压0-5V', '电压0-10V', '电压1-5V']
     cur_name_array = ['电流4-20mA', '电流0-20mA']
 
-    # 0mA-20mA的理论值
-    currentTheory_0020 = [0x6c00, (int)(0x6c00 * 0.75), (int)(0x6c00 * 0.5), (int)(0x6c00 * 0.25), 0]  # 0x6c00 =>27648
-    arrayCur_0020 = ["20mA测试", "15mA测试", "10mA测试", "5mA测试", "0mA测试"]
-    # 0mA-20mA的rawData
-    highCurrent_0020 = 59849
-    highCurrent_0020 = 32768
-
     # 4mA-20mA的理论值
     currentTheory_0420 = [0x6c00, (int)(0x6c00 * 0.75), (int)(0x6c00 * 0.5), (int)(0x6c00 * 0.25), 0]  # 0x6c00 =>27648
     arrayCur_0420 = ["20mA测试", "16mA测试", "12mA测试", "8mA测试", "4mA测试"]
     # 4mA-20mA的rawData
     highCurrent_0420 = 54162
     lowCurrent_0420 = 10832
+
+    # 0mA-20mA的理论值
+    currentTheory_0020 = [0x6c00, (int)(0x6c00 * 0.75), (int)(0x6c00 * 0.5), (int)(0x6c00 * 0.25), 0]  # 0x6c00 =>27648
+    arrayCur_0020 = ["20mA测试", "15mA测试", "10mA测试", "5mA测试", "0mA测试"]
+    # 0mA-20mA的rawData
+    highCurrent_0020 = 59849
+    highCurrent_0020 = 32768
 
     # -10v~10v的理论值
     voltageTheory_1010 = [0x6c00, 0x3600, 0x00, -13824, -27648]  # 0x6c00 =>27648
@@ -456,46 +456,53 @@ class AIThread(QObject):
                 m_range = volRange_array[typeNum]
                 # #修改AI量程
                 for i in range(self.m_Channels):
+                    self.pauseOption()
+                    if not self.is_running:
+                        return False
                     if not self.setAIInputType(i + 1, type, typeNum):
                         return False
-                    # self.isPause()
-                    # if not self.isStop():
-                    #     return
                 # 修改AO量程
                 for i in range(self.m_Channels):
                     if not self.setAOInputType(i + 1, type, typeNum):
                         return False
 
-                self.vol_cur_test(type,m_valueTheory, m_arrayVal, m_range,typeNum)
-
-
-
+                if not self.vol_cur_test(type,m_valueTheory, m_arrayVal, m_range,typeNum):
+                    return False
         elif type == 'AICurrent':
             vol_cur_testNum = 2 #电流有2种量程
+            curValue_array = [self.currentTheory_0420, self.currentTheory_0020]
+            curName_array = [self.arrayCur_0420, self.arrayCur_0020]
+            curRange_array = [27648, 27648]
+
             self.pauseOption()
             if not self.is_running:
                 return False
             self.result_signal.emit('AI模块电流测试开始......' + self.HORIZONTAL_LINE)
             print('AI模块电流测试开始......' + self.HORIZONTAL_LINE)
             self.item_signal.emit([8, 1, 0, ''])
-            m_valueTheory = self.currentTheory_0420
-            m_arrayVal = self.arrayCur_0420
-            m_range = 0x6c00 - 0
-            # #修改AI量程
-            for i in range(self.m_Channels):
-                self.pauseOption()
-                if not self.is_running:
-                    return False
-                if not self.setAIInputType(i + 1, type):
-                    return False
-            # 修改AO量程
-            for i in range(self.m_Channels):
-                # self.isPause()
-                # if not self.isStop():
-                #     return
-                if not self.setAOInputType(i + 1, type):
-                    return False
+            if not self.channelZero():
+                return False
 
+            for typeNum in range(vol_cur_testNum):  # 对每个量程进行测试
+                m_valueTheory = curValue_array[typeNum]
+                m_arrayVal = curName_array[typeNum]
+                m_range =curRange_array[typeNum]
+                # #修改AI量程
+                for i in range(self.m_Channels):
+                    self.pauseOption()
+                    if not self.is_running:
+                        return False
+                    if not self.setAIInputType(i + 1, type, typeNum):
+                        return False
+                # 修改AO量程
+                for i in range(self.m_Channels):
+                    self.pauseOption()
+                    if not self.is_running:
+                        return False
+                    if not self.setAOInputType(i + 1, type, typeNum):
+                        return False
+                if not self.vol_cur_test(type, m_valueTheory, m_arrayVal, m_range, typeNum):
+                    return False
         # for i in range(5):
         #     self.pauseOption()
         #     if not self.is_running:
@@ -688,13 +695,13 @@ class AIThread(QObject):
         return True
 
 
-    def vol_cur_test(self,type:str,m_valueTheory,m_arrayVal,m_range,typeNum:int):
+    def vol_cur_test(self,type:str,m_valueTheory,m_arrayVal,m_range,typeNum:int)->bool:
         """
         单个量程测试
         :param m_valueTheory: list
         :param m_arrayVal: list
         :param m_range: list
-        :return:
+        :return:bool
         """
         for i in range(5):
             self.pauseOption()
@@ -817,7 +824,7 @@ class AIThread(QObject):
                 elif type == 'AICurrent':
                     self.curReceValue[typeNum][i] = usReceValue
                     self.curPrecision[typeNum][i] = chPrecision
-
+        return bool
     def GetPrecision(self, receValue, theoryValue, range):
         return (receValue - theoryValue) * 1000 / range
 
@@ -1421,21 +1428,21 @@ class AIThread(QObject):
                         # print(f'AORangeArray[1]:{self.AORangeArray[1]}')
                         if hex(self.m_can_obj.Data[4]) == hex(self.cur_AORangeArray[2*typeNum]) and hex(
                                 self.m_can_obj.Data[5]) == hex(self.cur_AORangeArray[2*typeNum+1]):
-                            print(f'{AOChannel}.成功设置AO通道{AOChannel}的量程为”{self.cur_AIRangeArray[typeNum]}“。\n\n')
+                            print(f'{AOChannel}.成功设置AO通道{AOChannel}的量程为”{self.cur_name_array[typeNum]}“。\n\n')
                             self.pauseOption()
                             if not self.is_running:
                                 return False
                             self.result_signal.emit(f'{AOChannel}.成功设置AO通道{AOChannel}的量程为”'
-                                                    f'{self.cur_AIRangeArray[typeNum]}“。\n\n')
+                                                    f'{self.cur_name_array[typeNum]}“。\n\n')
                             break
                         else:
                             self.pauseOption()
                             if not self.is_running:
                                 return False
                             self.result_signal.emit(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”'
-                                                    f'{self.cur_AIRangeArray[typeNum]}“。\n\n')
+                                                    f'{self.cur_name_array[typeNum]}“。\n\n')
                             print(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”'
-                                  f'{self.cur_AIRangeArray[typeNum]}“。\n\n')
+                                  f'{self.cur_name_array[typeNum]}“。\n\n')
                             return False
                 else:
                     self.pauseOption()

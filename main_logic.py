@@ -916,15 +916,15 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.lineEdit_REV.setReadOnly(True)
         self.lineEdit_SN.setFocus()
 
-        self.lineEdit.clear()
+        # self.lineEdit.clear()
         self.lineEdit_3.clear()
         self.lineEdit_5.clear()
 
-        self.lineEdit_22.clear()
+        # self.lineEdit_22.clear()
         self.lineEdit_21.clear()
         self.lineEdit_20.clear()
 
-        self.lineEdit_47.clear()
+        # self.lineEdit_47.clear()
         self.lineEdit_46.clear()
         self.lineEdit_45.clear()
         self.pushButton_4.setEnabled(False)
@@ -1546,17 +1546,17 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.lineEdit_SN.setReadOnly(False)
         self.lineEdit_REV.setReadOnly(False)
         if self.tabWidget.currentIndex() == 0:
-            self.lineEdit.clear()
+            # self.lineEdit.clear()
             self.lineEdit_3.clear()
             self.lineEdit_5.clear()
         elif self.tabWidget.currentIndex() == 1:
-            self.lineEdit_22.clear()
+            # self.lineEdit_22.clear()
             self.lineEdit_21.clear()
             self.lineEdit_20.clear()
         elif self.tabWidget.currentIndex() == 2:
             self.lineEdit_45.clear()
             self.lineEdit_46.clear()
-            self.lineEdit_47.clear()
+            # self.lineEdit_47.clear()
         self.lineEdit_SN.setFocus()
         self.endOfTest()
 
