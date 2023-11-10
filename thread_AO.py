@@ -1035,50 +1035,57 @@ class AOThread(QObject):
         bool_transmit, self.m_can_obj = CAN_option.transmitCAN(can_id, self.m_transmitData)
 
     def receive_WriteToAO(self, value, type, channelNum,typeNum):
-        # [(367422 - 156866), (314993 - 209295), (314679 - 262038), (367212 - 261933),(314658 - 272545)]
-        #                    -/+10V   -/+5V   0-5V   0-10V   1-5V
-        self.vol_maxRange_array = [27648 * 2, 27648 * 2, 27648, 27648, 27648]
-        # cur_maxRange_array = [(315094 - 272538), (315115 - 262037)]
-        #                    4-20mA  0-20mA
-        self.cur_maxRange_array = [27648, 27648]
+        # # [(367422 - 156866), (314993 - 209295), (314679 - 262038), (367212 - 261933),(314658 - 272545)]
+        # #                    -/+10V   -/+5V   0-5V   0-10V   1-5V
+        # self.vol_maxRange_array = [27648 * 2, 27648 * 2, 27648, 27648, 27648]
+        # # cur_maxRange_array = [(315094 - 272538), (315115 - 262037)]
+        # #                    4-20mA  0-20mA
+        # self.cur_maxRange_array = [27648, 27648]
+        #
+        # self.vol_highValue_array = [self.highVoltage_1010, self.highVoltage_0505, self.highVoltage_0005,
+        #                             self.highVoltage_0010, self.highVoltage_0105]
+        # self.vol_lowValue_array = [self.lowVoltage_1010, self.lowVoltage_0505, self.lowVoltage_0005,
+        #                            self.lowVoltage_0010, self.lowVoltage_0105]
+        # self.cur_highValue_array = [self.highCurrent_0420, self.highCurrent_0020]
+        # self.cur_lowValue_array = [self.lowCurrent_0420, self.lowCurrent_0020]
+        #
+        #
 
-        self.vol_highValue_array = [self.highVoltage_1010, self.highVoltage_0505, self.highVoltage_0005,
-                                    self.highVoltage_0010, self.highVoltage_0105]
-        self.vol_lowValue_array = [self.lowVoltage_1010, self.lowVoltage_0505, self.lowVoltage_0005,
-                                   self.lowVoltage_0010, self.lowVoltage_0105]
-        self.cur_highValue_array = [self.highCurrent_0420, self.highCurrent_0020]
-        self.cur_lowValue_array = [self.lowCurrent_0420, self.lowCurrent_0020]
 
-
-
-
-        self.vol_high_standardValue_array = [367002, 314573, 314573, 367002, 314573]
-        self.cur_high_standardValue_array = [314777, 314777]
-        self.vol_low_standardValue_array = [157286, 209715, 262144, 262144, 272630]
-        self.cur_low_standardValue_array = [272671, 262144]
+        self.vol_high_standardValue_array = [self.voltageTheory_1010[0], self.voltageTheory_0505[0],
+                                            self.voltageTheory_0005[0],self.voltageTheory_0010[0], self.voltageTheory_0105[0]]
+        self.cur_high_standardValue_array = [self.currentTheory_0420[0], self.currentTheory_0020[0]]
+        self.vol_low_standardValue_array = [self.voltageTheory_1010[4], self.voltageTheory_0505[4],
+                                            self.voltageTheory_0005[4],self.voltageTheory_0010[4], self.voltageTheory_0105[4]]
+        self.cur_low_standardValue_array = [self.currentTheory_0420[4], self.currentTheory_0020[4]]
         self.vol_error_value = [841, 841, 212, 422, 170]
         self.cur_high_error_value = [636, 678]
         self.cur_low_error_value = [265, 214]
         if type == 'AIVoltage':
-            self.error_value=self.vol_error_value[typeNum]
-            if int(value) == 27648:
+            # self.error_value=self.vol_error_value[typeNum]
+            if int(value) == self.vol_highValue_array[typeNum]:
                 self.standardValue = self.vol_high_standardValue_array[typeNum]
-            elif int(value) == 0 or int(value) == -27648:
+            elif int(value) ==  self.vol_low_standardValue_array[typeNum]:
                 self.standardValue = self.vol_low_standardValue_array[typeNum]
             # headInf = self.arrayVol_1010
         elif type == 'AICurrent':
-            if int(value) == 27648:
-                self.error_value =self.cur_high_error_value[typeNum]
+            if int(value) == self.cur_highValue_array:
+                # self.error_value =self.cur_high_error_value[typeNum]
                 self.standardValue = self.cur_high_standardValue_array[typeNum]
-            elif int(value) == 0:
-                self.error_value = self.cur_low_error_value[typeNum]
+            elif int(value) == self.cur_lowValue_array:
+                # self.error_value = self.cur_low_error_value[typeNum]
                 self.standardValue = self.cur_low_standardValue_array[typeNum]
 
 
         self.pauseOption()
         if not self.is_running:
             return False, 0
-        self.result_signal.emit('写入数据并等待信号稳定………' + self.HORIZONTAL_LINE)
+        if value > 50000:
+            self.result_signal.emit(f'写入第一个数据点（{self.standardValue}）并等待信号稳定………' + self.HORIZONTAL_LINE)
+        else:
+            self.result_signal.emit(f'写入第二个数据点（{self.standardValue}）并等待信号稳定………' + self.HORIZONTAL_LINE)
+
+            ##############改到这里#########
         if not self.calibrate_writeValueToAO(value):
             return False
         intWait = int(self.waiting_time / 1000)
