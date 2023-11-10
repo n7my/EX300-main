@@ -302,7 +302,7 @@ def receiveCANbyID(can_id, max_waiting):
                 while ret != 1:
                     print('VCI_Receive: CAN通道 ' + str(CAN_INDEX + 1) + ' 接收数据失败, 正在重试')
                     ret = Can_DLL.VCI_Receive(VCI_USB_CAN_2, DEV_INDEX, CAN_INDEX, byref(m_can_obj), RECEIVE_LEN, WAIT_TIME)
-                    # print(f'time.time() - now_time:{time.time() - now_time}')
+                    print(f'time.time() - now_time:{time.time() - now_time}')
                     if (time.time() - now_time) * 1000 > 2000:
                         print('接收数据错误且超时！')
                         return False, m_can_obj
