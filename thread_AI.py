@@ -54,7 +54,7 @@ class AIThread(QObject):
     arrayCur_0020 = ["20mA测试", "15mA测试", "10mA测试", "5mA测试", "0mA测试"]
     # 0mA-20mA的rawData
     highCurrent_0020 = 59849
-    highCurrent_0020 = 32768
+    lowCurrent_0020 = 32768
 
     # -10v~10v的理论值
     voltageTheory_1010 = [0x6c00, 0x3600, 0x00, -13824, -27648]  # 0x6c00 =>27648
@@ -232,26 +232,7 @@ class AIThread(QObject):
 
 
     def AIOption(self):
-        # testLoopNum = 1
-        # while True:
-        #     self.result_signal.emit(f"第{testLoopNum}次循环")
-        #     self.labe_signal.emit(['testing', '正在测试'])
         self.isExcel = True
-        # CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
-        # self.pauseOption()
-        # if not self.is_running:
-        #     self.pass_signal.emit(False)
-        #     #return
-        # self.result_signal.emit(f"等待2秒……\n\n")
-        # self.pauseOption()
-        # if not self.is_running:
-        #     self.pass_signal.emit(False)
-        #     #return
-        # self.result_signal.emit(f"self.m_Channels = {self.m_Channels}\n\n")
-        # print(f"self.m_Channels = {self.m_Channels}\n\n")
-        # time.sleep(2)
-        # # 启动CAN分析仪
-        # self.CAN_init()
         # self.isTestCANRunErr=False#CAN灯暂时不开放
         if self.isTest:
             if self.isTestRunErr or self.isTestCANRunErr:
@@ -847,9 +828,6 @@ class AIThread(QObject):
             self.m_transmitData = [0x01,0x01,0x00,0x00,0x00,0x00,0x00,0x00]
             try:
                 bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay, self.m_transmitData)
-                # if not bool_transmit:
-                #     self.result_signal.emit('继电器切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
-                #     print('继电器切换错误，请停止检查设备！')
                 if not bool_transmit:
                     return False
             except:
@@ -859,9 +837,6 @@ class AIThread(QObject):
 
             try:
                 bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay+1, self.m_transmitData)
-                # if not bool_transmit:
-                #     self.result_signal.emit('继电器切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
-                #     print('继电器切换错误，请停止检查设备！')
                 if not bool_transmit:
                     return False
             except:
@@ -891,7 +866,7 @@ class AIThread(QObject):
                 if not self.is_running:
                     return False
             calibrateEnd_time = time.time()
-            calibrateTest_time = round(calibrateEnd_time - calibrateStart_time, 1)
+            calibrateTest_time = round(calibrateEnd_time - calibrateStart_time, 2)
             self.pauseOption()
             if not self.is_running:
                 return False
@@ -901,7 +876,7 @@ class AIThread(QObject):
                 self.item_signal.emit([5, 2, 2,f'{calibrateTest_time}'])
             # self.itemOperation(mTable, 5, 2, 1, f'{calibrateTest_time}')
             self.m_transmitData = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-            time.sleep(1)
+            # time.sleep(0.5)
             bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay, self.m_transmitData)
             if not bool_transmit:
                 self.pauseOption()
@@ -989,7 +964,7 @@ class AIThread(QObject):
             self.item_signal.emit([6, 2, 1, f'{calibrateTest_time}'])
             #CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
             #self.can_start()
-            time.sleep(1)
+            # time.sleep(1)
             self.m_transmitData = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
 
             bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay, self.m_transmitData)
@@ -1019,7 +994,7 @@ class AIThread(QObject):
 
         return True
 
-    def calibrateAI_vol_cur(self,type:str,typeNum):
+    def calibrateAI_vol_cur(self,type:str,typeNum:int):
         # [(367422 - 156866), (314993 - 209295), (314679 - 262038), (367212 - 261933),(314658 - 272545)]
         #                    -/+10V   -/+5V   0-5V   0-10V   1-5V
         self.vol_maxRange_array = [210556, 105698, 52641, 105279, 42113]
@@ -1633,8 +1608,8 @@ class AIThread(QObject):
                     bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(0x580 + self.CANAddr_AI,
                                                                              self.waiting_time)
                     if bool_receive:
-                        print(f'm_can_obj.Data[4]:{self.m_can_obj.Data[4]}')
-                        print(f'm_can_obj.Data[5]:{self.m_can_obj.Data[5]}')
+                        # print(f'm_can_obj.Data[4]:{self.m_can_obj.Data[4]}')
+                        # print(f'm_can_obj.Data[5]:{self.m_can_obj.Data[5]}')
                         # print(f'self.vol_AIRangeArray[2*typeNum]:{self.vol_AIRangeArray[2*typeNum]')
                         # print(f'self.vol_AIRangeArray[2*typeNum]+1:self.vol_AIRangeArray[2*typeNum+1]')
                         if hex(self.m_can_obj.Data[4]) == hex(self.vol_AIRangeArray[2*typeNum]) and hex(
@@ -1768,7 +1743,6 @@ class AIThread(QObject):
     def testRunErr(self,addr):
         self.testNum -= 1
         self.isLEDRunOK = True
-
         self.isLEDErrOK = True
         self.isLEDPass = True
 
@@ -1939,7 +1913,7 @@ class AIThread(QObject):
 
         return True
 
-    def testCANRunErr(self,addr):
+    def testCANRunErr(self, addr):
         self.testNum -= 1
         # 关闭CAN设备
         #CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
@@ -2083,15 +2057,6 @@ class AIThread(QObject):
         self.isLEDCANPass = self.isLEDCANPass & self.isLEDCANErrOK
 
         return True
-
-
-        # elif reply == QMessageBox.No:
-        #     self.testNum = self.testNum + 1
-        #     self.isTestCANRunErr = False
-        #     self.itemOperation(mTable, 3, 0, 0, '')
-        #     self.itemOperation(mTable, 4, 0, 0, '')
-        #     self.result_signal.emit('取消CAN_RUN &CAN_ERROR测试！' + self.HORIZONTAL_LINE)
-        #     print('取消CAN_RUN &CAN_ERROR测试！')
 
     def generateExcel(self, station, module):
         book = xlwt.Workbook(encoding='utf-8')

@@ -45,7 +45,7 @@ class AOThread(QObject):
     arrayCur_0020 = ["20mA测试", "15mA测试", "10mA测试", "5mA测试", "0mA测试"]
     # 0mA-20mA的rawData
     highCurrent_0020 = 59849
-    highCurrent_0020 = 32768
+    lowCurrent_0020 = 32768
 
     # 4mA-20mA的理论值
     currentTheory_0420 = [0x6c00, (int)(0x6c00 * 0.75), (int)(0x6c00 * 0.5), (int)(0x6c00 * 0.25), 0]  # 0x6c00 =>27648
@@ -212,33 +212,88 @@ class AOThread(QObject):
         errorNum = 0
 
     def AOOption(self):
-        isExcel = True
+        self.isExcel = True
 
         if self.isTest:
-            if self.isTestRunErr:
-                if not self.testRunErr(int(self.CANAddr_AO)):
-                    self.pass_signal.emit(False)
+            if self.isTestRunErr or self.isTestCANRunErr:
+                # 进入指示灯测试模式
+                self.pauseOption()
+                if not self.is_running:
+                    return False
+                self.result_signal.emit("--------------进入 LED TEST模式-------------\n\n")
+                print("--------------进入 LED TEST模式-------------")
+                # self.channelZero()
+                self.m_transmitData[0] = 0x23
+                self.m_transmitData[1] = 0xf6
+                self.m_transmitData[2] = 0x5f
+                self.m_transmitData[3] = 0x00
+                self.m_transmitData[4] = 0x53
+                self.m_transmitData[5] = 0x54
+                self.m_transmitData[6] = 0x41
+                self.m_transmitData[7] = 0x52
+                isLEDTest, whatEver = CAN_option.transmitCAN((0x600 + int(self.CANAddr_AO)), self.m_transmitData)
+                if isLEDTest:
+                    self.pauseOption()
+                    if not self.is_running:
+                        return False
+                    self.result_signal.emit("-----------进入 LED TEST 模式成功-----------\n")
+                    print("-----------进入 LED TEST 模式成功-----------" + self.HORIZONTAL_LINE)
+                    if self.isTestRunErr:
+                        if not self.testRunErr(int(self.CANAddr_AO)):
+                            self.pass_signal.emit(False)
 
-            if self.isTestCANRunErr:
-                if not self.testCANRunErr(int(self.CANAddr_AO)):
-                    self.pass_signal.emit(False)
-                    # return
+                    if self.isTestCANRunErr:
+                        if not self.testCANRunErr(int(self.CANAddr_AO)):
+                            self.pass_signal.emit(False)
+
+                    # 退出 LED TEST 模式
+                    self.clearList(self.m_transmitData)
+                    self.m_transmitData[0] = 0x23
+                    self.m_transmitData[1] = 0xf6
+                    self.m_transmitData[2] = 0x5f
+                    self.m_transmitData[3] = 0x00
+                    self.m_transmitData[4] = 0x45
+                    self.m_transmitData[5] = 0x58
+                    self.m_transmitData[6] = 0x49
+                    self.m_transmitData[7] = 0x54
+                    bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + self.CANAddr_AO),
+                                                                           self.m_transmitData)
+                    if bool_transmit:
+                        self.pauseOption()
+                        if not self.is_running:
+                            return False
+                        self.result_signal.emit("成功退出 LED TEST 模式。\n" + self.HORIZONTAL_LINE)
+                        print("成功退出 LED TEST 模式\n" + self.HORIZONTAL_LINE)
+                    else:
+                        self.result_signal.emit("退出 LED TEST 模式失败！\n" + self.HORIZONTAL_LINE)
+
+                else:
+                    self.pauseOption()
+                    if not self.is_running:
+                        return False
+                    self.result_signal.emit("-----------进入 LED TEST 模式失败-----------\n\n")
+                    print("-----------进入 LED TEST 模式失败-----------\n\n")
+                    self.item_signal.emit([1, 2, 2, '进入模式失败'])
+                    self.item_signal.emit([2, 2, 2, '进入模式失败'])
 
         if self.isCalibrate:
-            boola = self.calibrateAO()
-            if not boola:
+            bool_calibrate = self.calibrateAO()
+            if not bool_calibrate:
                 self.pass_signal.emit(False)
+                # 标定出错直接取消后续的测试和表格生成
+                self.isTest = False
+                self.isExcel = False
 
         if self.isTest:
             if self.isAOTestVol:
                 if not self.testAO('AOVoltage'):
-                    isExcel = False
+                    self.isExcel = False
                     self.pass_signal.emit(False)
 
 
             if self.isAOTestCur:
                 if not self.testAO('AOCurrent'):
-                    isExcel = False
+                    self.isExcel = False
                     self.pass_signal.emit(False)
 
         # if isExcel:
@@ -250,7 +305,8 @@ class AOThread(QObject):
         #     self.result_signal.emit('测试停止，校准校验表生成失败…………' + self.HORIZONTAL_LINE)
 
         self.allFinished_signal.emit()
-        self.pass_signal.emit(True)
+        if bool_calibrate:
+            self.pass_signal.emit(True)
 
     def CAN_init(self):
         CAN_option.connect(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_option.CAN_INDEX)
@@ -608,7 +664,7 @@ class AOThread(QObject):
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.result_signal.emit('切换到电压模式' + self.HORIZONTAL_LINE)
+            self.result_signal.emit('继电器切换到电压模式' + self.HORIZONTAL_LINE)
 
             # self.testNum = self.testNum - 1
             self.m_transmitData = [0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
@@ -629,6 +685,7 @@ class AOThread(QObject):
                 self.messageBox_signal.emit(['错误提示', '继电器2切换错误，请停止检查设备！'])
                 # QMessageBox(QMessageBox.Critical, '错误提示', '继电器切换错误，请停止检查设备！').exec_()
                 return False
+            time.sleep(0.3)
 
             self.pauseOption()
             if not self.is_running:
@@ -640,22 +697,28 @@ class AOThread(QObject):
             if not self.is_running:
                 return False
             self.result_signal.emit(f'开始标定AO电压：' + self.HORIZONTAL_LINE)
-            bool_calibrate = self.calibrateAO_vol_cur('AOVoltage')
-            if not bool_calibrate:
-                return False
-            self.pauseOption()
-            if not self.is_running:
-                return False
+            for typeNum in range(5):
+                bool_calibrate = self.calibrateAO_vol_cur('AOVoltage',typeNum)
+                if not bool_calibrate:
+                    calibrateFailEnd_time = time.time()
+                    calibrateFail_time = round(calibrateFailEnd_time - calibrateStart_time, 1)
+                    self.item_signal.emit([5, 2, 2, f'{calibrateFail_time}'])
+                    return False
+                self.pauseOption()
+                if not self.is_running:
+                    return False
             calibrateEnd_time = time.time()
             calibrateTest_time = round(calibrateEnd_time - calibrateStart_time, 2)
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.item_signal.emit([5, 2, 1, f'{calibrateTest_time}'])
+            if bool_calibrate:
+                self.item_signal.emit([5, 2, 1, f'{calibrateTest_time}'])
+            else:
+                self.item_signal.emit([5, 2, 2,f'{calibrateTest_time}'])
             # self.itemOperation(mTable, 5, 2, 1, f'{calibrateTest_time}')
             self.m_transmitData = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-
-            time.sleep(1)
+            # time.sleep(1)
             bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200+self.CANAddr_relay, self.m_transmitData)
             if not bool_transmit:
                 self.pauseOption()
@@ -673,6 +736,7 @@ class AOThread(QObject):
                 self.result_signal.emit('继电器2切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
                 print('继电器2切换错误，请停止检查设备！')
                 return False
+            time.sleep(0.3)
 
         elif not self.isCalibrateVol:
             self.pauseOption()
@@ -684,30 +748,34 @@ class AOThread(QObject):
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.result_signal.emit('切换到电流模式' + self.HORIZONTAL_LINE)
+            self.result_signal.emit('继电器切换到电流模式' + self.HORIZONTAL_LINE)
             time.sleep(2)
             # CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
             # self.can_start()
             time.sleep(1)
             # self.testNum = self.testNum - 1
             self.m_transmitData = [0x06, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200+self.CANAddr_relay, self.m_transmitData)
-            if not bool_transmit:
-                self.pauseOption()
-                if not self.is_running:
-                    return False
+            try:
+                bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200+self.CANAddr_relay, self.m_transmitData)
+                if not bool_transmit:
+                    self.pauseOption()
+                    if not self.is_running:
+                        return False
+            except:
                 self.result_signal.emit('继电器1切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
                 print('继电器1切换错误，请停止检查设备！')
                 return False
-
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay + 1, self.m_transmitData)
-            if not bool_transmit:
-                self.pauseOption()
-                if not self.is_running:
-                    return False
+            try:
+                bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay + 1, self.m_transmitData)
+                if not bool_transmit:
+                    self.pauseOption()
+                    if not self.is_running:
+                        return False
+            except:
                 self.result_signal.emit('继电器2切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
                 print('继电器2切换错误，请停止检查设备！')
                 return False
+            time.sleep(0.3)
 
             self.pauseOption()
             if not self.is_running:
@@ -718,12 +786,13 @@ class AOThread(QObject):
             if not self.is_running:
                 return False
             self.result_signal.emit(f'开始标定AO电流：' + self.HORIZONTAL_LINE)
-            bool_calibrate = self.calibrateAO_vol_cur('AOCurrent')
-            if not bool_calibrate:
-                return False
-            self.pauseOption()
-            if not self.is_running:
-                return False
+            for typeNum in range(2):
+                bool_calibrate = self.calibrateAO_vol_cur('AOCurrent',typeNum)
+                if not bool_calibrate:
+                    return False
+                self.pauseOption()
+                if not self.is_running:
+                    return False
             calibrateEnd_time = time.time()
             calibrateTest_time = round(calibrateEnd_time - calibrateStart_time, 2)
             # self.itemOperation(mTable, 6, 2, 1, f'{calibrateTest_time}')
@@ -733,7 +802,7 @@ class AOThread(QObject):
             self.item_signal.emit([6, 2, 1, f'{calibrateTest_time}'])
             # CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
             # self.can_start()
-            time.sleep(1)
+            # time.sleep(1)
             self.m_transmitData = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
             bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200+self.CANAddr_relay, self.m_transmitData)
             if not bool_transmit:
@@ -752,6 +821,7 @@ class AOThread(QObject):
                 self.result_signal.emit('继电器2切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
                 print('继电器2切换错误，请停止检查设备！')
                 return False
+            time.sleep(0.3)
 
         elif not self.isCalibrateCur:
             self.pauseOption()
@@ -761,40 +831,54 @@ class AOThread(QObject):
 
         return True
 
-    def calibrateAO_vol_cur(self, type):
-        # if type == 'AOVoltage':
-        #     pass
+    def calibrateAO_vol_cur(self, type:str,typeNum:int):
+        # [(367422 - 156866), (314993 - 209295), (314679 - 262038), (367212 - 261933),(314658 - 272545)]
+        #                    -/+10V   -/+5V   0-5V   0-10V   1-5V
+        self.vol_maxRange_array = [27648*2, 27648*2, 27648, 27648, 27648]
+        # cur_maxRange_array = [(315094 - 272538), (315115 - 262037)]
+        #                    4-20mA  0-20mA
+        self.cur_maxRange_array = [27648, 27648]
+
+        self.vol_highValue_array = [self.highVoltage_1010, self.highVoltage_0505, self.highVoltage_0005,
+                                    self.highVoltage_0010, self.highVoltage_0105]
+        self.vol_lowValue_array = [self.lowVoltage_1010, self.lowVoltage_0505, self.lowVoltage_0005,
+                                   self.lowVoltage_0010, self.lowVoltage_0105]
+        self.cur_highValue_array = [self.highCurrent_0420, self.highCurrent_0020]
+        self.cur_lowValue_array = [self.lowCurrent_0420, self.lowCurrent_0020]
+
         maxRange = 0
         lowValue = 0
         highValue = 0
         if type == 'AOVoltage':
-            highValue = self.highVoltage_1010
-            lowValue = self.lowVoltage_1010
-            maxRange = 2*27648 + 100  # 允许差值比最大量程大一点
+            highValue = self.vol_highValue_array[typeNum]
+            lowValue = self.vol_lowValue_array[typeNum]
+            maxRange = self.vol_maxRange_array[typeNum] #上限最大值- 下限最小值
         if type == 'AOCurrent':
-            highValue = self.highCurrent_0020
-            lowValue = self.highCurrent_0020
-            maxRange = 27648 + 100  # 允许差值比最大量程大一点
+            highValue = self.cur_highValue_array[typeNum]
+            lowValue = self.cur_lowValue_array[typeNum]
+            maxRange = self.cur_maxRange_array[typeNum]  # 上限最大值- 下限最小值
 
         # self.CAN_init()
+        # 0.防止之前可能在标定模式中，先退出标定模式
+        self.setAIChOutCalibrate()
 
         """1.通道归零"""
         self.channelZero()
 
         """2.初始化模式"""
         self.setAOChOutCalibrate()
-        time.sleep(0.5)
+        time.sleep(0.1)
 
         """3.设置AO量程"""
         for i in range(self.m_Channels):
             channel = i + 1
-            if not self.setAIInputType(channel, type):
+            if not self.setAIInputType(channel, type, typeNum):
                 return False
 
         """4.设置AO量程"""
         for i in range(self.m_Channels):
             channel = i + 1
-            if not self.setAOInputType(channel, type):
+            if not self.setAOInputType(channel, type, typeNum):
                 return False
 
         """5.进入标定模式"""
@@ -821,7 +905,7 @@ class AOThread(QObject):
                 return False
             self.result_signal.emit(self.HORIZONTAL_LINE + '仅标定第一个通道' + self.HORIZONTAL_LINE)
             print(self.HORIZONTAL_LINE + '仅标定第一个通道' + self.HORIZONTAL_LINE)
-        bool_receive, usArrayHigh = self.receive_WriteToAO(highValue, type, channelNum)
+        bool_receive, usArrayHigh = self.receive_WriteToAO(highValue, type, channelNum,typeNum)
         if not bool_receive:
             return False
         self.pauseOption()
@@ -829,7 +913,7 @@ class AOThread(QObject):
             return False
         self.result_signal.emit(f"等待2秒……\n\n")
         time.sleep(2)
-        bool_receive, usArrayLow = self.receive_WriteToAO(lowValue, type, channelNum)
+        bool_receive, usArrayLow = self.receive_WriteToAO(lowValue, type, channelNum,typeNum)
         if not bool_receive:
             return False
         for i in range(channelNum):
@@ -950,8 +1034,47 @@ class AOThread(QObject):
         self.m_transmitData[6] = ((usSpan >> 16) & 0xff)
         bool_transmit, self.m_can_obj = CAN_option.transmitCAN(can_id, self.m_transmitData)
 
-    def receive_WriteToAO(self, value, type, channelNum):
-        print('写入数据并等待信号稳定………' + self.HORIZONTAL_LINE)
+    def receive_WriteToAO(self, value, type, channelNum,typeNum):
+        # [(367422 - 156866), (314993 - 209295), (314679 - 262038), (367212 - 261933),(314658 - 272545)]
+        #                    -/+10V   -/+5V   0-5V   0-10V   1-5V
+        self.vol_maxRange_array = [27648 * 2, 27648 * 2, 27648, 27648, 27648]
+        # cur_maxRange_array = [(315094 - 272538), (315115 - 262037)]
+        #                    4-20mA  0-20mA
+        self.cur_maxRange_array = [27648, 27648]
+
+        self.vol_highValue_array = [self.highVoltage_1010, self.highVoltage_0505, self.highVoltage_0005,
+                                    self.highVoltage_0010, self.highVoltage_0105]
+        self.vol_lowValue_array = [self.lowVoltage_1010, self.lowVoltage_0505, self.lowVoltage_0005,
+                                   self.lowVoltage_0010, self.lowVoltage_0105]
+        self.cur_highValue_array = [self.highCurrent_0420, self.highCurrent_0020]
+        self.cur_lowValue_array = [self.lowCurrent_0420, self.lowCurrent_0020]
+
+
+
+
+        self.vol_high_standardValue_array = [367002, 314573, 314573, 367002, 314573]
+        self.cur_high_standardValue_array = [314777, 314777]
+        self.vol_low_standardValue_array = [157286, 209715, 262144, 262144, 272630]
+        self.cur_low_standardValue_array = [272671, 262144]
+        self.vol_error_value = [841, 841, 212, 422, 170]
+        self.cur_high_error_value = [636, 678]
+        self.cur_low_error_value = [265, 214]
+        if type == 'AIVoltage':
+            self.error_value=self.vol_error_value[typeNum]
+            if int(value) == 27648:
+                self.standardValue = self.vol_high_standardValue_array[typeNum]
+            elif int(value) == 0 or int(value) == -27648:
+                self.standardValue = self.vol_low_standardValue_array[typeNum]
+            # headInf = self.arrayVol_1010
+        elif type == 'AICurrent':
+            if int(value) == 27648:
+                self.error_value =self.cur_high_error_value[typeNum]
+                self.standardValue = self.cur_high_standardValue_array[typeNum]
+            elif int(value) == 0:
+                self.error_value = self.cur_low_error_value[typeNum]
+                self.standardValue = self.cur_low_standardValue_array[typeNum]
+
+
         self.pauseOption()
         if not self.is_running:
             return False, 0
@@ -1141,7 +1264,7 @@ class AOThread(QObject):
             array[i] = 0x00
 
     # 检查待检AO模块输入类型是否正确
-    def setAOInputType(self, AOChannel, type):
+    def setAOInputType(self, AOChannel, type:str, typeNum:int):
         if AOChannel == 1:
             self.pauseOption()
             if not self.is_running:
@@ -1158,8 +1281,8 @@ class AOThread(QObject):
         self.clearList(self.m_can_obj.Data)
 
         if type == 'AOVoltage' or type == 'AIVoltage':
-            self.m_transmitData[4] = self.AORangeArray[0]
-            self.m_transmitData[5] = self.AORangeArray[1]
+            self.m_transmitData[4] = self.vol_AORangeArray[2 * typeNum]
+            self.m_transmitData[5] = self.vol_AORangeArray[2 * typeNum + 1]
             while True:
                 # self.isPause()
                 # if not self.isStop():
@@ -1173,31 +1296,35 @@ class AOThread(QObject):
                         # print(f'm_can_obj.Data[5]:{self.m_can_obj.Data[5]}')
                         # print(f'AORangeArray[0]:{self.AORangeArray[0]}')
                         # print(f'AORangeArray[1]:{self.AORangeArray[1]}')
-                        if hex(self.m_can_obj.Data[4]) == hex(self.AORangeArray[0]) and hex(
-                                self.m_can_obj.Data[5]) == hex(self.AORangeArray[1]):
-                            print(f'{AOChannel}.成功设置AO通道{AOChannel}的量程为”电压+/-10V“。\n\n')
+                        if hex(self.m_can_obj.Data[4]) == hex(self.vol_AORangeArray[2 * typeNum]) and hex(
+                                self.m_can_obj.Data[5]) == hex(self.vol_AORangeArray[2 * typeNum + 1]):
+                            print(f'{AOChannel}.成功设置AO通道{AOChannel}的量程为”{self.vol_name_array[typeNum]}“。\n\n')
                             self.pauseOption()
                             if not self.is_running:
                                 return False
-                            self.result_signal.emit(f'{AOChannel}.成功设置AO通道{AOChannel}的量程为”电压+/-10V“。\n\n')
+                            self.result_signal.emit(f'{AOChannel}.成功设置AO通道{AOChannel}的量程为”'
+                                                    f'{self.vol_name_array[typeNum]}“。\n\n')
                             break
                         else:
                             self.pauseOption()
                             if not self.is_running:
                                 return False
-                            self.result_signal.emit(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”电压+/-10V“。\n\n')
-                            print(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”电压+/-10V“。\n\n')
+                            self.result_signal.emit(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”'
+                                                    f'{self.vol_name_array[typeNum]}“。\n\n')
+                            print(
+                                f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”{self.vol_name_array[typeNum]}“。\n\n')
                             return False
                 else:
                     self.pauseOption()
                     if not self.is_running:
                         return False
-                    self.result_signal.emit(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”电压+/-10V“。\n\n')
+                    self.result_signal.emit(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”'
+                                            f'{self.vol_name_array[typeNum]}“。\n\n')
                     return False
                     # print(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”电压+/-10V“。\n\n')
         elif type == 'AOCurrent' or type == 'AICurrent':
-            self.m_transmitData[4] = self.AORangeArray[10]
-            self.m_transmitData[5] = self.AORangeArray[11]
+            self.m_transmitData[4] = self.cur_AORangeArray[2 * typeNum]
+            self.m_transmitData[5] = self.cur_AORangeArray[2 * typeNum + 1]
             while True:
                 # self.isPause()
                 # if not self.isStop():
@@ -1211,27 +1338,30 @@ class AOThread(QObject):
                         # print(f'm_can_obj.Data[5]:{self.m_can_obj.Data[5]}')
                         # print(f'AORangeArray[0]:{self.AORangeArray[0]}')
                         # print(f'AORangeArray[1]:{self.AORangeArray[1]}')
-                        if hex(self.m_can_obj.Data[4]) == hex(self.AORangeArray[10]) and hex(
-                                self.m_can_obj.Data[5]) == hex(self.AORangeArray[11]):
-                            print(f'{AOChannel}.成功设置AO通道{AOChannel}的量程为”电流(0-20)mA“。\n\n')
+                        if hex(self.m_can_obj.Data[4]) == hex(self.cur_AORangeArray[2 * typeNum]) and hex(
+                                self.m_can_obj.Data[5]) == hex(self.cur_AORangeArray[2 * typeNum + 1]):
+                            print(f'{AOChannel}.成功设置AO通道{AOChannel}的量程为”{self.cur_name_array[typeNum]}“。\n\n')
                             self.pauseOption()
                             if not self.is_running:
                                 return False
-                            self.result_signal.emit(f'{AOChannel}.成功设置AO通道{AOChannel}的量程为”电流(0-20)mA“。\n\n')
+                            self.result_signal.emit(f'{AOChannel}.成功设置AO通道{AOChannel}的量程为”'
+                                                    f'{self.cur_name_array[typeNum]}“。\n\n')
                             break
                         else:
                             self.pauseOption()
                             if not self.is_running:
                                 return False
-                            self.result_signal.emit(
-                                f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”电流(0-20)mA“。\n\n')
-                            print(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”电流(0-20)mA“。\n\n')
+                            self.result_signal.emit(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”'
+                                                    f'{self.cur_name_array[typeNum]}“。\n\n')
+                            print(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”'
+                                  f'{self.cur_name_array[typeNum]}“。\n\n')
                             return False
                 else:
                     self.pauseOption()
                     if not self.is_running:
                         return False
-                    self.result_signal.emit(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”电流(0-20)mA“。\n\n')
+                    self.result_signal.emit(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”'
+                                            f'{self.cur_AIRangeArray[typeNum]}“。\n\n')
                     return False
 
         if AOChannel == 4:
@@ -1242,7 +1372,7 @@ class AOThread(QObject):
         return True
 
     # 检查配套AI模块输入类型是否正确
-    def setAIInputType(self, AIChannel, type):
+    def setAIInputType(self, AIChannel, type, typeNum:int):
         # CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
         # self.can_start()
         if AIChannel == 1:
@@ -1261,8 +1391,8 @@ class AOThread(QObject):
         self.clearList(self.m_can_obj.Data)
 
         if type == 'AOVoltage' or type == 'AIVoltage':
-            self.m_transmitData[4] = self.AIRangeArray[0]
-            self.m_transmitData[5] = self.AIRangeArray[1]
+            self.m_transmitData[4] = self.vol_AIRangeArray[2 * typeNum]
+            self.m_transmitData[5] = self.vol_AIRangeArray[2 * typeNum + 1]
             while True:
                 # QApplication.processEvents()
                 if CAN_option.transmitCAN(0x600 + self.CANAddr_AI, self.m_transmitData)[0]:
@@ -1273,31 +1403,33 @@ class AOThread(QObject):
                         # print(f'm_can_obj.Data[5]:{self.m_can_obj.Data[5]}')
                         # print(f'AIRangeArray[0]:{self.AIRangeArray[0]}')
                         # print(f'AIRangeArray[1]:{self.AIRangeArray[1]}')
-                        if hex(self.m_can_obj.Data[4]) == hex(self.AIRangeArray[0]) and hex(
-                                self.m_can_obj.Data[5]) == hex(self.AIRangeArray[1]):
-                            print(f'{AIChannel}.成功设置AI通道{AIChannel}的量程为”电压+/-10V“。\n\n')
+                        if hex(self.m_can_obj.Data[4]) == hex(self.vol_AIRangeArray[2*typeNum]) and hex(
+                                self.m_can_obj.Data[5]) == hex(self.vol_AIRangeArray[2*typeNum+1]):
+                            print(f'{AIChannel}.成功设置AI通道{AIChannel}的量程为"{self.vol_name_array[typeNum]}"。\n\n')
 
                             self.pauseOption()
                             if not self.is_running:
                                 return False
-                            self.result_signal.emit(f'{AIChannel}.成功设置AI通道{AIChannel}的量程为”电压+/-10V“。\n\n')
+                            self.result_signal.emit(f'{AIChannel}.成功设置AI通道{AIChannel}的量程为"'
+                                                    f'{self.vol_name_array[typeNum]}"。\n\n')
                             break
                         else:
                             self.pauseOption()
                             if not self.is_running:
                                 return False
-                            self.result_signal.emit(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”电压+/-10V“。\n\n')
-                            print(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”电压+/-10V“。\n\n')
+                            self.result_signal.emit(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为"'
+                                                    f'{self.vol_name_array[typeNum]}"。\n\n')
                 else:
                     self.pauseOption()
                     if not self.is_running:
                         return False
-                    self.result_signal.emit(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”电压+/-10V“。\n\n')
+                    self.result_signal.emit(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”'
+                                            f'{self.vol_name_array[typeNum]}“。\n\n')
                     return False
                     # print(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”电压+/-10V“。\n\n')
         elif type == 'AOCurrent' or type == 'AICurrent':
-            self.m_transmitData[4] = self.AIRangeArray[10]
-            self.m_transmitData[5] = self.AIRangeArray[11]
+            self.m_transmitData[4] = self.cur_AIRangeArray[2 * typeNum]
+            self.m_transmitData[5] = self.cur_AIRangeArray[2 * typeNum + 1]
             while True:
                 # self.isPause()
                 # if not self.isStop():
@@ -1311,28 +1443,31 @@ class AOThread(QObject):
                         # print(f'm_can_obj.Data[5]:{self.m_can_obj.Data[5]}')
                         # print(f'AIRangeArray[0]:{self.AIRangeArray[0]}')
                         # print(f'AIRangeArray[1]:{self.AIRangeArray[1]}')
-                        if hex(self.m_can_obj.Data[4]) == hex(self.AIRangeArray[10]) and hex(
-                                self.m_can_obj.Data[5]) == hex(self.AIRangeArray[11]):
-                            print(f'{AIChannel}.成功设置AI通道{AIChannel}的量程为”电流(0-20)mA“。\n\n')
+                        if hex(self.m_can_obj.Data[4]) == hex(self.cur_AIRangeArray[2 * typeNum]) and hex(
+                                self.m_can_obj.Data[5]) == hex(self.cur_AIRangeArray[2 * typeNum + 1]):
+                            print(f'{AIChannel}.成功设置AI通道{AIChannel}的量程为”{self.cur_name_array[typeNum]}“。\n\n')
 
                             self.pauseOption()
                             if not self.is_running:
                                 return False
-                            self.result_signal.emit(f'{AIChannel}.成功设置AI通道{AIChannel}的量程为”电流(0-20)mA“。\n\n')
+                            self.result_signal.emit(f'{AIChannel}.成功设置AI通道{AIChannel}的量程为”'
+                                                    f'{self.cur_name_array[typeNum]}“。\n\n')
                             break
                         else:
                             self.pauseOption()
                             if not self.is_running:
                                 return False
-                            self.result_signal.emit(
-                                f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”电流(0-20)mA“。\n\n')
-                            print(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”电流(0-20)mA“。\n\n')
+                            self.result_signal.emit(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为'
+                                                    f'”{self.cur_name_array[typeNum]}“。\n\n')
+                            print(
+                                f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”{self.cur_name_array[typeNum]}“。\n\n')
                             return False
                 else:
                     self.pauseOption()
                     if not self.is_running:
                         return False
-                    self.result_signal.emit(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”电流(0-20)mA“。\n\n')
+                    self.result_signal.emit(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”'
+                                            f'{self.cur_name_array[typeNum]}“。\n\n')
                     return False
         if AIChannel == 4:
             self.pauseOption()
@@ -1408,233 +1543,175 @@ class AOThread(QObject):
 
     def testRunErr(self, addr):
         self.testNum -= 1
-        # 关闭CAN设备
-        # CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
-        # 启动CAN设备并打开CAN通道
-        # self.can_start()
         self.isLEDRunOK = True
-        # self.result_signal.emit(f'self.isLEDRunOK:{self.isLEDRunOK}')
         self.isLEDErrOK = True
         self.isLEDPass = True
-        # reply = QMessageBox.question(None, '检测RUN &ERROR', '是否开始进行RUN 和ERROR 检测？',
-        #                              QMessageBox.Yes | QMessageBox.No,QMessageBox.Yes)
-        # if self.tabIndex == 0:
-        #     mTable = self.tableWidget_DIDO
-        # elif self.tabIndex == 1:
-        #     mTable = self.tableWidget_AI
-        # elif self.tabIndex == 2:
-        #     mTable = self.tableWidget_AO
-        # if reply == QMessageBox.Yes:
-        # for i in range(4):
+
         self.pauseOption()
         if not self.is_running:
             return False
-        self.item_signal.emit([1, 1, 0, ''])
-        # mTable.item(1, i).setBackground(QtGui.QColor(255, 255, 0))
-        # if i == 1:
-        #     mTable.item(1, i).setText('正在检测')
+        self.item_signal.emit([1,1,0,''])
+            # mTable.item(1, i).setBackground(QtGui.QColor(255, 255, 0))
+            # if i == 1:
+            #     mTable.item(1, i).setText('正在检测')
         runStart_time = time.time()
-        # 进入指示灯测试模式
+
         self.pauseOption()
         if not self.is_running:
             return False
-        self.result_signal.emit("--------------进入 LED TEST模式-------------\n\n")
-        print("--------------进入 LED TEST模式-------------")
-        self.channelZero()
-        self.m_transmitData[0] = 0x23
+        self.result_signal.emit("1.进行 LED RUN 测试\n\n")
+        print("1.进行 LED RUN 测试\n\n")
+        self.clearList(self.m_transmitData)
+        self.m_transmitData[0] = 0x2f
         self.m_transmitData[1] = 0xf6
         self.m_transmitData[2] = 0x5f
-        self.m_transmitData[3] = 0x00
-        self.m_transmitData[4] = 0x53
-        self.m_transmitData[5] = 0x54
-        self.m_transmitData[6] = 0x41
-        self.m_transmitData[7] = 0x52
-        isLEDTest, whatEver = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData)
-        if isLEDTest:
+        self.m_transmitData[3] = 0x01
+        self.m_transmitData[4] = 0x01
+        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr),self.m_transmitData)
+        runEnd_time = time.time()
+        runTest_time = round(runEnd_time - runStart_time,2)
+        time.sleep(0.5)
+        # reply = QMessageBox.question(None, '检测RUN &ERROR', 'RUN指示灯是否点亮？',
+        #                              QMessageBox.Yes | QMessageBox.No,
+        #                              QMessageBox.Yes)
+        self.messageBox_signal.emit(['检测RUN &ERROR', 'RUN指示灯是否点亮？'])
+        reply = self.result_queue.get()
+        if reply == QMessageBox.Yes:
+            self.runLED = True
+            # for i in range(4):
+            #     item = mTable.item(1, i)
+            #     item.setBackground(QtGui.QColor(0, 255, 0))
+            #     item.setTextAlignment(QtCore.Qt.AlignCenter)
+            #     if i == 1:
+            #         item.setText('检测完成')
+            #     if i == 2:
+            #         item.setText('通过')
+            #     if i == 3:
+            #         item.setText(f'{runTest_time}')
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.result_signal.emit("-----------进入 LED TEST 模式成功-----------\n")
-            print("-----------进入 LED TEST 模式成功-----------" + self.HORIZONTAL_LINE)
+            self.item_signal.emit([1,2,1,f'{runTest_time}'])
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.result_signal.emit("1.进行 LED RUN 测试\n\n")
-            print("1.进行 LED RUN 测试\n\n")
+            self.result_signal.emit("LED RUN 测试通过\n关闭LED RUN\n"+self.HORIZONTAL_LINE)
+            print("LED RUN 测试通过\n关闭LED RUN\n"+self.HORIZONTAL_LINE)
             self.clearList(self.m_transmitData)
             self.m_transmitData[0] = 0x2f
             self.m_transmitData[1] = 0xf6
             self.m_transmitData[2] = 0x5f
             self.m_transmitData[3] = 0x01
-            self.m_transmitData[4] = 0x01
+            self.m_transmitData[4] = 0x00
             bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData)
-            runEnd_time = time.time()
-            runTest_time = round(runEnd_time - runStart_time, 2)
-            time.sleep(0.5)
-            # reply = QMessageBox.question(None, '检测RUN &ERROR', 'RUN指示灯是否点亮？',
-            #                              QMessageBox.Yes | QMessageBox.No,
-            #                              QMessageBox.Yes)
-            self.messageBox_signal.emit(['检测RUN &ERROR', 'RUN指示灯是否点亮？'])
-            reply = self.result_queue.get()
-            if reply == QMessageBox.Yes:
-                self.runLED = True
-                # for i in range(4):
-                #     item = mTable.item(1, i)
-                #     item.setBackground(QtGui.QColor(0, 255, 0))
-                #     item.setTextAlignment(QtCore.Qt.AlignCenter)
-                #     if i == 1:
-                #         item.setText('检测完成')
-                #     if i == 2:
-                #         item.setText('通过')
-                #     if i == 3:
-                #         item.setText(f'{runTest_time}')
-                self.pauseOption()
-                if not self.is_running:
-                    return False
-                self.item_signal.emit([1, 2, 1, f'{runTest_time}'])
-                self.pauseOption()
-                if not self.is_running:
-                    return False
-                self.result_signal.emit("LED RUN 测试通过\n关闭LED RUN\n" + self.HORIZONTAL_LINE)
-                print("LED RUN 测试通过\n关闭LED RUN\n" + self.HORIZONTAL_LINE)
-                self.clearList(self.m_transmitData)
-                self.m_transmitData[0] = 0x2f
-                self.m_transmitData[1] = 0xf6
-                self.m_transmitData[2] = 0x5f
-                self.m_transmitData[3] = 0x01
-                self.m_transmitData[4] = 0x00
-                bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData)
-                time.sleep(1)
-                self.isLEDRunOK = True
-                # self.result_signal.emit(f'self.isLEDRunOK:{self.isLEDRunOK}')
-            elif reply == QMessageBox.No:
-                self.runLED = False
-                self.pauseOption()
-                if not self.is_running:
-                    return False
-                self.item_signal.emit([1, 2, 2, f'{runTest_time}'])
-                # for i in range(4):
-                #     item = mTable.item(1, i)
-                #     item.setBackground(QtGui.QColor(255, 0, 0))
-                #     item.setTextAlignment(QtCore.Qt.AlignCenter)
-                #     item.setForeground(QtGui.QColor(255, 255, 255))
-                #     if i == 1:
-                #         item.setText('检测完成')
-                #     if i == 2:
-                #         item.setText('未通过')
-                #     if i == 3:
-                #         item.setText(f'{runTest_time}')
-                self.pauseOption()
-                if not self.is_running:
-                    return False
-                self.result_signal.emit("LED RUN 测试不通过\n" + self.HORIZONTAL_LINE)
-                print("LED RUN 测试不通过\n" + self.HORIZONTAL_LINE)
-                self.isLEDRunOK = False
-                # self.result_signal.emit(f'self.isLEDRunOK:{self.isLEDRunOK}')
-            self.isLEDPass = self.isLEDPass & self.isLEDRunOK
-
-            errorStart_time = time.time()
+            time.sleep(1)
+            self.isLEDRunOK = True
+            # self.result_signal.emit(f'self.isLEDRunOK:{self.isLEDRunOK}')
+        elif reply == QMessageBox.No:
+            self.runLED = False
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.result_signal.emit("2.进行 LED ERROR 测试\n\n")
-            print("2.进行 LED ERROR 测试\n\n")
-            self.pauseOption()
-            if not self.is_running:
-                return False
-            self.item_signal.emit([2, 1, 0, ''])
+            self.item_signal.emit([1,2,2,f'{runTest_time}'])
             # for i in range(4):
-            #     mTable.item(2, i).setBackground(QtGui.QColor(255, 255, 0))
+            #     item = mTable.item(1, i)
+            #     item.setBackground(QtGui.QColor(255, 0, 0))
+            #     item.setTextAlignment(QtCore.Qt.AlignCenter)
+            #     item.setForeground(QtGui.QColor(255, 255, 255))
             #     if i == 1:
-            #         mTable.item(2, i).setText('正在检测')
-            #         mTable.item(2, i).setTextAlignment(QtCore.Qt.AlignCenter)
+            #         item.setText('检测完成')
+            #     if i == 2:
+            #         item.setText('未通过')
+            #     if i == 3:
+            #         item.setText(f'{runTest_time}')
+            self.pauseOption()
+            if not self.is_running:
+                return False
+            self.result_signal.emit("LED RUN 测试不通过\n" + self.HORIZONTAL_LINE)
+            print("LED RUN 测试不通过\n" + self.HORIZONTAL_LINE)
+            self.isLEDRunOK = False
+            # self.result_signal.emit(f'self.isLEDRunOK:{self.isLEDRunOK}')
+        self.isLEDPass = self.isLEDPass & self.isLEDRunOK
 
+        errorStart_time = time.time()
+        self.pauseOption()
+        if not self.is_running:
+            return False
+        self.result_signal.emit("2.进行 LED ERROR 测试\n\n")
+        print("2.进行 LED ERROR 测试\n\n")
+        self.pauseOption()
+        if not self.is_running:
+            return False
+        self.item_signal.emit([2, 1, 0, ''])
+        # for i in range(4):
+        #     mTable.item(2, i).setBackground(QtGui.QColor(255, 255, 0))
+        #     if i == 1:
+        #         mTable.item(2, i).setText('正在检测')
+        #         mTable.item(2, i).setTextAlignment(QtCore.Qt.AlignCenter)
+
+        self.clearList(self.m_transmitData)
+        self.m_transmitData[0] = 0x2f
+        self.m_transmitData[1] = 0xf6
+        self.m_transmitData[2] = 0x5f
+        self.m_transmitData[3] = 0x02
+        self.m_transmitData[4] = 0x01
+
+        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData)
+        errorEnd_time = time.time()
+        errorTest_time = round(errorEnd_time-errorStart_time,2)
+        time.sleep(0.5)
+        self.messageBox_signal.emit(['检测RUN &ERROR', 'ERROR指示灯是否点亮？'])
+        reply = self.result_queue.get()
+        # reply = QMessageBox.question(None, '检测RUN &ERROR', 'ERROR指示灯是否点亮？',
+        #                              QMessageBox.Yes | QMessageBox.No,
+        #                              QMessageBox.Yes)
+        if reply == QMessageBox.Yes:
+            self.errorLED = True
+            # for i in range(4):
+            #     item = mTable.item(2, i)
+            #     item.setBackground(QtGui.QColor(0, 255, 0))
+            #     item.setTextAlignment(QtCore.Qt.AlignCenter)
+            #     if i == 1:
+            #         item.setText('检测完成')
+            #     if i == 2:
+            #         item.setText('通过')
+            #     if i == 3:
+            #         item.setText(f'{errorTest_time}')
+            # self.itemOperation(mTable,2,2,1,errorTest_time)
+            self.pauseOption()
+            if not self.is_running:
+                return False
+            self.item_signal.emit([2,2,1,f'{errorTest_time}'])
+            self.pauseOption()
+            if not self.is_running:
+                return False
+            self.result_signal.emit("LED ERROR 测试通过\n关闭LED ERROR\n"+self.HORIZONTAL_LINE)
+            print("LED ERROR 测试通过\n关闭LED ERROR\n"+self.HORIZONTAL_LINE)
             self.clearList(self.m_transmitData)
             self.m_transmitData[0] = 0x2f
             self.m_transmitData[1] = 0xf6
             self.m_transmitData[2] = 0x5f
             self.m_transmitData[3] = 0x02
-            self.m_transmitData[4] = 0x01
-
+            self.m_transmitData[4] = 0x00
             bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData)
-            errorEnd_time = time.time()
-            errorTest_time = round(errorEnd_time - errorStart_time, 2)
-            time.sleep(0.5)
-            self.messageBox_signal.emit(['检测RUN &ERROR', 'ERROR指示灯是否点亮？'])
-            reply = self.result_queue.get()
-            # reply = QMessageBox.question(None, '检测RUN &ERROR', 'ERROR指示灯是否点亮？',
-            #                              QMessageBox.Yes | QMessageBox.No,
-            #                              QMessageBox.Yes)
-            if reply == QMessageBox.Yes:
-                self.errorLED = True
-                # for i in range(4):
-                #     item = mTable.item(2, i)
-                #     item.setBackground(QtGui.QColor(0, 255, 0))
-                #     item.setTextAlignment(QtCore.Qt.AlignCenter)
-                #     if i == 1:
-                #         item.setText('检测完成')
-                #     if i == 2:
-                #         item.setText('通过')
-                #     if i == 3:
-                #         item.setText(f'{errorTest_time}')
-                # self.itemOperation(mTable,2,2,1,errorTest_time)
-                self.pauseOption()
-                if not self.is_running:
-                    return False
-                self.item_signal.emit([2, 2, 1, f'{errorTest_time}'])
-                self.pauseOption()
-                if not self.is_running:
-                    return False
-                self.result_signal.emit("LED ERROR 测试通过\n关闭LED ERROR\n" + self.HORIZONTAL_LINE)
-                print("LED ERROR 测试通过\n关闭LED ERROR\n" + self.HORIZONTAL_LINE)
-                self.clearList(self.m_transmitData)
-                self.m_transmitData[0] = 0x2f
-                self.m_transmitData[1] = 0xf6
-                self.m_transmitData[2] = 0x5f
-                self.m_transmitData[3] = 0x02
-                self.m_transmitData[4] = 0x00
-                bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData)
-                time.sleep(1)
-                self.isLEDErrOK = True
-            elif reply == QMessageBox.No:
-                self.errorLED = False
-                self.pauseOption()
-                if not self.is_running:
-                    return False
-                self.item_signal.emit([2, 2, 2, f'{errorTest_time}'])
-                # self.itemOself.pauseOption()peration(mTable, 2, 2, 2, errorTest_time)
-                self.pauseOption()
-                if not self.is_running:
-                    return False
-                self.result_signal.emit("LED ERROR 测试不通过\n" + self.HORIZONTAL_LINE)
-                print("LED ERROR 测试不通过\n" + self.HORIZONTAL_LINE)
-                self.isLEDErrOK = False
-
-            self.isLEDPass = self.isLEDPass & self.isLEDErrOK
+            time.sleep(1)
+            self.isLEDErrOK = True
+        elif reply == QMessageBox.No:
+            self.errorLED = False
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.result_signal.emit("退出 LED TEST 模式\n" + self.HORIZONTAL_LINE)
-            print("退出 LED TEST 模式\n" + self.HORIZONTAL_LINE)
-            self.clearList(self.m_transmitData)
-            self.m_transmitData[0] = 0x23
-            self.m_transmitData[1] = 0xf6
-            self.m_transmitData[2] = 0x5f
-            self.m_transmitData[3] = 0x00
-            self.m_transmitData[4] = 0x45
-            self.m_transmitData[5] = 0x58
-            self.m_transmitData[6] = 0x49
-            self.m_transmitData[7] = 0x54
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData)
-
-        else:
+            self.item_signal.emit([2, 2, 2, f'{errorTest_time}'])
+            # self.itemOself.pauseOption()peration(mTable, 2, 2, 2, errorTest_time)
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.result_signal.emit("-----------进入 LED TEST 模式失败-----------\n\n")
-            print("-----------进入 LED TEST 模式失败-----------\n\n")
-            self.item_signal.emit([1, 2, 2, '进入模式失败'])
-            self.item_signal.emit([2, 2, 2, '进入模式失败'])
+            self.result_signal.emit("LED ERROR 测试不通过\n" + self.HORIZONTAL_LINE)
+            print("LED ERROR 测试不通过\n" + self.HORIZONTAL_LINE)
+            self.isLEDErrOK = False
+
+        self.isLEDPass = self.isLEDPass & self.isLEDErrOK
+
         return True
 
     def testCANRunErr(self, addr):
@@ -1643,8 +1720,9 @@ class AOThread(QObject):
         # CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
         # 启动CAN设备并打开CAN通道
         # self.can_start()
-        isLEDCANRunOK = True
-        isLEDCANErrOK = True
+        self.isLEDCANRunOK = True
+        self.isLEDCANErrOK = True
+        self.isLEDCANPass = True
         # reply = QMessageBox.question(None, '检测CAN_RUN &CAN_ERROR', '是否开始进行CAN_RUN 和CAN_ERROR 检测？',
         #                              QMessageBox.Yes | QMessageBox.No,
         #                              QMessageBox.Yes)
@@ -1660,179 +1738,126 @@ class AOThread(QObject):
         if not self.is_running:
             return False
         self.item_signal.emit([3, 1, 0, ''])
-        # 进入指示灯测试模式
+
         self.pauseOption()
         if not self.is_running:
             return False
-        self.result_signal.emit("--------------进入 LED TEST模式-------------\n\n")
-        print("--------------进入 LED TEST模式-------------")
-        if not self.channelZero():
-            return False
-        self.m_transmitData[0] = 0x23
+        self.result_signal.emit("1.进行 LED CAN_RUN 测试\n\n")
+        print("1.进行 LED CAN_RUN 测试\n\n")
+        self.clearList(self.m_transmitData)
+        self.m_transmitData[0] = 0x2f
         self.m_transmitData[1] = 0xf6
         self.m_transmitData[2] = 0x5f
-        self.m_transmitData[3] = 0x00
-        self.m_transmitData[4] = 0x53
-        self.m_transmitData[5] = 0x54
-        self.m_transmitData[6] = 0x41
-        self.m_transmitData[7] = 0x52
-        print(f'{self.module_2}地址:{0x600 + addr}')
-        isLEDTest, whatEver = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData)
-        if isLEDTest:
+        self.m_transmitData[3] = 0x03
+        self.m_transmitData[4] = 0x01
+        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData)
+        CANRunEnd_time = time.time()
+        CANRunTest_time = round(CANRunEnd_time - CANRunStart_time, 2)
+        time.sleep(0.5)
+        self.messageBox_signal.emit(['检测RUN &ERROR', 'CAN_RUN指示灯是否点亮？'])
+        reply = self.result_queue.get()
+        # reply = QMessageBox.question(None, '检测CAN_RUN &CAN_ERROR', '指示灯是否点亮？',
+        #                              QMessageBox.Yes | QMessageBox.No,
+        #                              QMessageBox.Yes)
+        if reply == QMessageBox.Yes:
+            self.CAN_runLED = True
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.result_signal.emit("-----------进入 LED TEST 模式成功-----------\n")
-            print("-----------进入 LED TEST 模式成功-----------" + self.HORIZONTAL_LINE)
+            self.item_signal.emit([3, 2, 1, CANRunTest_time])
+            # self.itemOperation(mTable,3,2,1,CANRunTest_time)
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.result_signal.emit("1.进行 LED CAN_RUN 测试\n\n")
-            print("1.进行 LED CAN_RUN 测试\n\n")
+            self.result_signal.emit("LED CAN_RUN 测试通过\n关闭LED CAN_RUN\n" + self.HORIZONTAL_LINE)
+            print("LED CAN_RUN 测试通过\n关闭LED CAN_RUN\n" + self.HORIZONTAL_LINE)
             self.clearList(self.m_transmitData)
             self.m_transmitData[0] = 0x2f
             self.m_transmitData[1] = 0xf6
             self.m_transmitData[2] = 0x5f
             self.m_transmitData[3] = 0x03
-            self.m_transmitData[4] = 0x01
+            self.m_transmitData[4] = 0x00
             bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData)
-            CANRunEnd_time = time.time()
-            CANRunTest_time = round(CANRunEnd_time - CANRunStart_time, 2)
-            time.sleep(0.5)
-            self.messageBox_signal.emit(['检测RUN &ERROR', 'CAN_RUN指示灯是否点亮？'])
-            reply = self.result_queue.get()
-            # reply = QMessageBox.question(None, '检测CAN_RUN &CAN_ERROR', '指示灯是否点亮？',
-            #                              QMessageBox.Yes | QMessageBox.No,
-            #                              QMessageBox.Yes)
-            if reply == QMessageBox.Yes:
-                self.CAN_runLED = True
-                self.pauseOption()
-                if not self.is_running:
-                    return False
-                self.item_signal.emit([3, 2, 1, CANRunTest_time])
-                # self.itemOperation(mTable,3,2,1,CANRunTest_time)
-                self.pauseOption()
-                if not self.is_running:
-                    return False
-                self.result_signal.emit("LED CAN_RUN 测试通过\n关闭LED CAN_RUN\n" + self.HORIZONTAL_LINE)
-                print("LED CAN_RUN 测试通过\n关闭LED CAN_RUN\n" + self.HORIZONTAL_LINE)
-                self.clearList(self.m_transmitData)
-                self.m_transmitData[0] = 0x2f
-                self.m_transmitData[1] = 0xf6
-                self.m_transmitData[2] = 0x5f
-                self.m_transmitData[3] = 0x03
-                self.m_transmitData[4] = 0x00
-                bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData)
-                time.sleep(1)
-                isLEDCANRunOK = True
-            elif reply == QMessageBox.No:
-                self.CAN_runLED = False
-                self.pauseOption()
-                if not self.is_running:
-                    return False
-                self.item_signal.emit([3, 2, 2, CANRunTest_time])
-                # self.itemOperation(mTable, 3, 2, 2, CANRunTest_time)
-                self.pauseOption()
-                if not self.is_running:
-                    return False
-                self.result_signal.emit("LED CAN_RUN 测试不通过\n" + self.HORIZONTAL_LINE)
-                print("LED CAN_RUN 测试不通过\n" + self.HORIZONTAL_LINE)
-                isLEDCANRunOK = False
+            time.sleep(1)
+            self.isLEDCANRunOK = True
+        elif reply == QMessageBox.No:
+            self.CAN_runLED = False
+            self.pauseOption()
+            if not self.is_running:
+                return False
+            self.item_signal.emit([3, 2, 2, CANRunTest_time])
+            # self.itemOperation(mTable, 3, 2, 2, CANRunTest_time)
+            self.pauseOption()
+            if not self.is_running:
+                return False
+            self.result_signal.emit("LED CAN_RUN 测试不通过\n" + self.HORIZONTAL_LINE)
+            print("LED CAN_RUN 测试不通过\n" + self.HORIZONTAL_LINE)
+            self.isLEDCANRunOK = False
+        self.isLEDCANPass = self.isLEDCANPass & self.isLEDCANRunOK
 
-            CANErrStart_time = time.time()
+        CANErrStart_time = time.time()
+        self.pauseOption()
+        if not self.is_running:
+            return False
+        self.item_signal.emit([4, 1, 0, ''])
+        # self.itemOperation(mTable, 4, 1, 0, '')
+        self.pauseOption()
+        if not self.is_running:
+            return False
+        self.result_signal.emit("2.进行 LED CAN_ERROR 测试\n\n")
+        print("2.进行 LED CAN_ERROR 测试\n\n")
+        self.clearList(self.m_transmitData)
+        self.m_transmitData[0] = 0x2f
+        self.m_transmitData[1] = 0xf6
+        self.m_transmitData[2] = 0x5f
+        self.m_transmitData[3] = 0x04
+        self.m_transmitData[4] = 0x01
+        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData)
+        CANErrEnd_time = time.time()
+        CANErrTest_time = round(CANErrEnd_time - CANErrStart_time, 2)
+        time.sleep(0.5)
+        self.messageBox_signal.emit(['检测RUN &ERROR', 'CAN_ERROR指示灯是否点亮？'])
+        reply = self.result_queue.get()
+        # reply = QMessageBox.question(None, '检测CAN_RUN &CAN_ERROR', '指示灯是否点亮？',
+        #                              QMessageBox.Yes | QMessageBox.No,
+        #                              QMessageBox.Yes)
+        if reply == QMessageBox.Yes:
+            self.CAN_errorLED = True
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.item_signal.emit([4, 1, 0, ''])
-            # self.itemOperation(mTable, 4, 1, 0, '')
+            self.item_signal.emit([4, 2, 1, CANErrTest_time])
+            # self.itemOperation(mTable, 4, 2, 1, CANErrTest_time)
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.result_signal.emit("2.进行 LED CAN_ERROR 测试\n\n")
-            print("2.进行 LED CAN_ERROR 测试\n\n")
+            self.result_signal.emit("LED CAN_ERROR 测试通过\n关闭LED CAN_ERROR\n" + self.HORIZONTAL_LINE)
+            print("LED CAN_ERROR 测试通过\n关闭LED CAN_ERROR\n" + self.HORIZONTAL_LINE)
             self.clearList(self.m_transmitData)
             self.m_transmitData[0] = 0x2f
             self.m_transmitData[1] = 0xf6
             self.m_transmitData[2] = 0x5f
             self.m_transmitData[3] = 0x04
-            self.m_transmitData[4] = 0x01
+            self.m_transmitData[4] = 0x00
             bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData)
-            CANErrEnd_time = time.time()
-            CANErrTest_time = round(CANErrEnd_time - CANErrStart_time, 2)
-            time.sleep(0.5)
-            self.messageBox_signal.emit(['检测RUN &ERROR', 'CAN_ERROR指示灯是否点亮？'])
-            reply = self.result_queue.get()
-            # reply = QMessageBox.question(None, '检测CAN_RUN &CAN_ERROR', '指示灯是否点亮？',
-            #                              QMessageBox.Yes | QMessageBox.No,
-            #                              QMessageBox.Yes)
-            if reply == QMessageBox.Yes:
-                self.CAN_errorLED = True
-                self.pauseOption()
-                if not self.is_running:
-                    return False
-                self.item_signal.emit([4, 2, 1, CANErrTest_time])
-                # self.itemOperation(mTable, 4, 2, 1, CANErrTest_time)
-                self.pauseOption()
-                if not self.is_running:
-                    return False
-                self.result_signal.emit("LED CAN_ERROR 测试通过\n关闭LED CAN_ERROR\n" + self.HORIZONTAL_LINE)
-                print("LED CAN_ERROR 测试通过\n关闭LED CAN_ERROR\n" + self.HORIZONTAL_LINE)
-                self.clearList(self.m_transmitData)
-                self.m_transmitData[0] = 0x2f
-                self.m_transmitData[1] = 0xf6
-                self.m_transmitData[2] = 0x5f
-                self.m_transmitData[3] = 0x04
-                self.m_transmitData[4] = 0x00
-                bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData)
-                time.sleep(1)
-                isLEDCANErrOK = True
-            elif reply == QMessageBox.No:
-                self.CAN_errorLED = False
-                self.pauseOption()
-                if not self.is_running:
-                    return False
-                self.item_signal.emit([4, 2, 2, CANErrTest_time])
-                # self.itemOperation(mTable, 4, 2, 2, CANErrTest_time)
-                self.pauseOption()
-                if not self.is_running:
-                    return False
-                self.result_signal.emit("LED CAN_ERROR 测试不通过\n" + self.HORIZONTAL_LINE)
-                print("LED CAN_ERROR 测试不通过\n" + self.HORIZONTAL_LINE)
-                isLEDCANErrOK = False
+            time.sleep(1)
+            self.isLEDCANErrOK = True
+        elif reply == QMessageBox.No:
+            self.CAN_errorLED = False
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.result_signal.emit("退出 LED TEST 模式\n" + self.HORIZONTAL_LINE)
-            print("退出 LED TEST 模式\n" + self.HORIZONTAL_LINE)
-            self.clearList(self.m_transmitData)
-            self.m_transmitData[0] = 0x23
-            self.m_transmitData[1] = 0xf6
-            self.m_transmitData[2] = 0x5f
-            self.m_transmitData[3] = 0x00
-            self.m_transmitData[4] = 0x45
-            self.m_transmitData[5] = 0x58
-            self.m_transmitData[6] = 0x49
-            self.m_transmitData[7] = 0x54
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData)
-
-        else:
+            self.item_signal.emit([4, 2, 2, CANErrTest_time])
+            # self.itemOperation(mTable, 4, 2, 2, CANErrTest_time)
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.result_signal.emit("-----------进入 LED TEST 模式失败-----------\n\n")
-            print("-----------进入 LED TEST 模式失败-----------\n\n")
-            self.item_signal.emit([3, 2, 2, '进入模式失败'])
-            self.item_signal.emit([4, 2, 2, '进入模式失败'])
+            self.result_signal.emit("LED CAN_ERROR 测试不通过\n" + self.HORIZONTAL_LINE)
+            print("LED CAN_ERROR 测试不通过\n" + self.HORIZONTAL_LINE)
+            self.isLEDCANErrOK = False
+        self.isLEDCANPass = self.isLEDCANPass & self.isLEDCANErrOK
 
         return True
-
-        # elif reply == QMessageBox.No:
-        #     self.testNum = self.testNum + 1
-        #     self.isTestCANRunErr = False
-        #     self.itemOperation(mTable, 3, 0, 0, '')
-        #     self.itemOperation(mTable, 4, 0, 0, '')
-        #     self.result_signal.emit('取消CAN_RUN &CAN_ERROR测试！' + self.HORIZONTAL_LINE)
-        #     print('取消CAN_RUN &CAN_ERROR测试！')
 
     def generateExcel(self, station, module):
         book = xlwt.Workbook(encoding='utf-8')
