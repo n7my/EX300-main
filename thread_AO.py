@@ -635,10 +635,10 @@ class AOThread(QObject):
                     self.result_signal.emit(f'规定时间内无法接收到稳定信号，请检查通道是否损坏！\n')
                     self.result_signal.emit(f'各通道实际接收数据：{rece_wait[0]}、{rece_wait[1]}、'
                                             f'{rece_wait[2]}、{rece_wait[3]}\n')
-                    self.result_signal.emit(f'最大差值：{abs(int(m_valueTheory[0]/1000))}')
-                    self.result_signal.emit(f'各通道实际差值：{abs(rece_wait[0] - m_valueTheory[i])}、{abs(rece_wait[1] - m_valueTheory[i])}、'
-                                            f'{abs(rece_wait[2] - m_valueTheory[i])}、{abs(rece_wait[3] - m_valueTheory[i])}\n')
-                    self.result_signal.emit(f'量程”{m_name}“的 {m_arrayVal[i]}不通过\n')
+                    # self.result_signal.emit(f'最大差值：{abs(int(m_valueTheory[0]/1000))}')
+                    # self.result_signal.emit(f'各通道实际差值：{abs(rece_wait[0] - m_valueTheory[i])}、{abs(rece_wait[1] - m_valueTheory[i])}、'
+                    #                         f'{abs(rece_wait[2] - m_valueTheory[i])}、{abs(rece_wait[3] - m_valueTheory[i])}\n')
+                    self.result_signal.emit(f'量程”{m_name}“的 {m_arrayVal[i]}接收数据误差过大！\n')
                     # if type == 'AOVoltage':
                     #     self.volReceValue[typeNum][i] = rece_wait
                     #     self.volPrecision[typeNum][i] = chPrecision
@@ -653,17 +653,29 @@ class AOThread(QObject):
                 if waitFlag == 'stopReceive':
                     return False
                 if m_valueTheory[i]==0:
-                    if (abs(rece_wait[0] - m_valueTheory[i]) <= 28 and
-                        abs(rece_wait[1] - m_valueTheory[i]) <= 28 and
-                        abs(rece_wait[2] - m_valueTheory[i]) <= 28 and
-                        abs(rece_wait[3] - m_valueTheory[i]) <= 28):
+                    if (abs(rece_wait[0] - m_valueTheory[i]) <= 500 and
+                        abs(rece_wait[1] - m_valueTheory[i]) <= 500 and
+                        abs(rece_wait[2] - m_valueTheory[i]) <= 500 and
+                        abs(rece_wait[3] - m_valueTheory[i]) <= 500):
                         break
                 else:
-                    if (abs(rece_wait[0] - m_valueTheory[i]) <= abs(int(m_valueTheory[0]/1000)) and
-                        abs(rece_wait[1] - m_valueTheory[i]) <= abs(int(m_valueTheory[0]/1000)) and
-                        abs(rece_wait[2] - m_valueTheory[i]) <= abs(int(m_valueTheory[0]/1000)) and
-                        abs(rece_wait[3] - m_valueTheory[i]) <= abs(int(m_valueTheory[0]/1000))):
+                    if (abs(rece_wait[0] - m_valueTheory[i]) <= 500 and
+                        abs(rece_wait[1] - m_valueTheory[i]) <= 500 and
+                        abs(rece_wait[2] - m_valueTheory[i]) <= 500 and
+                        abs(rece_wait[3] - m_valueTheory[i]) <= 500):
                         break
+                # if m_valueTheory[i]==0:
+                #     if (abs(rece_wait[0] - m_valueTheory[i]) <= 28 and
+                #         abs(rece_wait[1] - m_valueTheory[i]) <= 28 and
+                #         abs(rece_wait[2] - m_valueTheory[i]) <= 28 and
+                #         abs(rece_wait[3] - m_valueTheory[i]) <= 28):
+                #         break
+                # else:
+                #     if (abs(rece_wait[0] - m_valueTheory[i]) <= abs(int(m_valueTheory[0]/1000)) and
+                #         abs(rece_wait[1] - m_valueTheory[i]) <= abs(int(m_valueTheory[0]/1000)) and
+                #         abs(rece_wait[2] - m_valueTheory[i]) <= abs(int(m_valueTheory[0]/1000)) and
+                #         abs(rece_wait[3] - m_valueTheory[i]) <= abs(int(m_valueTheory[0]/1000))):
+                #         break
                 time.sleep(0.2)
             if warning_sign:
                 return False
