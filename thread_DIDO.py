@@ -806,8 +806,8 @@ class DIDOThread(QObject):
         self.pauseOption()
         if not self.is_running:
             return False
-        self.result_signal.emit("--------------进入 LED TEST模式-------------\n\n")
-        print("--------------进入 LED TEST模式-------------")
+        # self.result_signal.emit("--------------进入 LED TEST模式-------------\n\n")
+        # print("--------------进入 LED TEST模式-------------")
         # if not self.channelZero():
         #     return False
         self.m_transmitData[0] = 0x23
@@ -824,9 +824,9 @@ class DIDOThread(QObject):
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.result_signal.emit("-----------进入 LED TEST 模式成功-----------\n")
-            print("-----------进入 LED TEST 模式成功-----------" + self.HORIZONTAL_LINE)
-            self.pauseOption()
+            # self.result_signal.emit("-----------进入 LED TEST 模式成功-----------\n")
+            # print("-----------进入 LED TEST 模式成功-----------" + self.HORIZONTAL_LINE)
+            # self.pauseOption()
             if not self.is_running:
                 return False
             self.result_signal.emit("1.进行 LED CAN_RUN 测试\n\n")
