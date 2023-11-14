@@ -603,31 +603,7 @@ class AOThread(QObject):
             print(f'{m_valueTheory[i]}\n\n')
 
             self.result_signal.emit(f'等待信号稳定……\n')
-            # tt=time.time()
-            # while True:
-            #     if time.time()-tt >= int(self.waiting_time/1000):
-            #         break
-            #     waitFlag, rece_wait = self.receiveAIData()
-            #     if waitFlag == 'stopReceive':
-            #         return False
-            # recv = [0, 0, 0, 0]
-            # if type == 'AIVoltage':
-            #     self.error_value = 422
-                # self.error_value = self.vol_error_value[3]
-                # if int(m_valueTheory[i]) == 27648:
-                #     self.standardValue = self.vol_high_standardValue_array[typeNum]
-                # elif int(m_valueTheory[i]) == 0 or int(m_valueTheory[i]) == -27648:
-                #     self.standardValue = self.vol_low_standardValue_array[typeNum]
 
-            # elif type == 'AICurrent':
-            #     self.error_value = 636
-                # self.error_value = self.cur_high_error_value[0]
-                # if int(m_valueTheory[i]) == 27648:
-                #     self.error_value = self.cur_high_error_value[typeNum]
-                #     self.standardValue = self.cur_high_standardValue_array[typeNum]
-                # elif int(m_valueTheory[i]) == 0:
-                #     self.error_value = self.cur_low_error_value[typeNum]
-                #     self.standardValue = self.cur_low_standardValue_array[typeNum]
             t_wait =time.time()
             warning_sign = False
             while True:
@@ -639,12 +615,7 @@ class AOThread(QObject):
                     # self.result_signal.emit(f'各通道实际差值：{abs(rece_wait[0] - m_valueTheory[i])}、{abs(rece_wait[1] - m_valueTheory[i])}、'
                     #                         f'{abs(rece_wait[2] - m_valueTheory[i])}、{abs(rece_wait[3] - m_valueTheory[i])}\n')
                     self.result_signal.emit(f'量程”{m_name}“的 {m_arrayVal[i]}接收数据误差过大！\n')
-                    # if type == 'AOVoltage':
-                    #     self.volReceValue[typeNum][i] = rece_wait
-                    #     self.volPrecision[typeNum][i] = chPrecision
-                    # elif type == 'AOCurrent':
-                    #     self.curReceValue[typeNum][i] = rece_wait
-                    #     self.curPrecision[typeNum][i] = chPrecision
+
                     warning_sign = True
                     break
                 waitFlag, rece_wait = self.receiveAIData(4)
@@ -653,16 +624,16 @@ class AOThread(QObject):
                 if waitFlag == 'stopReceive':
                     return False
                 if m_valueTheory[i]==0:
-                    if (abs(rece_wait[0] - m_valueTheory[i]) <= 500 and
-                        abs(rece_wait[1] - m_valueTheory[i]) <= 500 and
-                        abs(rece_wait[2] - m_valueTheory[i]) <= 500 and
-                        abs(rece_wait[3] - m_valueTheory[i]) <= 500):
+                    if (abs(rece_wait[0] - m_valueTheory[i]) <= 200 and
+                        abs(rece_wait[1] - m_valueTheory[i]) <= 200 and
+                        abs(rece_wait[2] - m_valueTheory[i]) <= 200 and
+                        abs(rece_wait[3] - m_valueTheory[i]) <= 200):
                         break
                 else:
-                    if (abs(rece_wait[0] - m_valueTheory[i]) <= 500 and
-                        abs(rece_wait[1] - m_valueTheory[i]) <= 500 and
-                        abs(rece_wait[2] - m_valueTheory[i]) <= 500 and
-                        abs(rece_wait[3] - m_valueTheory[i]) <= 500):
+                    if (abs(rece_wait[0] - m_valueTheory[i]) <= 200 and
+                        abs(rece_wait[1] - m_valueTheory[i]) <= 200 and
+                        abs(rece_wait[2] - m_valueTheory[i]) <= 200 and
+                        abs(rece_wait[3] - m_valueTheory[i]) <= 200):
                         break
                 # if m_valueTheory[i]==0:
                 #     if (abs(rece_wait[0] - m_valueTheory[i]) <= 28 and
@@ -2861,16 +2832,22 @@ class AOThread(QObject):
                         # 理论值
                         sheet.write(self.AO_row + 2 + j + self.AO_Channels * typeNum, 3 + 3 * i + 1,
                                     f'{int(self.volValue_array[typeNum][i])}', pass_style)
-                        # 测试值
-                        sheet.write(self.AO_row + 2 + j + self.AO_Channels * typeNum, 4 + 3 * i + 1,
-                                    f'{self.volReceValue[typeNum][i][j]}', pass_style)
+                        # # 测试值
+                        # sheet.write(self.AO_row + 2 + j + self.AO_Channels * typeNum, 4 + 3 * i + 1,
+                        #             f'{self.volReceValue[typeNum][i][j]}', pass_style)
                         # 精度
                         if isinstance(self.volPrecision[typeNum][i][j], float) and \
                                 abs(self.volPrecision[typeNum][i][j]) < 1:
+                            # 测试值
+                            sheet.write(self.AO_row + 2 + j + self.AO_Channels * typeNum, 4 + 3 * i + 1,
+                                        f'{self.volReceValue[typeNum][i][j]}', pass_style)
                             sheet.write(self.AO_row + 2 + j + self.AO_Channels * typeNum, 5 + 3 * i + 1,
                                         f'{self.volPrecision[typeNum][i][j]}‰', pass_style)
                         elif isinstance(self.volPrecision[typeNum][i][j], str) and \
                                 self.volPrecision[typeNum][i][j] == '-':
+                            # 测试值
+                            sheet.write(self.AO_row + 2 + j + self.AO_Channels * typeNum, 4 + 3 * i + 1,
+                                        f'{self.volReceValue[typeNum][i][j]}', warning_style)
                             sheet.write(self.AO_row + 2 + j + self.AO_Channels * typeNum, 5 + 3 * i + 1,
                                         f'{self.volPrecision[typeNum][i][j]}', warning_style)
                             self.errorNum += 1
@@ -2881,6 +2858,9 @@ class AOThread(QObject):
                             self.errorNum += 1
                             self.errorInf += f'\n{self.errorNum})AO模块量程"{self.vol_excelName_array[typeNum]}"' \
                                              f'的测试点{i + 1}在通道{j + 1}的电压精度超出范围'
+                            # 测试值
+                            sheet.write(self.AO_row + 2 + j + self.AO_Channels * typeNum, 4 + 3 * i + 1,
+                                        f'{self.volReceValue[typeNum][i][j]}', fail_style)
                             sheet.write(self.AO_row + 2 + j+ self.AO_Channels * typeNum, 5 + 3 * i + 1,
                                         f'{self.volPrecision[typeNum][i][j]}‰', fail_style)
         if self.isAOTestVol and self.isAOTestCur:
@@ -2900,18 +2880,26 @@ class AOThread(QObject):
                         # 理论值
                         sheet.write(self.AO_row + 2 + 5*self.AO_Channels + j + self.AO_Channels*typeNum,
                                     3 + 3 * i + 1,f'{int(self.curValue_array[typeNum][i])}',pass_style)
-                        # 测试值
-                        sheet.write(self.AO_row + 2 + 5*self.AO_Channels + j + self.AO_Channels*typeNum,
-                                    4 + 3 * i + 1,f'{self.curReceValue[typeNum][i][j]}',pass_style)
+                        # # 测试值
+                        # sheet.write(self.AO_row + 2 + 5*self.AO_Channels + j + self.AO_Channels*typeNum,
+                        #             4 + 3 * i + 1,f'{self.curReceValue[typeNum][i][j]}',pass_style)
                         # 精度
                         if isinstance(self.curPrecision[typeNum][i][j], float) and \
                                 abs(self.curPrecision[typeNum][i][j]) < 1:
+                            # 测试值
+                            sheet.write(self.AO_row + 2 + 5 * self.AO_Channels + j + self.AO_Channels * typeNum,
+                                        4 + 3 * i + 1, f'{self.curReceValue[typeNum][i][j]}', pass_style)
+                            # 精度
                             sheet.write(self.AO_row + 2 + 5*self.AO_Channels + j + self.AO_Channels*typeNum,
                                         5 + 3 * i + 1,f'{self.curPrecision[typeNum][i][j]}‰', pass_style)
                         elif isinstance(self.curPrecision[typeNum][i][j], str) and \
                                 self.curPrecision[typeNum][i][j] == '-':
-                            sheet.write(self.AO_row + 2 + j + self.AO_Channels * typeNum, 5 + 3 * i + 1,
-                                        f'{self.curPrecision[typeNum][i][j]}', warning_style)
+                            # 测试值
+                            sheet.write(self.AO_row + 2 + 5 * self.AO_Channels + j + self.AO_Channels * typeNum,
+                                        4 + 3 * i + 1, f'{self.curReceValue[typeNum][i][j]}', warning_style)
+                            # 精度
+                            sheet.write(self.AO_row + 2 + 5 * self.AO_Channels + j + self.AO_Channels * typeNum,
+                                        5 + 3 * i + 1,f'{self.curPrecision[typeNum][i][j]}', warning_style)
                             self.errorNum += 1
                             self.errorInf += f'\n{self.errorNum})AO模块量程"{self.cur_excelName_array[typeNum]}"' \
                                              f'的测试点{i + 1}在通道{j + 1}的数据接收有误'
@@ -2920,6 +2908,9 @@ class AOThread(QObject):
                             self.errorNum += 1
                             self.errorInf += f'\n{self.errorNum})AO模块量程"{self.cur_excelName_array[typeNum]}"' \
                                              f'的测试点{i + 1}在通道{j + 1}的电流精度超出范围'
+                            # 测试值
+                            sheet.write(self.AO_row + 2 + 5 * self.AO_Channels + j + self.AO_Channels * typeNum,
+                                        4 + 3 * i + 1, f'{self.curReceValue[typeNum][i][j]}', fail_style)
                             sheet.write(self.AO_row + 2 + 5*self.AO_Channels + j + self.AO_Channels*typeNum,
                                         5 + 3 * i + 1,f'{self.curPrecision[typeNum][i][j]}‰', fail_style)
         if not self.isAOTestVol and self.isAOTestCur:
@@ -2936,17 +2927,24 @@ class AOThread(QObject):
                         # 理论值
                         sheet.write(self.AO_row + 2 + j + self.AO_Channels*typeNum, 3 + 3 * i + 1,
                                     f'{int(self.curValue_array[typeNum][i])}', pass_style)
-                        # 测试值
-                        # print(j)
-                        sheet.write(self.AO_row + 2 + j + self.AO_Channels*typeNum, 4 + 3 * i + 1,
-                                    f'{self.curReceValue[typeNum][i][j]}', pass_style)
+                        # # 测试值
+                        # sheet.write(self.AO_row + 2 + j + self.AO_Channels*typeNum, 4 + 3 * i + 1,
+                        #             f'{self.curReceValue[typeNum][i][j]}', pass_style)
                         # 精度
                         if isinstance(self.curPrecision[typeNum][i][j], float) and \
                                 abs(self.curPrecision[typeNum][i][j]) < 1:
+                            # 测试值
+                            sheet.write(self.AO_row + 2 + j + self.AO_Channels * typeNum, 4 + 3 * i + 1,
+                                        f'{self.curReceValue[typeNum][i][j]}', pass_style)
+                            # 精度
                             sheet.write(self.AO_row + 2 + j + self.AO_Channels*typeNum, 5 + 3 * i + 1,
                                         f'{self.curPrecision[typeNum][i][j]}‰', pass_style)
                         elif isinstance(self.curPrecision[typeNum][i][j], str) and \
                                 self.curPrecision[typeNum][i][j] == '-':
+                            # 测试值
+                            sheet.write(self.AO_row + 2 + j + self.AO_Channels * typeNum, 4 + 3 * i + 1,
+                                        f'{self.curReceValue[typeNum][i][j]}', warning_style)
+                            # 精度
                             sheet.write(self.AO_row + 2 + j + self.AO_Channels * typeNum, 5 + 3 * i + 1,
                                         f'{self.volPrecision[typeNum][i][j]}', warning_style)
                             self.errorNum += 1
@@ -2957,6 +2955,9 @@ class AOThread(QObject):
                             self.errorNum += 1
                             self.errorInf += f'\n{self.errorNum})AO模块量程"{self.cur_excelName_array[typeNum]}"' \
                                              f'的测试点{i + 1}在通道{j + 1}的电流精度超出范围'
+                            # 测试值
+                            sheet.write(self.AO_row + 2 + j + self.AO_Channels * typeNum, 4 + 3 * i + 1,
+                                        f'{self.curReceValue[typeNum][i][j]}', fail_style)
                             sheet.write(self.AO_row + 2 + j + self.AO_Channels*typeNum, 5 + 3 * i + 1,
                                         f'{self.curPrecision[typeNum][i][j]}‰', fail_style)
 
