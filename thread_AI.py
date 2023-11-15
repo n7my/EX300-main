@@ -1694,14 +1694,6 @@ class AIThread(QObject):
     def setAIChOutCalibrate(self):
         bool_all = True
         self.m_transmitData = [0x23, 0x3f, 0x64, 0x00, 0x45, 0x58, 0x49, 0x54]
-        # self.m_transmitData[0] = 0x23
-        # self.m_transmitData[1] = 0x3f
-        # self.m_transmitData[2] = 0x64
-        # self.m_transmitData[3] = 0x00
-        # self.m_transmitData[4] = 0x45
-        # self.m_transmitData[5] = 0x58
-        # self.m_transmitData[6] = 0x49
-        # self.m_transmitData[7] = 0x54
 
         bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + self.CANAddr_AI), self.m_transmitData)
         bool_all = bool_all & bool_transmit
@@ -2999,6 +2991,7 @@ class AIThread(QObject):
     def stop_work(self):
         self.resume_work()
         self.is_running = False
-
+        self.setAIChOutCalibrate()
+        self.labe_signal.emit(['fail', '测试停止'])
 
 

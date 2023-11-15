@@ -8,6 +8,7 @@ import threading
 from CAN_option import *
 import win32print
 import struct
+import otherOption
 
 class AOThread(QObject):
     result_signal = pyqtSignal(str)
@@ -227,7 +228,76 @@ class AOThread(QObject):
 
     def AOOption(self):
         self.isExcel = True
+        bool_online = False
+        #总线初始化
+        try:
+            time_online = time.time()
+            while True:
+                QApplication.processEvents()
+                if (time.time() - time_online)*1000 > 2000:
+                    self.pauseOption()
+                    if not self.is_running:
+                        # 后续测试全部取消
+                        self.isTest = False
+                        self.isCalibrate = False
+                        self.isExcel = False
+                        break
+                    self.result_signal.emit(f'错误：总线初始化超时！' + self.HORIZONTAL_LINE)
+                    QMessageBox.critical(None, '错误', '总线初始化超时！请检查CAN分析仪或各设备是否正确连接', QMessageBox.Yes |
+                                         QMessageBox.No, QMessageBox.Yes)
+                    # 后续测试全部取消
+                    self.isTest = False
+                    self.isCalibrate = False
+                    self.isExcel = False
+                    break
 
+                bool_online,eID = otherOption.isModulesOnline(self.CANAddr_AI,self.CANAddr_AO,self.module_1,
+                                                          self.module_2,self.waiting_time,self.CANAddr_relay,'AO')
+                if bool_online:
+                    self.pauseOption()
+                    if not self.is_running:
+                        # 后续测试全部取消
+                        self.isTest = False
+                        self.isCalibrate = False
+                        self.isExcel = False
+                        break
+                    self.result_signal.emit(f'总线初始化成功！' + self.HORIZONTAL_LINE)
+                    break
+                else:
+                    self.pauseOption()
+                    if not self.is_running:
+                        # 后续测试全部取消
+                        self.isTest = False
+                        self.isCalibrate = False
+                        self.isExcel = False
+                        break
+                    if eID == 0:
+                        self.result_signal.emit(f'错误：未发现{self.module_1}' + self.HORIZONTAL_LINE)
+                    elif eID ==1:
+                        self.result_signal.emit(f'错误：未发现{self.module_2}' + self.HORIZONTAL_LINE)
+                    elif eID ==3:
+                        self.result_signal.emit(f'错误：未发现继电器1' + self.HORIZONTAL_LINE)
+                    elif eID ==7:
+                        self.result_signal.emit(f'错误：未发现继电器2' + self.HORIZONTAL_LINE)
+                    self.result_signal.emit(f'错误：总线初始化失败！再次尝试初始化。' + self.HORIZONTAL_LINE)
+
+            self.result_signal.emit('模块在线检测结束！' + self.HORIZONTAL_LINE)
+
+        except:
+            self.pauseOption()
+            if not self.is_running:
+                # 后续测试全部取消
+                self.isTest = False
+                self.isCalibrate = False
+                self.isExcel = False
+
+            QMessageBox(QMessageBox.Critical, '错误提示', '总线初始化异常，请检查设备').exec_()
+            # 后续测试全部取消
+            self.isTest = False
+            self.isCalibrate = False
+            self.isExcel = False
+            self.result_signal.emit('模块在线检测结束！' + self.HORIZONTAL_LINE)
+        #开始测试
         if self.isTest:
             if self.isTestRunErr or self.isTestCANRunErr:
                 # 进入指示灯测试模式
@@ -323,16 +393,16 @@ class AOThread(QObject):
             bool_testCur = False
 
         if self.isExcel:
+
             self.result_signal.emit('开始生成校准校验表…………' + self.HORIZONTAL_LINE)
             self.generateExcel(self.isAOPassTest, 'AO')
             self.result_signal.emit('生成校准校验表成功' + self.HORIZONTAL_LINE)
-            self.result_signal.emit(f'self.volReceValue=\n{self.volReceValue}' + self.HORIZONTAL_LINE)
-            self.result_signal.emit(f'self.volPrecision=\n{self.volPrecision}' + self.HORIZONTAL_LINE)
-            self.result_signal.emit(f'self.curReceValue=\n{self.curReceValue}' + self.HORIZONTAL_LINE)
-            self.result_signal.emit(f'self.curPrecision=\n{self.curPrecision}' + self.HORIZONTAL_LINE)
+
+            if not self.isAOVolPass or not self.isAOCurPass:
+                self.result_signal.emit(f'不通过原因：\n{self.errorInf}' + self.HORIZONTAL_LINE)
 
         elif not self.isExcel:
-            self.result_signal.emit('测试停止，校准校验表生成失败…………' + self.HORIZONTAL_LINE)
+            self.result_signal.emit('测试停止，未生成校准校验表！' + self.HORIZONTAL_LINE)
 
         self.allFinished_signal.emit()
         if bool_calibrate:
@@ -923,9 +993,7 @@ class AOThread(QObject):
             if not self.is_running:
                 return False
             self.item_signal.emit([6, 2, 1, f'{calibrateTest_time}'])
-            # CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
-            # self.can_start()
-            # time.sleep(1)
+
             self.m_transmitData = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
             bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200+self.CANAddr_relay, self.m_transmitData)
             if not bool_transmit:
@@ -3066,4 +3134,78 @@ class AOThread(QObject):
     def stop_work(self):
         self.resume_work()
         self.is_running = False
+        self.setAOChOutCalibrate()
+        self.labe_signal.emit(['fail', '测试停止'])
 
+    # def isModulesOnline(self, CAN1, CAN2, module_1, module_2, waiting_time, CANAddr_relay):
+    #     # 检测设备心跳
+    #     if self.check_heartbeat(CAN1, module_1, waiting_time) == False:
+    #         return False
+    #     # if self.tabIndex == 1 or self.tabIndex == 2:
+    #     if self.check_heartbeat(CANAddr_relay, '继电器1', waiting_time) == False:
+    #         return False
+    #     if self.check_heartbeat(CANAddr_relay + 1, '继电器2', waiting_time) == False:
+    #         return False
+    #     if self.check_heartbeat(CAN2, module_2, waiting_time) == False:
+    #         return False
+    #     return True
+
+    # def check_heartbeat(self, can_addr, inf, max_waiting):
+    #     can_id = 0x700 + can_addr
+    #     bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(can_id, max_waiting)
+    #     print(self.m_can_obj.Data)
+    #     if bool_receive == False:
+    #         self.result_signal.emit(f'错误：未发现{inf}' + self.HORIZONTAL_LINE)
+    #         return False
+    #     self.result_signal.emit(f'发现{inf}：收到心跳帧：{hex(self.m_can_obj.ID)}\n\n')
+    #     return True
+
+
+
+
+
+
+    # def isModulesOnline(self):
+    #     # 检测设备心跳
+    #     if self.check_heartbeat(self.CAN1, self.module_1, self.waiting_time) == False:
+    #         return False
+    #     if self.check_heartbeat(self.CAN2, self.module_2, self.waiting_time) == False:
+    #         return False
+    #     if self.tabIndex !=0:
+    #         if self.check_heartbeat(self.CANAddr_relay, '继电器1', self.waiting_time) == False:
+    #             return False
+    #         if self.check_heartbeat(self.CANAddr_relay+1, '继电器2', self.waiting_time) == False:
+    #             return False
+    #
+    #     return True
+
+    #  def check_heartbeat(self, can_addr, inf, max_waiting):
+    #         if inf == '继电器':
+    #             bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(0x700 + can_addr , max_waiting)
+    #             print(self.m_can_obj.Data)
+    #             if bool_receive == False:
+    #                 self.result_signal.emit(f'错误：未发现{inf}' + self.HORIZONTAL_LINE)
+    #                 # self.isPause()
+    #                 # if not self.isStop():
+    #                 #     return
+    #                 return False
+    #
+    #             self.result_signal.emit(f'发现{inf}：收到心跳帧：{hex(self.m_can_obj.ID)}\n\n')
+    #
+    #
+    #         else:
+    #             can_id = 0x700 + can_addr
+    #             bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(can_id, max_waiting)
+    #             print(self.m_can_obj.Data)
+    #             if bool_receive == False:
+    #                 self.result_signal.emit(f'错误：未发现{inf}' + self.HORIZONTAL_LINE)
+    #                 # self.isPause()
+    #                 # if not self.isStop():
+    #                 #     return
+    #                 return False
+    #
+    #             self.result_signal.emit(f'发现{inf}：收到心跳帧：{hex(self.m_can_obj.ID)}\n\n')
+    #         # self.isPause()
+    #         #if not self.isStop():
+    # #            return
+    #         return True

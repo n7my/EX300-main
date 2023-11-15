@@ -252,7 +252,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         #                             padding: 2px;
         #                         }
         #                     """)
-        for tW in [self.tableWidget_AI, self.tableWidget_AO, self.tableWidget_DIDO]:
+        for tW in [self.tableWidget_AI, self.tableWidget_AO, self.tableWidget_DIDO,self.tableWidget_CPU]:
             tW.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
         #批量设置lineEdit只读
@@ -343,10 +343,13 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.pushButton_8.clicked.connect(self.killUi)
         self.pushButton_11.clicked.connect(self.showMinimized)
         self.pushButton_11.clicked.connect(self.saveConfig)
-
-        self.tableWidget_DIDO.setStyleSheet("background-color: rgb(255, 255, 255);")
-        self.tableWidget_AI.setStyleSheet("background-color: rgb(255, 255, 255);")
-        self.tableWidget_AO.setStyleSheet("background-color: rgb(255, 255, 255);")
+        self.tableWidget_array=[self.tableWidget_DIDO,self.tableWidget_AI,
+                                self.tableWidget_AO,self.tableWidget_CPU]
+        for tW in self.tableWidget_array:
+            tW.setStyleSheet("background-color: rgb(255, 255, 255);")
+        # self.tableWidget_AI.setStyleSheet("background-color: rgb(255, 255, 255);")
+        # self.tableWidget_AO.setStyleSheet("background-color: rgb(255, 255, 255);")
+        # self.tableWidget_CPU.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.pushButton_4.clicked.connect(self.start_button)
         self.pushButton_3.clicked.connect(self.stop_button)
 
@@ -409,10 +412,11 @@ class Ui_Control(QMainWindow,Ui_Form):
                     """)
         self.pushButton_resume.setEnabled(False)
         self.pushButton_resume.setVisible(False)
-
-        self.tableWidget_AI.horizontalHeader().setStyleSheet("background-color: #11826C;")
-        self.tableWidget_AO.horizontalHeader().setStyleSheet("background-color: #11826C;")
-        self.tableWidget_DIDO.horizontalHeader().setStyleSheet("background-color: #11826C;")
+        for tW in self.tableWidget_array:
+            tW.horizontalHeader().setStyleSheet("background-color: #11826C;")
+        # self.tableWidget_AO.horizontalHeader().setStyleSheet("background-color: #11826C;")
+        # self.tableWidget_DIDO.horizontalHeader().setStyleSheet("background-color: #11826C;")
+        # self.tableWidget_CPU.horizontalHeader().setStyleSheet("background-color: #11826C;")
 
         self.checkBox_5.setEnabled(not self.radioButton.isChecked())
         self.checkBox_6.setEnabled(not self.radioButton.isChecked())
@@ -462,6 +466,15 @@ class Ui_Control(QMainWindow,Ui_Form):
             if self.comboBox_5.currentIndex()==0:
                 self.lineEdit_PN.setText('P0000010392365')
             self.lineEdit_47.setText(self.lineEdit_PN.text())
+        elif self.tabIndex == 3:
+            self.tableWidget_DIDO.setVisible(False)
+            self.tableWidget_AI.setVisible(False)
+            self.tableWidget_AO.setVisible(False)
+            self.tableWidget_CPU.setVisible(True)
+            self.label_7.setText("CPU")
+            if self.comboBox_20.currentIndex()==0:
+                self.lineEdit_PN.setText('P0000010390631')
+            self.lineEdit_30.setText(self.lineEdit_PN.text())
         self.saveDir = self.label_41.text()
         self.tabWidget.currentChanged.connect(self.tabChange)
 
@@ -609,8 +622,19 @@ class Ui_Control(QMainWindow,Ui_Form):
 
 
         #CPU页面初始化
-
-
+        self.cpu_comboBox_array = [self.comboBox_20,self.comboBox_21,self.comboBox_22,self.comboBox_23]
+        self.cpu_lineEdit_array = [self.lineEdit_33]
+        self.cpu_checkBox_array = [self.checkBox_50,self.checkBox_51,self.checkBox_52,self.checkBox_53,
+                                    self.checkBox_54,self.checkBox_55,self.checkBox_56,self.checkBox_57,
+                                    self.checkBox_58,self.checkBox_59,self.checkBox_60,self.checkBox_61,
+                                    self.checkBox_62,self.checkBox_63,self.checkBox_64,self.checkBox_65,
+                                    self.checkBox_66,self.checkBox_67,self.checkBox_68,self.checkBox_69]
+        for comboBox in self.cpu_comboBox_array:
+            comboBox.currentIndexChanged.connect(self.saveConfig)
+        for lineEdit in self.cpu_lineEdit_array:
+            lineEdit.textChanged.connect(self.saveConfig)
+        for checkBox in self.cpu_checkBox_array:
+            checkBox.toggled.connect(self.saveConfig)
 
 
         # self.lineEdit_PN.setPlaceholderText('请输入PN码')
@@ -933,19 +957,6 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.pushButton_4.setStyleSheet(self.topButton_qss['off'])
 
 
-        # if self.tabIndex == 0:
-        #     self.lineEdit_22.setText(self.lineEdit_PN.text())
-        #     self.lineEdit_21.setText(self.lineEdit_SN.text())
-        #     self.lineEdit_20.setText(self.lineEdit_REV.text())
-        # if self.tabIndex == 1:
-        #     self.lineEdit_22.setText(self.lineEdit_PN.text())
-        #     self.lineEdit_21.setText(self.lineEdit_SN.text())
-        #     self.lineEdit_20.setText(self.lineEdit_REV.text())
-        # elif self.tabIndex == 2:
-        #     self.lineEdit_47.setText(self.lineEdit_PN.text())
-        #     self.lineEdit_46.setText(self.lineEdit_SN.text())
-        #     self.lineEdit_45.setText(self.lineEdit_REV.text())
-
     def inputPN(self):
         if len(self.lineEdit_PN.text()) == 15:
             self.lineEdit_PN.setReadOnly(True)
@@ -974,6 +985,8 @@ class Ui_Control(QMainWindow,Ui_Form):
                 self.lineEdit_21.setText(self.lineEdit_SN.text())
             elif self.tabIndex == 2:
                 self.lineEdit_46.setText(self.lineEdit_SN.text())
+            elif self.tabIndex == 3:
+                self.lineEdit_31.setText(self.lineEdit_SN.text())
         else:
             # time.sleep(0.1)
             self.lineEdit_SN.clear()
@@ -1002,6 +1015,8 @@ class Ui_Control(QMainWindow,Ui_Form):
                 self.lineEdit_20.setText(self.lineEdit_REV.text())
             elif self.tabIndex == 2:
                 self.lineEdit_45.setText(self.lineEdit_REV.text())
+            elif self.tabIndex == 3:
+                self.lineEdit_32.setText(self.lineEdit_REV.text())
             self.pushButton_4.setFocus()
         else:
             # time.sleep(0.5)
@@ -1023,6 +1038,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.tableWidget_DIDO.setVisible(True)
             self.tableWidget_AI.setVisible(False)
             self.tableWidget_AO.setVisible(False)
+            self.tableWidget_CPU.setVisible(False)
             self.label_7.setText("DIDO")
             if self.comboBox.currentIndex() == 1:
                 self.lineEdit_PN.setText('P0000010391877')
@@ -1034,6 +1050,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.tableWidget_DIDO.setVisible(False)
             self.tableWidget_AI.setVisible(True)
             self.tableWidget_AO.setVisible(False)
+            self.tableWidget_CPU.setVisible(False)
             self.label_7.setText("AI")
             if self.comboBox_3.currentIndex() == 0:
                 self.lineEdit_PN.setText('P0000010392361')
@@ -1041,12 +1058,22 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.tableWidget_DIDO.setVisible(False)
             self.tableWidget_AI.setVisible(False)
             self.tableWidget_AO.setVisible(True)
+            self.tableWidget_CPU.setVisible(False)
             self.label_7.setText("AO")
             if self.comboBox_5.currentIndex() == 0:
                 self.lineEdit_PN.setText('P0000010392365')
+        elif self.tabIndex == 3 and not self.isAllScreen:
+            self.tableWidget_DIDO.setVisible(False)
+            self.tableWidget_AI.setVisible(False)
+            self.tableWidget_AO.setVisible(False)
+            self.tableWidget_CPU.setVisible(True)
+            self.label_7.setText("CPU")
+            if self.comboBox_20.currentIndex() == 0:
+                self.lineEdit_PN.setText('P0000010390631')
         # self.reInputPNSNREV()
 
     def start_button(self):
+
         self.label.setStyleSheet(self.testState_qss['testing'])
         self.label.setText('检测中……')
         self.pushButton_3.setEnabled(True)
@@ -1212,42 +1239,42 @@ class Ui_Control(QMainWindow,Ui_Form):
                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
             return False
 
-        try:
-            time_online = time.time()
-            while True:
-                QApplication.processEvents()
-                if (time.time() - time_online)*1000 >2000:
-                    if not mainThreadRunning():
-                        return False
-                    self.showInf(f'错误：总线初始化超时！' + self.HORIZONTAL_LINE)
-                    QMessageBox.critical(None, '错误', '总线初始化超时！请检查CAN分析仪是否正确连接', QMessageBox.Yes |
-                                         QMessageBox.No, QMessageBox.Yes)
-                    self.endOfTest()
-                    return False
-                bool_online = self.isModulesOnline()
-                # bool_online = self.isModulesOnline(currentTable)
-                if bool_online:
-                    if not mainThreadRunning():
-                        return False
-                    self.showInf(f'总线初始化成功！' + self.HORIZONTAL_LINE)
-                    break
-                else:
-                    if not mainThreadRunning():
-                        return False
-                    self.showInf(f'错误：总线初始化失败！再次尝试初始化。' + self.HORIZONTAL_LINE)
-                    # QMessageBox.critical(None, '错误', '总线初始化失败！再次尝试初始化', QMessageBox.Yes |
-                    #                  QMessageBox.No, QMessageBox.Yes)
-                    self.PassOrFail(False)
-                    if not mainThreadRunning():
-                        return False
-            self.showInf('模块在线检测结束！' + self.HORIZONTAL_LINE)
-
-        except:
-            if not mainThreadRunning():
-                return False
-            QMessageBox(QMessageBox.Critical, '错误提示', '总线初始化异常，请检查设备').exec_()
-            self.PassOrFail(False)
-            return False
+        # try:
+        #     time_online = time.time()
+        #     while True:
+        #         QApplication.processEvents()
+        #         if (time.time() - time_online)*1000 >2000:
+        #             if not mainThreadRunning():
+        #                 return False
+        #             self.showInf(f'错误：总线初始化超时！' + self.HORIZONTAL_LINE)
+        #             QMessageBox.critical(None, '错误', '总线初始化超时！请检查CAN分析仪或各设备是否正确连接', QMessageBox.Yes |
+        #                                  QMessageBox.No, QMessageBox.Yes)
+        #             self.endOfTest()
+        #             return False
+        #         bool_online = self.isModulesOnline()
+        #         # bool_online = self.isModulesOnline(currentTable)
+        #         if bool_online:
+        #             if not mainThreadRunning():
+        #                 return False
+        #             self.showInf(f'总线初始化成功！' + self.HORIZONTAL_LINE)
+        #             break
+        #         else:
+        #             if not mainThreadRunning():
+        #                 return False
+        #             self.showInf(f'错误：总线初始化失败！再次尝试初始化。' + self.HORIZONTAL_LINE)
+        #             # QMessageBox.critical(None, '错误', '总线初始化失败！再次尝试初始化', QMessageBox.Yes |
+        #             #                  QMessageBox.No, QMessageBox.Yes)
+        #             self.PassOrFail(False)
+        #             if not mainThreadRunning():
+        #                 return False
+        #     self.showInf('模块在线检测结束！' + self.HORIZONTAL_LINE)
+        #
+        # except:
+        #     if not mainThreadRunning():
+        #         return False
+        #     QMessageBox(QMessageBox.Critical, '错误提示', '总线初始化异常，请检查设备').exec_()
+        #     self.PassOrFail(False)
+        #     return False
 
         if self.tabWidget.currentIndex() == 0:
             self.testFlag = 'DIDO'
@@ -1401,6 +1428,10 @@ class Ui_Control(QMainWindow,Ui_Form):
                 self.AO_thread.started.connect(self.AO_option.AOOption)
                 self.AO_thread.start()
 
+        elif self.tabWidget.currentIndex() == 3:
+            self.testFlag = 'CPU'
+
+
 
         return True
 
@@ -1415,6 +1446,8 @@ class Ui_Control(QMainWindow,Ui_Form):
             mTable = self.tableWidget_AI
         elif testFlag == 'AO':
             mTable = self.tableWidget_AO
+        elif testFlag == 'CPU':
+            mTable = self.tableWidget_CPU
         # 检测外观
         appearanceStart_time = time.time()
         if not mainThreadRunning():
@@ -1474,6 +1507,10 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.lineEdit_45.clear()
             self.lineEdit_46.clear()
             # self.lineEdit_47.clear()
+        elif self.tabWidget.currentIndex() == 3:
+            self.lineEdit_31.clear()
+            self.lineEdit_32.clear()
+            # self.lineEdit_47.clear()
         self.lineEdit_SN.setFocus()
         self.endOfTest()
 
@@ -1527,6 +1564,7 @@ class Ui_Control(QMainWindow,Ui_Form):
     def  stop_subThread(self):
         if self.testFlag == 'AI':
             if self.AI_thread and self.AI_thread.isRunning():
+                self.showInf(f'结束AI子线程' + self.HORIZONTAL_LINE)
                 print('结束AI子线程')
                 # self.AI_option.stop_work()
                 self.AI_thread.quit()
@@ -1534,17 +1572,26 @@ class Ui_Control(QMainWindow,Ui_Form):
         elif self.testFlag == 'AO':
             if self.AO_thread and self.AO_thread.isRunning():
                 print('结束AO子线程')
+                self.showInf(f'结束AO子线程' + self.HORIZONTAL_LINE)
                 # self.AI_option.stop_work()
                 self.AO_thread.quit()
                 self.AO_thread.wait()
         elif self.testFlag == 'DO' or self.testFlag == 'DI' or self.testFlag == 'DIDO':
             if self.DIDO_thread and self.DIDO_thread.isRunning():
+                self.showInf(f'结束DIDO子线程' + self.HORIZONTAL_LINE)
                 print('结束DIDO子线程')
                 # self.AI_option.stop_work()
                 self.DIDO_thread.quit()
                 self.DIDO_thread.wait()
+        elif self.testFlag == 'CPU':
+            if self.CPU_thread and self.CPU_thread.isRunning():
+                print('结束CPU子线程')
+                self.showInf(f'结束CPU子线程' + self.HORIZONTAL_LINE)
+                # self.AI_option.stop_work()
+                self.CPU_thread.quit()
+                self.CPU_thread.wait()
         else:
-            pass
+            self.showInf(f'不存在运行的子线程' + self.HORIZONTAL_LINE)
     
         
 
@@ -1660,9 +1707,10 @@ class Ui_Control(QMainWindow,Ui_Form):
     def allScreen(self):
         self.label_7.setVisible(False)
         self.isAllScreen = True
-        self.tableWidget_DIDO.setVisible(False)
-        self.tableWidget_AI.setVisible(False)
-        self.tableWidget_AO.setVisible(False)
+        for tW in self.tableWidget_array:
+            tW.setVisible(False)
+        # self.tableWidget_AI.setVisible(False)
+        # self.tableWidget_AO.setVisible(False)
         self.pushbutton_allScreen.setEnabled(False)
         self.pushbutton_allScreen.setVisible(False)
         self.label_28.setGeometry(10, 199, 192, 30)
@@ -1683,10 +1731,12 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.label_28.setGeometry(10, 634, 192, 30)
         if self.tabIndex == 0:
             self.tableWidget_DIDO.setVisible(True)
-        if self.tabIndex == 1:
+        elif self.tabIndex == 1:
             self.tableWidget_AI.setVisible(True)
-        if self.tabIndex == 2:
+        elif self.tabIndex == 2:
             self.tableWidget_AO.setVisible(True)
+        elif self.tabIndex == 3:
+            self.tableWidget_CPU.setVisible(True)
         self.pushbutton_allScreen.setEnabled(True)
         self.pushbutton_allScreen.setVisible(True)
         QApplication.processEvents()
@@ -2024,18 +2074,11 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.asciiCode_sn = (strToASCII(self.lineEdit_SN.text()))
         self.asciiCode_rev = (strToASCII(self.lineEdit_REV.text()))
 
-        # self.asciiCode_pn = ASCIIToHex(self.asciiCode_pn)
-        # self.asciiCode_sn = ASCIIToHex(self.asciiCode_sn)
-        # self.asciiCode_rev = ASCIIToHex(self.asciiCode_rev)
-
         #三码写入PLC
         if not write3codeToPLC(self.CAN2,[self.asciiCode_pn,self.asciiCode_sn,self.asciiCode_rev]):
             return False
         else:
             self.showInf('三码写入成功！\n\n')
-            time.sleep(2)
-
-
 
         self.textBrowser_5.clear()
         self.textBrowser_5.insertPlainText(f'产品信息下发成功，开始测试。' + self.HORIZONTAL_LINE)

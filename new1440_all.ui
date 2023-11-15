@@ -2274,6 +2274,19 @@
        <string>MA0202</string>
       </property>
      </widget>
+     <widget class="QCheckBox" name="checkBox_70">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>270</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>外观检查</string>
+      </property>
+     </widget>
      <widget class="QCheckBox" name="checkBox_50">
       <property name="geometry">
        <rect>
