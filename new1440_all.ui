@@ -33,7 +33,7 @@
     <rect>
      <x>753</x>
      <y>314</y>
-     <width>651</width>
+     <width>671</width>
      <height>521</height>
     </rect>
    </property>
@@ -1712,7 +1712,7 @@
        <x>10</x>
        <y>10</y>
        <width>621</width>
-       <height>151</height>
+       <height>101</height>
       </rect>
      </property>
      <property name="title">
@@ -1752,7 +1752,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="lineEdit_24">
+        <widget class="QLineEdit" name="lineEdit_32">
          <property name="styleSheet">
           <string notr="true">background-color: rgb(255, 255, 255);</string>
          </property>
@@ -1784,7 +1784,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="lineEdit_25">
+        <widget class="QLineEdit" name="lineEdit_31">
          <property name="styleSheet">
           <string notr="true">background-color: rgb(255, 255, 255);</string>
          </property>
@@ -1816,12 +1816,12 @@
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="lineEdit_26">
+        <widget class="QLineEdit" name="lineEdit_30">
          <property name="styleSheet">
           <string notr="true">background-color: rgb(255, 255, 255);</string>
          </property>
          <property name="text">
-          <string/>
+          <string>P0000010390631</string>
          </property>
         </widget>
        </item>
@@ -1845,7 +1845,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QComboBox" name="comboBox_4">
+        <widget class="QComboBox" name="comboBox_20">
          <property name="styleSheet">
           <string notr="true">background-color: rgb(255, 255, 255);</string>
          </property>
@@ -1876,7 +1876,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QComboBox" name="comboBox_6">
+        <widget class="QComboBox" name="comboBox_21">
          <property name="styleSheet">
           <string notr="true">background-color: rgb(255, 255, 255);</string>
          </property>
@@ -1927,7 +1927,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QComboBox" name="comboBox_9">
+        <widget class="QComboBox" name="comboBox_22">
          <property name="styleSheet">
           <string notr="true">background-color: rgb(255, 255, 255);</string>
          </property>
@@ -1978,7 +1978,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QComboBox" name="comboBox_11">
+        <widget class="QComboBox" name="comboBox_23">
          <property name="styleSheet">
           <string notr="true">background-color: rgb(255, 255, 255);</string>
          </property>
@@ -2029,7 +2029,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="lineEdit_27">
+        <widget class="QLineEdit" name="lineEdit_33">
          <property name="styleSheet">
           <string notr="true">background-color: rgb(255, 255, 255);</string>
          </property>
@@ -2039,6 +2039,279 @@
         </widget>
        </item>
       </layout>
+     </widget>
+    </widget>
+    <widget class="QGroupBox" name="groupBox_19">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>120</y>
+       <width>621</width>
+       <height>371</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>检测</string>
+     </property>
+     <widget class="QCheckBox" name="checkBox_53">
+      <property name="geometry">
+       <rect>
+        <x>500</x>
+        <y>20</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>FLASH</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_54">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>70</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>MAC/三码写入</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_69">
+      <property name="geometry">
+       <rect>
+        <x>500</x>
+        <y>220</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>固件烧录</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_56">
+      <property name="geometry">
+       <rect>
+        <x>340</x>
+        <y>70</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>拨杆测试</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_55">
+      <property name="geometry">
+       <rect>
+        <x>170</x>
+        <y>70</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>FPGA</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_57">
+      <property name="geometry">
+       <rect>
+        <x>500</x>
+        <y>70</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>MFK按键</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_58">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>120</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>RTC测试</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_60">
+      <property name="geometry">
+       <rect>
+        <x>340</x>
+        <y>120</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>各指示灯</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_59">
+      <property name="geometry">
+       <rect>
+        <x>170</x>
+        <y>120</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>掉电保存</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_61">
+      <property name="geometry">
+       <rect>
+        <x>500</x>
+        <y>120</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>本体IN</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_62">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>170</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>本体OUT</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_64">
+      <property name="geometry">
+       <rect>
+        <x>340</x>
+        <y>170</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>RS-232C</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_63">
+      <property name="geometry">
+       <rect>
+        <x>170</x>
+        <y>170</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>以太网</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_65">
+      <property name="geometry">
+       <rect>
+        <x>500</x>
+        <y>170</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>RS-485</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_66">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>220</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>右扩CAN</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_68">
+      <property name="geometry">
+       <rect>
+        <x>340</x>
+        <y>220</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>测试报告</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_67">
+      <property name="geometry">
+       <rect>
+        <x>170</x>
+        <y>220</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>MA0202</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_50">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>20</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>U盘读写</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_51">
+      <property name="geometry">
+       <rect>
+        <x>170</x>
+        <y>20</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>型号检查</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_52">
+      <property name="geometry">
+       <rect>
+        <x>340</x>
+        <y>20</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>SRAM</string>
+      </property>
      </widget>
     </widget>
    </widget>
