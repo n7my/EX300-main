@@ -1712,30 +1712,17 @@
        <x>10</x>
        <y>10</y>
        <width>621</width>
-       <height>101</height>
+       <height>161</height>
       </rect>
      </property>
      <property name="title">
       <string>产品信息</string>
      </property>
-     <widget class="Line" name="line_9">
-      <property name="geometry">
-       <rect>
-        <x>175</x>
-        <y>10</y>
-        <width>20</width>
-        <height>41</height>
-       </rect>
-      </property>
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-     </widget>
      <widget class="QWidget" name="layoutWidget_20">
       <property name="geometry">
        <rect>
         <x>540</x>
-        <y>20</y>
+        <y>40</y>
         <width>69</width>
         <height>31</height>
        </rect>
@@ -1767,7 +1754,7 @@
       <property name="geometry">
        <rect>
         <x>390</x>
-        <y>20</y>
+        <y>40</y>
         <width>111</width>
         <height>31</height>
        </rect>
@@ -1799,7 +1786,7 @@
       <property name="geometry">
        <rect>
         <x>200</x>
-        <y>20</y>
+        <y>40</y>
         <width>153</width>
         <height>31</height>
        </rect>
@@ -1831,7 +1818,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>20</y>
+        <y>40</y>
         <width>158</width>
         <height>30</height>
        </rect>
@@ -1862,7 +1849,7 @@
       <property name="geometry">
        <rect>
         <x>200</x>
-        <y>60</y>
+        <y>80</y>
         <width>111</width>
         <height>30</height>
        </rect>
@@ -1913,7 +1900,7 @@
       <property name="geometry">
        <rect>
         <x>350</x>
-        <y>60</y>
+        <y>80</y>
         <width>111</width>
         <height>30</height>
        </rect>
@@ -1964,7 +1951,7 @@
       <property name="geometry">
        <rect>
         <x>500</x>
-        <y>60</y>
+        <y>80</y>
         <width>111</width>
         <height>30</height>
        </rect>
@@ -2011,11 +1998,169 @@
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="layoutWidget_3">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>120</y>
+        <width>71</width>
+        <height>30</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_8">
+       <item>
+        <widget class="QLabel" name="label_67">
+         <property name="text">
+          <string>工装1</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_34">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(255, 255, 255);</string>
+         </property>
+         <property name="text">
+          <string>1</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="layoutWidget_4">
+      <property name="geometry">
+       <rect>
+        <x>110</x>
+        <y>120</y>
+        <width>71</width>
+        <height>30</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_9">
+       <item>
+        <widget class="QLabel" name="label_68">
+         <property name="text">
+          <string>工装2</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_35">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(255, 255, 255);</string>
+         </property>
+         <property name="text">
+          <string>2</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="layoutWidget_5">
+      <property name="geometry">
+       <rect>
+        <x>210</x>
+        <y>120</y>
+        <width>71</width>
+        <height>30</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_10">
+       <item>
+        <widget class="QLabel" name="label_69">
+         <property name="text">
+          <string>工装3</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_36">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(255, 255, 255);</string>
+         </property>
+         <property name="text">
+          <string>3</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="layoutWidget_6">
+      <property name="geometry">
+       <rect>
+        <x>310</x>
+        <y>120</y>
+        <width>71</width>
+        <height>30</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_14">
+       <item>
+        <widget class="QLabel" name="label_70">
+         <property name="text">
+          <string>工装4</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_37">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(255, 255, 255);</string>
+         </property>
+         <property name="text">
+          <string>4</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="layoutWidget_8">
+      <property name="geometry">
+       <rect>
+        <x>410</x>
+        <y>120</y>
+        <width>71</width>
+        <height>30</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_40">
+       <item>
+        <widget class="QLabel" name="label_71">
+         <property name="text">
+          <string>工装5</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit_38">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(255, 255, 255);</string>
+         </property>
+         <property name="text">
+          <string>5</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_71">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>20</y>
+        <width>71</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>修改参数</string>
+      </property>
+     </widget>
      <widget class="QWidget" name="">
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>60</y>
+        <y>80</y>
         <width>161</width>
         <height>30</height>
        </rect>
@@ -2045,9 +2190,9 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>120</y>
+       <y>190</y>
        <width>621</width>
-       <height>371</height>
+       <height>301</height>
       </rect>
      </property>
      <property name="title">

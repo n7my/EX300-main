@@ -21,7 +21,7 @@ class AIThread(QObject):
     messageBox_signal= pyqtSignal(list)
     #allFinished_signal：所有测试结束信号
     allFinished_signal = pyqtSignal()
-    labe_signal = pyqtSignal(list)
+    label_signal = pyqtSignal(list)
     saveExcel_signal = pyqtSignal(list)
     print_signal = pyqtSignal(list)
 
@@ -3013,7 +3013,7 @@ class AIThread(QObject):
             sheet.write(self.generalTest_row + all_row + 1, 4, '■ 合格', pass_style)
             sheet.write(self.generalTest_row + all_row + 1, 6,
                         '------------------ 全部项目测试通过！！！ ------------------', pass_style)
-            self.labe_signal.emit(['pass','全部通过'])
+            self.label_signal.emit(['pass','全部通过'])
             self.print_signal.emit([f'/{name_save}{self.module_type}_{time.strftime("%Y%m%d%H%M%S")}', 'PASS', ''])
             # self.label.setStyleSheet(self.testState_qss['pass'])
             # self.label.setText('全部通过')
@@ -3022,7 +3022,7 @@ class AIThread(QObject):
             sheet.write(self.generalTest_row + all_row + 1, 4, '■ 部分合格', pass_style)
             sheet.write(self.generalTest_row + all_row + 1, 6,
                         '------------------ 注意：有部分项目未测试！！！ ------------------', warning_style)
-            self.labe_signal.emit(['testing', '部分通过'])
+            self.label_signal.emit(['testing', '部分通过'])
             self.print_signal.emit([f'/{name_save}{self.module_type}_{time.strftime("%Y%m%d%H%M%S")}', 'PASS', ''])
             # self.label.setStyleSheet(self.testState_qss['testing'])
             # self.label.setText('部分通过')
@@ -3030,7 +3030,7 @@ class AIThread(QObject):
             name_save = '不合格'
             sheet.write(self.generalTest_row + all_row + 2, 4, '■ 不合格', fail_style)
             sheet.write(self.generalTest_row + all_row + 2, 6, f'不合格原因：{self.errorInf}', fail_style)
-            self.labe_signal.emit(['fail', '未通过'])
+            self.label_signal.emit(['fail', '未通过'])
             self.print_signal.emit(
                 [f'/{name_save}{self.module_type}_{time.strftime("%Y%m%d%H%M%S")}', 'FAIL', self.errorInf])
             # self.label.setStyleSheet(self.testState_qss['fail'])
@@ -3059,6 +3059,6 @@ class AIThread(QObject):
         self.resume_work()
         self.is_running = False
         self.setAIChOutCalibrate()
-        self.labe_signal.emit(['fail', '测试停止'])
+        self.label_signal.emit(['fail', '测试停止'])
 
 

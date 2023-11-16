@@ -48,18 +48,24 @@ m_can_obj = CAN_option.VCI_CAN_OBJ(RECEIVE_ID, TIME_STAMP, TIME_FLAG, RECEIVE_SE
                                    REMOTE_FLAG, EXTERN_FLAG, DATA_LEN, DATA, RESERVED_3)
 
 
-def isModulesOnline(CAN1,CAN2,module_1,module_2,waiting_time,CANAddr_relay,type:str):
+def isModulesOnline(CANAddr_array,module_array,waiting_time):
     # 检测设备心跳
-    if check_heartbeat( CAN1, module_1, waiting_time) == False:
-        return False,0
-    if type == 'AO' or type == 'AI' :
-        if  check_heartbeat( CANAddr_relay, '继电器1',  waiting_time) == False:
-            return False,1
-        if  check_heartbeat( CANAddr_relay + 1, '继电器2', waiting_time) == False:
-            return False,3
-    if  check_heartbeat( CAN2, module_2, waiting_time) == False:
-        return False,7
-    return True,8
+    for i in range(len(module_array)):
+        if not check_heartbeat(CANAddr_array[i], module_array[i], waiting_time):
+            return False,i+1
+    return True, 0
+    #
+    # if type == 'DI' or type == 'DO' or type == 'DIDO':
+    #     if check_heartbeat(CANAddr_array[0], module_array[0], waiting_time) == False:
+    #         return False,0
+    # if type == 'AO' or type == 'AI' :
+    #     if  check_heartbeat( CANAddr_relay, '继电器1',  waiting_time) == False:
+    #         return False,1
+    #     if  check_heartbeat( CANAddr_relay + 1, '继电器2', waiting_time) == False:
+    #         return False,3
+    # if  check_heartbeat( CAN2, module_2, waiting_time) == False:
+    #     return False,7
+
 
 
 def check_heartbeat(can_addr, inf, max_waiting):

@@ -23,6 +23,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from thread_AI import AIThread
 from thread_AO import AOThread
 from thread_DIDO import DIDOThread
+from thread_CPU import CPUThread
 import threading
 import queue
 
@@ -227,8 +228,12 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.label_41.setAlignment(QtCore.Qt.AlignLeft|Qt.AlignVCenter)
         #屏蔽pushbutton_9
         self.pushButton_9.setVisible(False)
-        # 读页面配置
-        self.loadConfig()
+        try:
+            # 读页面配置
+            self.loadConfig()
+        except:
+            #若配置文件有问题就以默认方式初始化页面
+            pass
 
 
         #显示当前时间
@@ -252,6 +257,19 @@ class Ui_Control(QMainWindow,Ui_Form):
         #                             padding: 2px;
         #                         }
         #                     """)
+        #CPU页面参数配置
+        self.CPU_lineEdit_array = [self.lineEdit_33, self.lineEdit_34, self.lineEdit_35, self.lineEdit_36,
+                              self.lineEdit_37, self.lineEdit_38]
+        self.CPU_lineEditName_array = ["CPU_IP", "工装1", "工装2", "工装3", "工装4", "工装5"]
+        self.CPU_checkBox_array = [self.checkBox_50, self.checkBox_51, self.checkBox_52, self.checkBox_53,
+                              self.checkBox_54, self.checkBox_55, self.checkBox_56, self.checkBox_57,
+                              self.checkBox_58, self.checkBox_59, self.checkBox_60, self.checkBox_61,
+                              self.checkBox_62, self.checkBox_63, self.checkBox_64, self.checkBox_65,
+                              self.checkBox_66, self.checkBox_67, self.checkBox_68, self.checkBox_69,
+                              self.checkBox_70, self.checkBox_71]
+        self.CPU_checkBoxName_array = ["U盘读写", "型号检查", "SRAM", "FLASH", "MAC/三码写入", "FPGA", "拨杆测试", "MFK按键",
+                                  "RTC测试", "掉电保存", "各指示灯", "本体IN", "本体OUT", "以太网", "RS-232C", "RS-485",
+                                  "右扩CAN", "MA0202", "测试报告", "固件烧录", "外观检测", "修改参数"]
         for tW in [self.tableWidget_AI, self.tableWidget_AO, self.tableWidget_DIDO,self.tableWidget_CPU]:
             tW.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
@@ -623,18 +641,22 @@ class Ui_Control(QMainWindow,Ui_Form):
 
         #CPU页面初始化
         self.cpu_comboBox_array = [self.comboBox_20,self.comboBox_21,self.comboBox_22,self.comboBox_23]
-        self.cpu_lineEdit_array = [self.lineEdit_33]
+        self.cpu_lineEdit_array = [self.lineEdit_33,self.lineEdit_34,self.lineEdit_35,self.lineEdit_36,
+                                   self.lineEdit_37,self.lineEdit_38]
         self.cpu_checkBox_array = [self.checkBox_50,self.checkBox_51,self.checkBox_52,self.checkBox_53,
                                     self.checkBox_54,self.checkBox_55,self.checkBox_56,self.checkBox_57,
                                     self.checkBox_58,self.checkBox_59,self.checkBox_60,self.checkBox_61,
                                     self.checkBox_62,self.checkBox_63,self.checkBox_64,self.checkBox_65,
-                                    self.checkBox_66,self.checkBox_67,self.checkBox_68,self.checkBox_69]
+                                    self.checkBox_66,self.checkBox_67,self.checkBox_68,self.checkBox_69,
+                                   self.checkBox_70,self.checkBox_71]
         for comboBox in self.cpu_comboBox_array:
             comboBox.currentIndexChanged.connect(self.saveConfig)
         for lineEdit in self.cpu_lineEdit_array:
             lineEdit.textChanged.connect(self.saveConfig)
         for checkBox in self.cpu_checkBox_array:
             checkBox.toggled.connect(self.saveConfig)
+        self.CPU_paramChanged()
+        self.checkBox_71.stateChanged.connect(self.CPU_paramChanged)
 
 
         # self.lineEdit_PN.setPlaceholderText('请输入PN码')
@@ -789,18 +811,13 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.comboBox_21.setCurrentIndex(self.config_param["CPU_232COM"])
         self.comboBox_22.setCurrentIndex(self.config_param["CPU_485COM"])
         self.comboBox_23.setCurrentIndex(self.config_param["CPU_typecCOM"])
-        self.lineEdit_33.setText(self.config_param["CPU_IP"])
-        CPU_checkBox_array = [self.checkBox_50, self.checkBox_51, self.checkBox_52, self.checkBox_53,
-                              self.checkBox_54, self.checkBox_55, self.checkBox_56, self.checkBox_57,
-                              self.checkBox_58, self.checkBox_59, self.checkBox_60, self.checkBox_61,
-                              self.checkBox_62, self.checkBox_63, self.checkBox_64, self.checkBox_65,
-                              self.checkBox_66, self.checkBox_67, self.checkBox_68, self.checkBox_69,
-                              self.checkBox_70]
-        CPU_checkBoxName_array = ["U盘读写", "型号检查", "SRAM", "FLASH", "MAC/三码写入", "FPGA", "拨杆测试", "MFK按键",
-                                  "RTC测试", "掉电保存", "各指示灯", "本体IN", "本体OUT", "以太网", "RS-232C", "RS-485",
-                                  "右扩CAN", "MA0202", "测试报告", "固件烧录", "外观检测"]
-        for i in range(len(CPU_checkBox_array)):
-            CPU_checkBox_array[i].setChecked(self.config_param[CPU_checkBoxName_array[i]])
+
+        for i in range(len(self.CPU_lineEdit_array)):
+            self.CPU_lineEdit_array[i].setText(self.config_param[self.CPU_lineEditName_array[i]])
+
+
+        for i in range(len(self.CPU_checkBox_array)):
+            self.CPU_checkBox_array[i].setChecked(self.config_param[self.CPU_checkBoxName_array[i]])
 
     def saveConfig(self):
         self.config_param["savePath"] = self.label_41.text()
@@ -861,22 +878,14 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.config_param["DIDO_检测run"] = self.checkBox_2.isChecked()
 
         #CPU页面配置
+        for i in range(len(self.CPU_lineEdit_array)):
+            self.config_param[self.CPU_lineEditName_array[i]] = self.CPU_lineEdit_array[i].text()
         self.config_param["CPU_型号"] = self.comboBox_20.currentIndex()
-        self.config_param["CPU_IP"] = self.lineEdit_33.text()
         self.config_param["CPU_232COM"] = self.comboBox_21.currentIndex()
         self.config_param["CPU_485COM"] = self.comboBox_22.currentIndex()
         self.config_param["CPU_typecCOM"] = self.comboBox_23.currentIndex()
-        CPU_checkBox_array = [self.checkBox_50,self.checkBox_51,self.checkBox_52,self.checkBox_53,
-                              self.checkBox_54,self.checkBox_55,self.checkBox_56,self.checkBox_57,
-                              self.checkBox_58,self.checkBox_59,self.checkBox_60,self.checkBox_61,
-                              self.checkBox_62,self.checkBox_63,self.checkBox_64,self.checkBox_65,
-                              self.checkBox_66,self.checkBox_67,self.checkBox_68,self.checkBox_69,
-                              self.checkBox_70]
-        CPU_checkBoxName_array=["U盘读写","型号检查","SRAM","FLASH","MAC/三码写入","FPGA","拨杆测试","MFK按键",
-                                "RTC测试","掉电保存","各指示灯","本体IN","本体OUT","以太网","RS-232C","RS-485",
-                                "右扩CAN","MA0202","测试报告","固件烧录","外观检测"]
-        for i in range(len(CPU_checkBox_array)):
-            self.config_param[CPU_checkBoxName_array[i]] = CPU_checkBox_array[i].isChecked()
+        for i in range(len(self.CPU_checkBox_array)):
+            self.config_param[self.CPU_checkBoxName_array[i]] = self.CPU_checkBox_array[i].isChecked()
 
         #save
         config_str = str(self.config_param)
@@ -1012,7 +1021,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.lineEdit_PN.clear()
 
     def inputSN(self):
-        # print(self.lineEdit_PN.text())
+        # # print(self.lineEdit_PN.text())
         if len(self.lineEdit_SN.text()) == 12:
             self.lineEdit_SN.setReadOnly(True)
             self.lineEdit_REV.setReadOnly(False)
@@ -1065,13 +1074,14 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.saveDir = QFileDialog.getExistingDirectory(self, '修改路径', self.saveDir)
         if self.saveDir !='':
             self.label_41.setText(self.saveDir)
-            print(self.saveDir)
+            # print(self.saveDir)
 
     def openSaveDir(self):
         os.startfile(self.label_41.text())
 
     def tabChange(self):
         self.tabIndex = self.tabWidget.currentIndex()
+        # print("current tabIndex:",self.tabIndex)
         if self.tabIndex == 0 and not self.isAllScreen:
             self.tableWidget_DIDO.setVisible(True)
             self.tableWidget_AI.setVisible(False)
@@ -1221,7 +1231,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         can_thread.start()
         event_canInit.wait()
         list_canInit = q.get()
-        # print('list_canInit:',list_canInit)
+        # # print('list_canInit:',list_canInit)
         if not list_canInit[0]:
             self.showMessageBox(list_canInit[1])
             self.CANFail()
@@ -1236,15 +1246,22 @@ class Ui_Control(QMainWindow,Ui_Form):
 
         QApplication.processEvents()
 
+        #节点分配
         if self.tabIndex == 0:
-            if not self.configCANAddr(int(self.lineEdit_6.text()), int(self.lineEdit_7.text()), '', ''):
+            if not self.configCANAddr(int(self.lineEdit_6.text()), int(self.lineEdit_7.text()), '', '', ''):
                 return False
         elif self.tabIndex == 1:
-            if not self.configCANAddr(int(self.lineEdit_18.text()),int(self.lineEdit_23.text()),int(self.lineEdit_23.text())+1, int(self.lineEdit_19.text())):
+            if not self.configCANAddr(int(self.lineEdit_18.text()),int(self.lineEdit_23.text()),
+                                      int(self.lineEdit_23.text())+1, int(self.lineEdit_19.text()), ''):
                 return False
         elif self.tabIndex == 2:
-            if not self.configCANAddr(int(self.lineEdit_39.text()),int(self.lineEdit_41.text()),int(self.lineEdit_41.text())+1, int(self.lineEdit_40.text())
-                                      ):
+            if not self.configCANAddr(int(self.lineEdit_39.text()),int(self.lineEdit_41.text()),
+                                      int(self.lineEdit_41.text())+1, int(self.lineEdit_40.text()), ''):
+                return False
+        elif self.tabIndex == 3:
+            if not self.configCANAddr(int(self.lineEdit_34.text()), int(self.lineEdit_35.text()),
+                                      int(self.lineEdit_36.text()), int(self.lineEdit_37.text()),
+                                      int(self.lineEdit_38.text())):
                 return False
 
         self.result_queue = Queue()
@@ -1277,43 +1294,6 @@ class Ui_Control(QMainWindow,Ui_Form):
                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
             return False
 
-        # try:
-        #     time_online = time.time()
-        #     while True:
-        #         QApplication.processEvents()
-        #         if (time.time() - time_online)*1000 >2000:
-        #             if not mainThreadRunning():
-        #                 return False
-        #             self.showInf(f'错误：总线初始化超时！' + self.HORIZONTAL_LINE)
-        #             QMessageBox.critical(None, '错误', '总线初始化超时！请检查CAN分析仪或各设备是否正确连接', QMessageBox.Yes |
-        #                                  QMessageBox.No, QMessageBox.Yes)
-        #             self.endOfTest()
-        #             return False
-        #         bool_online = self.isModulesOnline()
-        #         # bool_online = self.isModulesOnline(currentTable)
-        #         if bool_online:
-        #             if not mainThreadRunning():
-        #                 return False
-        #             self.showInf(f'总线初始化成功！' + self.HORIZONTAL_LINE)
-        #             break
-        #         else:
-        #             if not mainThreadRunning():
-        #                 return False
-        #             self.showInf(f'错误：总线初始化失败！再次尝试初始化。' + self.HORIZONTAL_LINE)
-        #             # QMessageBox.critical(None, '错误', '总线初始化失败！再次尝试初始化', QMessageBox.Yes |
-        #             #                  QMessageBox.No, QMessageBox.Yes)
-        #             self.PassOrFail(False)
-        #             if not mainThreadRunning():
-        #                 return False
-        #     self.showInf('模块在线检测结束！' + self.HORIZONTAL_LINE)
-        #
-        # except:
-        #     if not mainThreadRunning():
-        #         return False
-        #     QMessageBox(QMessageBox.Critical, '错误提示', '总线初始化异常，请检查设备').exec_()
-        #     self.PassOrFail(False)
-        #     return False
-
         if self.tabWidget.currentIndex() == 0:
             self.testFlag = 'DIDO'
             self.appearanceTest(self.testFlag)
@@ -1336,7 +1316,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.DIDO_option.messageBox_signal.connect(self.showMessageBox)
             # self.DIDO_option.excel_signal.connect(self.generateExcel)
             self.DIDO_option.allFinished_signal.connect(self.allFinished)
-            self.DIDO_option.labe_signal.connect(self.labelChange)
+            self.DIDO_option.label_signal.connect(self.labelChange)
             # self.DIDO_option.saveExcel_signal.connect(self.saveExcel)
             # self.DIDO_option.print_signal.connect(self.printResult)
 
@@ -1356,7 +1336,7 @@ class Ui_Control(QMainWindow,Ui_Form):
 
             self.testFlag = 'AI'
             self.appearanceTest(self.testFlag)
-            self.appearance = True
+            # self.appearance = True
             # self.showInf(f'self.tabWidget.currentIndex()={self.tabWidget.currentIndex()}\n\n')
             mTable = self.tableWidget_AI
             # isPassVol = True
@@ -1418,10 +1398,9 @@ class Ui_Control(QMainWindow,Ui_Form):
                 self.AI_option.messageBox_signal.connect(self.showMessageBox)
                 # self.AI_option.excel_signal.connect(self.generateExcel)
                 self.AI_option.allFinished_signal.connect(self.allFinished)
-                self.AI_option.labe_signal.connect(self.labelChange)
+                self.AI_option.label_signal.connect(self.labelChange)
                 self.AI_option.saveExcel_signal.connect(self.saveExcel)#保存测试报告
                 self.AI_option.print_signal.connect(self.printResult)#打印测试标签
-                # self.AI_option.print_signal.connect(self.passp)
 
                 self.pushButton_3.clicked.connect(self.AI_option.stop_work)
                 self.pushButton_pause.clicked.connect(self.AI_option.pause_work)
@@ -1454,7 +1433,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                 self.AO_option.messageBox_signal.connect(self.showMessageBox)
                 # self.AO_option.excel_signal.connect(self.generateExcel)
                 self.AO_option.allFinished_signal.connect(self.allFinished)
-                self.AO_option.labe_signal.connect(self.labelChange)
+                self.AO_option.label_signal.connect(self.labelChange)
                 self.AO_option.saveExcel_signal.connect(self.saveExcel)
                 # self.AO_option.print_signal.connect(self.printResult)
 
@@ -1468,14 +1447,41 @@ class Ui_Control(QMainWindow,Ui_Form):
 
         elif self.tabWidget.currentIndex() == 3:
             self.testFlag = 'CPU'
+            mTable = self.tableWidget_CPU
+            #CPU的外观检测选项放在子线程里进行并且可选
+            #self.appearanceTest(self.testFlag)
+            self.CPU_thread = None
+            self.worker = None
+            if not self.CPU_thread or not self.worker_thread.isRunning():
+                # # 创建队列用于主线程和子线程之间的通信
+                # self.result_queue = Queue()
+
+                self.CPU_thread = QThread()
+                self.CPU_option = CPUThread(self.inf_CPUlist, self.result_queue)
+                self.CPU_option.result_signal.connect(self.showInf)
+                self.CPU_option.item_signal.connect(self.CPU_itemOperation)
+                self.CPU_option.pass_signal.connect(self.PassOrFail)
+                # self.CPU_option.RunErr_signal.connect(self.testRunErr)
+                # self.CPU_option.CANRunErr_signal.connect(self.testCANRunErr)
+                self.CPU_option.messageBox_signal.connect(self.showMessageBox)
+                # self.CPU_option.excel_signal.connect(self.generateExcel)
+                self.CPU_option.allFinished_signal.connect(self.allFinished)
+                self.CPU_option.label_signal.connect(self.labelChange)
+                self.CPU_option.saveExcel_signal.connect(self.saveExcel)
+                # self.CPU_option.print_signal.connect(self.printResult)
+
+                self.pushButton_3.clicked.connect(self.CPU_option.stop_work)
+                self.pushButton_pause.clicked.connect(self.CPU_option.pause_work)
+                self.pushButton_resume.clicked.connect(self.CPU_option.resume_work)
+
+                self.CPU_option.moveToThread(self.CPU_thread)
+                self.CPU_thread.started.connect(self.CPU_option.CPUOption)
+                self.CPU_thread.start()
 
 
 
         return True
 
-
-    def passp(self):
-        pass
 
     def appearanceTest(self,testFlag):
         if testFlag == 'DIDO':
@@ -1484,8 +1490,8 @@ class Ui_Control(QMainWindow,Ui_Form):
             mTable = self.tableWidget_AI
         elif testFlag == 'AO':
             mTable = self.tableWidget_AO
-        elif testFlag == 'CPU':
-            mTable = self.tableWidget_CPU
+        # elif testFlag == 'CPU':
+        #     mTable = self.tableWidget_CPU
         # 检测外观
         appearanceStart_time = time.time()
         if not mainThreadRunning():
@@ -1495,7 +1501,7 @@ class Ui_Control(QMainWindow,Ui_Form):
 
         if not mainThreadRunning():
             return False
-        reply = QMessageBox.question(None, '外观检测', '产品外观是否完好！',
+        reply = QMessageBox.question(None, '外观检测', '产品外观是否完好?',
                                      QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
         if reply == QMessageBox.Yes:
             self.appearance = True
@@ -1603,13 +1609,13 @@ class Ui_Control(QMainWindow,Ui_Form):
         if self.testFlag == 'AI':
             if self.AI_thread and self.AI_thread.isRunning():
                 self.showInf(f'结束AI子线程' + self.HORIZONTAL_LINE)
-                print('结束AI子线程')
+                # print('结束AI子线程')
                 # self.AI_option.stop_work()
                 self.AI_thread.quit()
                 self.AI_thread.wait()
         elif self.testFlag == 'AO':
             if self.AO_thread and self.AO_thread.isRunning():
-                print('结束AO子线程')
+                # print('结束AO子线程')
                 self.showInf(f'结束AO子线程' + self.HORIZONTAL_LINE)
                 # self.AI_option.stop_work()
                 self.AO_thread.quit()
@@ -1617,13 +1623,13 @@ class Ui_Control(QMainWindow,Ui_Form):
         elif self.testFlag == 'DO' or self.testFlag == 'DI' or self.testFlag == 'DIDO':
             if self.DIDO_thread and self.DIDO_thread.isRunning():
                 self.showInf(f'结束DIDO子线程' + self.HORIZONTAL_LINE)
-                print('结束DIDO子线程')
+                # print('结束DIDO子线程')
                 # self.AI_option.stop_work()
                 self.DIDO_thread.quit()
                 self.DIDO_thread.wait()
         elif self.testFlag == 'CPU':
             if self.CPU_thread and self.CPU_thread.isRunning():
-                print('结束CPU子线程')
+                # print('结束CPU子线程')
                 self.showInf(f'结束CPU子线程' + self.HORIZONTAL_LINE)
                 # self.AI_option.stop_work()
                 self.CPU_thread.quit()
@@ -1638,7 +1644,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.label_16.setEnabled(self.checkBox_27.isChecked())
         self.lineEdit_7.setEnabled(self.checkBox_27.isChecked())
         self.label_17.setEnabled(self.checkBox_27.isChecked())
-        self.saveConfig()
+        # self.saveConfig()
 
     def DIDOAdPara_stateChanged(self):
         self.lineEdit_13.setEnabled(self.checkBox_28.isChecked())
@@ -1649,7 +1655,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.label_26.setEnabled(self.checkBox_28.isChecked())
         self.label_25.setEnabled(self.checkBox_28.isChecked())
         self.label_24.setEnabled(self.checkBox_28.isChecked())
-        self.saveConfig()
+        # self.saveConfig()
     """
 
     AI
@@ -1663,7 +1669,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.label_49.setEnabled(self.checkBox_4.isChecked())
         self.lineEdit_23.setEnabled(self.checkBox_4.isChecked())
         self.label_54.setEnabled(self.checkBox_4.isChecked())
-        self.saveConfig()
+        # self.saveConfig()
 
     def AIAdPara_stateChanged(self):
         self.lineEdit_15.setEnabled(self.checkBox_3.isChecked())
@@ -1674,7 +1680,18 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.label_44.setEnabled(self.checkBox_3.isChecked())
         self.label_45.setEnabled(self.checkBox_3.isChecked())
         self.label_46.setEnabled(self.checkBox_3.isChecked())
-        self.saveConfig()
+        # self.saveConfig()
+
+    def CPU_paramChanged(self):
+        CPU_param_array=[self.lineEdit_33, self.lineEdit_34, self.lineEdit_35, self.lineEdit_36,
+                         self.lineEdit_37, self.lineEdit_38,self.comboBox_20,self.comboBox_21,
+                         self.comboBox_22,self.comboBox_23,self.label_59,self.label_60,self.label_61
+                         ,self.label_64,self.label_66,self.label_67,self.label_68,self.label_69,
+                         self.label_70,self.label_71]
+        for Cparam in CPU_param_array:
+            Cparam.setEnabled(self.checkBox_71.isChecked())
+
+        # self.saveConfig()
 
     def AI_NotCalibrate(self):
         self.checkBox_5.setEnabled(False)
@@ -1709,7 +1726,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.label_75.setEnabled(self.checkBox_33.isChecked())
         self.lineEdit_41.setEnabled(self.checkBox_33.isChecked())
         self.label_76.setEnabled(self.checkBox_33.isChecked())
-        self.saveConfig()
+        # self.saveConfig()
 
     def AOAdPara_stateChanged(self):
         self.lineEdit_42.setEnabled(self.checkBox_34.isChecked())
@@ -1720,7 +1737,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.label_79.setEnabled(self.checkBox_34.isChecked())
         self.label_80.setEnabled(self.checkBox_34.isChecked())
         self.label_81.setEnabled(self.checkBox_34.isChecked())
-        self.saveConfig()
+        # self.saveConfig()
 
     def AO_NotCalibrate(self):
         self.checkBox_35.setEnabled(False)
@@ -1767,6 +1784,10 @@ class Ui_Control(QMainWindow,Ui_Form):
 
         self.textBrowser_5.setGeometry(10, 664, 711, 181)
         self.label_28.setGeometry(10, 634, 192, 30)
+        self.tabIndex = self.tabWidget.currentIndex()
+
+        self.pushbutton_allScreen.setEnabled(True)
+        self.pushbutton_allScreen.setVisible(True)
         if self.tabIndex == 0:
             self.tableWidget_DIDO.setVisible(True)
         elif self.tabIndex == 1:
@@ -1775,8 +1796,6 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.tableWidget_AO.setVisible(True)
         elif self.tabIndex == 3:
             self.tableWidget_CPU.setVisible(True)
-        self.pushbutton_allScreen.setEnabled(True)
-        self.pushbutton_allScreen.setVisible(True)
         QApplication.processEvents()
     
     
@@ -1813,7 +1832,7 @@ class Ui_Control(QMainWindow,Ui_Form):
 
         if self.tabIndex == 0:#DI/DO界面
             mTable = self.tableWidget_DIDO
-            print(f'tabIndex={self.tabIndex}')
+            # print(f'tabIndex={self.tabIndex}')
 
             self.testNum = 3#外观检测 + CAN_RunErr检测 + RunErr检测 + 通道检测
             # 获取产品信息
@@ -1830,7 +1849,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.module_pn = self.lineEdit.text()
             self.module_sn = self.lineEdit_3.text()
             self.module_rev = self.lineEdit_5.text()
-            print(f'{self.module_type},{self.module_pn},{self.module_sn},{self.module_rev}')
+            # print(f'{self.module_type},{self.module_pn},{self.module_sn},{self.module_rev}')
 
             if self.comboBox.currentIndex() == 0 or self.comboBox.currentIndex() == 1 \
                     or self.comboBox.currentIndex() == 2:
@@ -1861,7 +1880,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.waiting_time = int(self.lineEdit_12.text())
             self.loop_num = int(self.lineEdit_14.text())
             self.saveDir = self.label_41.text()  # 保存路径
-            # print(f'{self.module_type},{self.module_pn},{self.module_sn},{self.module_rev},{self.CANAddr_AI}')
+            # # print(f'{self.module_type},{self.module_pn},{self.module_sn},{self.module_rev},{self.CANAddr_AI}')
 
             # 获取测试信息
             self.isTestCANRunErr = self.checkBox.isChecked()
@@ -1899,7 +1918,7 @@ class Ui_Control(QMainWindow,Ui_Form):
 
         elif self.tabIndex == 1:#AI界面
             mTable = self.tableWidget_AI
-            # print(f'tabIndex={self.tabIndex}')
+            # # print(f'tabIndex={self.tabIndex}')
             self.module_1 = self.inf['AO1']
             self.module_2 = self.inf['AI2']
             self.testNum = 4  # CAN_RunErr检测 + RunErr检测 + 电流检测 + 电压检测
@@ -1913,7 +1932,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.module_rev = self.lineEdit_20.text()
 
             self.inf_product = [self.module_type,self.module_pn,self.module_sn,self.module_rev,self.m_Channels]
-            # print(f'{self.module_type},{self.module_pn},{self.module_sn},{self.module_rev},{self.m_Channels}')
+            # # print(f'{self.module_type},{self.module_pn},{self.module_sn},{self.module_rev},{self.m_Channels}')
             # 获取CAN地址
             self.CANAddr_AI = int(self.lineEdit_19.text())
             self.CANAddr_AO = int(self.lineEdit_18.text())
@@ -1927,47 +1946,56 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.waiting_time = int(self.lineEdit_17.text())
             self.receive_num = int(self.lineEdit_15.text())
             self.saveDir = self.label_41.text()  # 保存路径
-            # print(f'{self.module_type},{self.module_pn},{self.module_sn},{self.module_rev},{self.CANAddr_AI}')
+            # # print(f'{self.module_type},{self.module_pn},{self.module_sn},{self.module_rev},{self.CANAddr_AI}')
             self.inf_additional = [self.baud_rate, self.waiting_time, self.receive_num,self.saveDir]
             # 获取标定信息
             if (self.radioButton.isChecked()):
                 self.isCalibrate = False
-                # print(f'isCalibrate:{self.isCalibrate}')
+                # # print(f'isCalibrate:{self.isCalibrate}')
                 self.isCalibrateVol = False
                 self.isCalibrateCur = False
                 self.inf_calibrate = [self.isCalibrate, self.isCalibrateVol, self.isCalibrateCur, 0]
             elif (self.radioButton_2.isChecked() or self.radioButton_3.isChecked()):
                 self.isCalibrate = True
-                print(f'isCalibrate:{self.isCalibrate}')
+                # print(f'isCalibrate:{self.isCalibrate}')
                 self.isCalibrateVol = self.checkBox_5.isChecked()
-                print(f'isCalibrateVol:{self.isCalibrateVol}')
+                # print(f'isCalibrateVol:{self.isCalibrateVol}')
                 self.isCalibrateCur = self.checkBox_6.isChecked()
-                print(f'isCalibrateCur:{self.isCalibrateCur}')
+                # print(f'isCalibrateCur:{self.isCalibrateCur}')
                 if self.radioButton_2.isChecked():
                     self.inf_calibrate = [self.isCalibrate,self.isCalibrateVol,self.isCalibrateCur,1]
                 elif self.radioButton_3.isChecked():
                     self.inf_calibrate = [self.isCalibrate, self.isCalibrateVol, self.isCalibrateCur,2]
                 # elif not self.radioButton_2.isChecked() and not self.radioButton_3.isChecked():
                 #     self.inf_calibrate = [self.isCalibrate, self.isCalibrateVol, self.isCalibrateCur,0]
+            else:
+                self.inf_calibrate = [self.isCalibrate, self.isCalibrateVol, self.isCalibrateCur, 0]
             # 获取检测信息
             if (self.radioButton_4.isChecked()):
                 self.isTest = False
-                # print(f'isCalibrate:{self.isCalibrate}')
+                # # print(f'isCalibrate:{self.isCalibrate}')
                 self.isAITestVol = False
                 self.isAITestCur = False
                 self.isTestCANRunErr = False
                 self.isTestRunErr = False
             elif (self.radioButton_5.isChecked()):
                 self.isTest = True
-                # print(f'isTest:{self.isTest}')
+                # # print(f'isTest:{self.isTest}')
                 self.isAITestVol = self.checkBox_9.isChecked()
-                # print(f'isAITestVol:{self.isAITestVol}')
+                # # print(f'isAITestVol:{self.isAITestVol}')
                 self.isAITestCur = self.checkBox_10.isChecked()
-                # print(f'isAITestCur:{self.isAITestCur}')
+                # # print(f'isAITestCur:{self.isAITestCur}')
                 self.isTestCANRunErr = self.checkBox_8.isChecked()
-                # print(f'isTestCANRunErr:{self.isTestCANRunErr}')
+                # # print(f'isTestCANRunErr:{self.isTestCANRunErr}')
                 self.isTestRunErr = self.checkBox_7.isChecked()
-                # print(f'isTestRunErr:{self.isTestRunErr}')
+                # # print(f'isTestRunErr:{self.isTestRunErr}')
+            else:
+                self.isTest = False
+                # # print(f'isCalibrate:{self.isCalibrate}')
+                self.isAITestVol = False
+                self.isAITestCur = False
+                self.isTestCANRunErr = False
+                self.isTestRunErr = False
             self.inf_test = [self.isTest,self.isAITestVol,self.isAITestCur,self.isTestCANRunErr,self.isTestRunErr]
 
             self.itemOperation(mTable, 0, 3, 0, '')
@@ -2005,7 +2033,7 @@ class Ui_Control(QMainWindow,Ui_Form):
 
         elif self.tabIndex == 2:#AO界面
             mTable = self.tableWidget_AO
-            print(f'tabIndex={self.tabIndex}')
+            # print(f'tabIndex={self.tabIndex}')
             self.module_1 = self.inf['AI1']
             self.module_2 = self.inf['AO2']
             self.testNum = 4  # CAN_RunErr检测 + RunErr检测 + 电流检测 + 电压检测
@@ -2017,7 +2045,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.module_pn = self.lineEdit_47.text()
             self.module_sn = self.lineEdit_46.text()
             self.module_rev = self.lineEdit_45.text()
-            print(f'{self.module_type},{self.module_pn},{self.module_sn},{self.module_rev},{self.m_Channels}')
+            # print(f'{self.module_type},{self.module_pn},{self.module_sn},{self.module_rev},{self.m_Channels}')
             self.inf_product = [self.module_type, self.module_pn, self.module_sn, self.module_rev, self.m_Channels]
 
             #获取CAN地址
@@ -2033,45 +2061,54 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.waiting_time = int(self.lineEdit_43.text())
             self.receive_num = int(self.lineEdit_44.text())
             self.saveDir = self.label_41.text()  # 保存路径
-            # print(f'{self.module_type},{self.module_pn},{self.module_sn},{self.module_rev},{self.CANAddr_AI}')
+            # # print(f'{self.module_type},{self.module_pn},{self.module_sn},{self.module_rev},{self.CANAddr_AI}')
             self.inf_additional = [self.baud_rate, self.waiting_time, self.receive_num, self.saveDir]
             #获取标定信息
             if(self.radioButton_18.isChecked()):
                 self.isCalibrate = False
-                # print(f'isCalibrate:{self.isCalibrate}')
+                # # print(f'isCalibrate:{self.isCalibrate}')
                 self.isCalibrateVol = False
                 self.isCalibrateCur = False
                 self.inf_calibrate = [self.isCalibrate, self.isCalibrateVol, self.isCalibrateCur, 0]
             elif(self.radioButton_19.isChecked() or self.radioButton_20.isChecked()):
                 self.isCalibrate = True
-                print(f'isCalibrate:{self.isCalibrate}')
+                # print(f'isCalibrate:{self.isCalibrate}')
                 self.isCalibrateVol = self.checkBox_35.isChecked()
-                print(f'isCalibrateVol:{self.isCalibrateVol}')
+                # print(f'isCalibrateVol:{self.isCalibrateVol}')
                 self.isCalibrateCur = self.checkBox_36.isChecked()
-                print(f'isCalibrateCur:{self.isCalibrateCur}')
+                # print(f'isCalibrateCur:{self.isCalibrateCur}')
                 if self.radioButton_19.isChecked():
                     self.inf_calibrate = [self.isCalibrate,self.isCalibrateVol,self.isCalibrateCur,1]
                 elif self.radioButton_20.isChecked():
                     self.inf_calibrate = [self.isCalibrate, self.isCalibrateVol, self.isCalibrateCur,2]
+            else:
+                self.inf_calibrate = [self.isCalibrate, self.isCalibrateVol, self.isCalibrateCur, 0]
             # 获取检测信息
             if (self.radioButton_16.isChecked()):
                 self.isTest = False
-                # print(f'isCalibrate:{self.isCalibrate}')
+                # # print(f'isCalibrate:{self.isCalibrate}')
                 self.isAOTestVol = False
                 self.isAOTestCur = False
                 self.isTestCANRunErr = False
                 self.isTestRunErr = False
             elif (self.radioButton_17.isChecked()):
                 self.isTest = True
-                # print(f'isTest:{self.isTest}')
+                # # print(f'isTest:{self.isTest}')
                 self.isAOTestVol = self.checkBox_29.isChecked()
-                # print(f'isAOTestVol:{self.isAOTestVol}')
+                # # print(f'isAOTestVol:{self.isAOTestVol}')
                 self.isAOTestCur = self.checkBox_30.isChecked()
-                # print(f'isAOTestCur:{self.isAOTestCur}')
+                # # print(f'isAOTestCur:{self.isAOTestCur}')
                 self.isTestCANRunErr = self.checkBox_31.isChecked()
-                # print(f'isTestCANRunErr:{self.isTestCANRunErr}')
+                # # print(f'isTestCANRunErr:{self.isTestCANRunErr}')
                 self.isTestRunErr = self.checkBox_32.isChecked()
-                # print(f'isTestRunErr:{self.isTestRunErr}')
+                # # print(f'isTestRunErr:{self.isTestRunErr}')
+            else:
+                self.isTest = False
+                # # print(f'isCalibrate:{self.isCalibrate}')
+                self.isAOTestVol = False
+                self.isAOTestCur = False
+                self.isTestCANRunErr = False
+                self.isTestRunErr = False
             self.inf_test = [self.isTest, self.isAOTestVol, self.isAOTestCur, self.isTestCANRunErr, self.isTestRunErr]
 
             self.itemOperation(mTable, 0, 3, 0, '')
@@ -2107,20 +2144,98 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.inf_AOlist = [self.inf_param, self.inf_product, self.inf_CANAdrr,
                                self.inf_additional, self.inf_calibrate, self.inf_test]
 
-        #三码转换
-        self.asciiCode_pn = (strToASCII(self.lineEdit_PN.text()))
-        self.asciiCode_sn = (strToASCII(self.lineEdit_SN.text()))
-        self.asciiCode_rev = (strToASCII(self.lineEdit_REV.text()))
 
-        #三码写入PLC
-        if not write3codeToPLC(self.CAN2,[self.asciiCode_pn,self.asciiCode_sn,self.asciiCode_rev]):
-            return False
-        else:
-            self.showInf('三码写入成功！\n\n')
+        elif self.tabIndex == 3:#CPU界面
+            mTable = self.tableWidget_CPU
+            # print(f'tabIndex={self.tabIndex}')
+            self.module_1 = '工装1（ET1600）'
+            self.module_2 = '工装2（QN0016）'
+            self.module_3 = '工装3（QN0016）'
+            self.module_4 = '工装4（AE0400）'
+            self.module_5 = '工装5（AQ0004）'
+            self.testNum = 21  # ["U盘读写", "型号检查", "SRAM", "FLASH", "MAC/三码写入", "FPGA", "拨杆测试", "MFK按键",
+                                  # "RTC测试", "掉电保存", "各指示灯", "本体IN", "本体OUT", "以太网", "RS-232C", "RS-485",
+                                  # "右扩CAN", "MA0202", "测试报告", "固件烧录", "外观检测"]
+
+            self.inf_param = [mTable, self.module_1, self.module_2, self.module_3,
+                              self.module_4,self.module_5,self.testNum]
+            #获取产品信息
+            self.module_type = self.comboBox_20.currentText()
+            self.in_Channels = int(self.module_type[5:7])
+            self.out_Channels = int(self.module_type[7:9])
+            self.module_pn = self.lineEdit_30.text()
+            self.module_sn = self.lineEdit_31.text()
+            self.module_rev = self.lineEdit_32.text()
+            # print(f'{self.module_type},{self.module_pn},{self.module_sn},{self.module_rev},{self.m_Channels}')
+            self.inf_product = [self.module_type, self.module_pn, self.module_sn,
+                                self.module_rev, self.in_Channels,self.out_Channels]
+
+            #获取CAN与IP地址
+            self.CANAddr1 = int(self.lineEdit_34.text())
+            self.CANAddr2 = int(self.lineEdit_35.text())
+            self.CANAddr3 = int(self.lineEdit_36.text())
+            self.CANAddr4 = int(self.lineEdit_37.text())
+            self.CANAddr5 = int(self.lineEdit_38.text())
+            # self.CAN1 = self.CANAddr_AI
+            # self.CAN2 = self.CANAddr_AO
+            self.IPAddr = int(self.lineEdit_33.text())
+            self.inf_CANIPAdrr = [self.CANAddr1,self.CANAddr2,self.CANAddr3,self.CANAddr4,
+                                  self.CANAddr5,self.IPAddr]
+            #获取串口信息
+            self.serialPort_232 = int(self.comboBox_21.currentIndex())
+            self.serialPort_485 = int(self.comboBox_22.currentIndex())
+            self.serialPort_typeC = int(self.comboBox_23.currentIndex())
+            self.saveDir = self.label_41.text()  # 保存路径
+            # # print(f'{self.module_type},{self.module_pn},{self.module_sn},{self.module_rev},{self.CANAddr_AI}')
+            self.inf_serialPort = [self.serialPort_232, self.serialPort_485,
+                                   self.serialPort_typeC, self.saveDir]
+            #获取检测信息
+            self.inf_CPU_test =[False for x in range(self.CPU_test_array)]
+            self.CPU_test_array = [self.checkBox_70, self.checkBox_50, self.checkBox_51, self.checkBox_52,
+                                   self.checkBox_53,
+                                   self.checkBox_54, self.checkBox_55, self.checkBox_56, self.checkBox_57,
+                                   self.checkBox_58, self.checkBox_59, self.checkBox_60, self.checkBox_61,
+                                   self.checkBox_62, self.checkBox_63, self.checkBox_64, self.checkBox_65,
+                                   self.checkBox_66, self.checkBox_67, self.checkBox_68, self.checkBox_69,
+                                   ]
+            self.CPU_testName_array = [ "外观检测","U盘读写", "型号检查", "SRAM", "FLASH", "MAC/三码写入", "FPGA",
+                                        "拨杆测试","MFK按键","RTC测试", "掉电保存", "各指示灯", "本体IN", "本体OUT",
+                                        "以太网","RS-232C","RS-485","右扩CAN", "MA0202", "测试报告", "固件烧录"]
+
+            for i in range(len(self.CPU_test_array)):
+                self.inf_CPU_test[i] = self.CPU_test_array[i].isChecked()
+            # :param
+            # mTable: 进行操作的表格
+            # :param
+            # row: 进行操作的单元行
+            # :param
+            # state: 测试状态['无需检测', '正在检测', '检测完成', '等待检测']
+            # :param
+            # result: 测试结果
+            # col2 = ['', '通过', '未通过']
+            # :param
+            # operationTime: 测试时间
+            for i in range(len(self.CPU_test_array)):
+                if self.inf_CPU_test[i]:
+                    self.itemOperation(mTable, i, 3, 0, '')
+                else:
+                    self.itemOperation(mTable, i, 0, 0, '')
+            self.inf_CPUlist = [self.inf_param,self.inf_product, self.inf_CANIPAdrr,
+                                self.inf_serialPort, self.inf_CPU_test]
+        if self.tabIndex == 0 or self.tabIndex == 1 or self.tabIndex == 2:
+            #三码转换
+            self.asciiCode_pn = (strToASCII(self.lineEdit_PN.text()))
+            self.asciiCode_sn = (strToASCII(self.lineEdit_SN.text()))
+            self.asciiCode_rev = (strToASCII(self.lineEdit_REV.text()))
+
+            #三码写入PLC
+            if not write3codeToPLC(self.CAN2,[self.asciiCode_pn,self.asciiCode_sn,self.asciiCode_rev]):
+                return False
+            else:
+                self.showInf('三码写入成功！\n\n')
 
         self.textBrowser_5.clear()
         self.textBrowser_5.insertPlainText(f'产品信息下发成功，开始测试。' + self.HORIZONTAL_LINE)
-        # self.move_to_end()
 
 
         self.pushButton_pause.setEnabled(True)
@@ -2138,18 +2253,22 @@ class Ui_Control(QMainWindow,Ui_Form):
             array[i] = 0x00
 
     #自动分配节点
-    def configCANAddr(self,addr1,addr2,addr3,addr4):
+    def configCANAddr(self,addr1,addr2,addr3,addr4,addr5):
         if self.tabIndex == 1 or self.tabIndex == 2:
             list =[addr1,addr2,addr3,addr4]
+        elif self.tabIndex == 3:
+            list = [addr1, addr2, addr3, addr4, addr5]
         else:
             list = [addr1, addr2]
         for a in list:
             self.m_transmitData=[0xac, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
             self.m_transmitData[2] = a
             boola = CAN_option.transmitCANAddr(0x0,self.m_transmitData)[0]
-            time.sleep(0.2)
+            time.sleep(0.01)
             if not boola:
+                self.showInf(f'节点{a}分配失败' + self.HORIZONTAL_LINE)
                 return False
+        self.showInf(f'所有节点分配成功' + self.HORIZONTAL_LINE)
         return True
 
 
@@ -2170,7 +2289,7 @@ class Ui_Control(QMainWindow,Ui_Form):
     def check_heartbeat(self, can_addr, inf, max_waiting):
         if inf == '继电器':
             bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(0x700 + can_addr , max_waiting)
-            print(self.m_can_obj.Data)
+            # print(self.m_can_obj.Data)
             if bool_receive == False:
                 self.showInf(f'错误：未发现{inf}' + self.HORIZONTAL_LINE)
                 # self.isPause()
@@ -2184,7 +2303,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         else:
             can_id = 0x700 + can_addr
             bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(can_id, max_waiting)
-            print(self.m_can_obj.Data)
+            # print(self.m_can_obj.Data)
             if bool_receive == False:
                 self.showInf(f'错误：未发现{inf}' + self.HORIZONTAL_LINE)
                 # self.isPause()
@@ -2259,8 +2378,8 @@ class Ui_Control(QMainWindow,Ui_Form):
         document = Document()
         default_section = document.sections[0]
         # 默认宽度和高度
-        # print(default_section.page_width.cm)  # 21.59
-        # print(default_section.page_height.cm)  # 27.94
+        # # print(default_section.page_width.cm)  # 21.59
+        # # print(default_section.page_height.cm)  # 27.94
         # 可直接修改宽度和高度，即纸张大小改为自定义
         default_section.page_width = Cm(8)
         default_section.page_height = Cm(12)
@@ -2342,9 +2461,9 @@ class Ui_Control(QMainWindow,Ui_Form):
 
     # def channelZero(self):
     #     self.showInf(f'对所有通道值进行归零处理' + self.HORIZONTAL_LINE)
-    #     # print('1111111111111111')
+    #     # # print('1111111111111111')
     #     isZero = self.normal_writeValuetoAO(0)
-    #     # print('2222222222222222')
+    #     # # print('2222222222222222')
     #     if isZero == True:
     #         self.showInf(f'所有通道归零成功' + self.HORIZONTAL_LINE)
     #         self.isPause()
@@ -2371,7 +2490,7 @@ class Ui_Control(QMainWindow,Ui_Form):
     #         self.m_transmitData[5] = ((value >> 8) & 0xff)
     #         self.m_transmitData[6] = 0x00
     #         self.m_transmitData[7] = 0x00
-    #         # print(f'{self.module_1}地址:{0x600+self.CANAddr_AO}')
+    #         # # print(f'{self.module_1}地址:{0x600+self.CANAddr_AO}')
     #         bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600+self.CANAddr_AO), self.m_transmitData)
     #         bool_all = bool_all & bool_transmit
     #         self.isPause()
@@ -2431,21 +2550,21 @@ class Ui_Control(QMainWindow,Ui_Form):
   #                   bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(0x580 + self.CANAddr_AI,
   #                                                                            self.waiting_time)
   #                   if bool_receive:
-  #                       # print(f'm_can_obj.Data[4]:{self.m_can_obj.Data[4]}')
-  #                       # print(f'm_can_obj.Data[5]:{self.m_can_obj.Data[5]}')
-  #                       # print(f'AIRangeArray[0]:{self.AIRangeArray[0]}')
-  #                       # print(f'AIRangeArray[1]:{self.AIRangeArray[1]}')
+  #                       # # print(f'm_can_obj.Data[4]:{self.m_can_obj.Data[4]}')
+  #                       # # print(f'm_can_obj.Data[5]:{self.m_can_obj.Data[5]}')
+  #                       # # print(f'AIRangeArray[0]:{self.AIRangeArray[0]}')
+  #                       # # print(f'AIRangeArray[1]:{self.AIRangeArray[1]}')
   #                       if hex(self.m_can_obj.Data[4]) == hex(self.AIRangeArray[0]) and hex(
   #                               self.m_can_obj.Data[5]) == hex(self.AIRangeArray[1]):
-  #                           print(f'{AIChannel}.成功设置AI通道{AIChannel}的量程为”电压+/-10V“。\n\n')
+  #                           # print(f'{AIChannel}.成功设置AI通道{AIChannel}的量程为”电压+/-10V“。\n\n')
   #                           self.showInf(f'{AIChannel}.成功设置AI通道{AIChannel}的量程为”电压+/-10V“。\n\n')
   #                           break
   #                       else:
   #                           self.showInf(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”电压+/-10V“。\n\n')
-  #                           print(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”电压+/-10V“。\n\n')
+  #                           # print(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”电压+/-10V“。\n\n')
   #               else:
   #                   self.showInf(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”电压+/-10V“。\n\n')
-  #                   # print(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”电压+/-10V“。\n\n')
+  #                   # # print(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”电压+/-10V“。\n\n')
   #       elif type == 'AOCurrent' or type == 'AICurrent':
   #           self.m_transmitData[4] = self.AIRangeArray[10]
   #           self.m_transmitData[5] = self.AIRangeArray[11]
@@ -2458,18 +2577,18 @@ class Ui_Control(QMainWindow,Ui_Form):
   #                   bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(0x580 + self.CANAddr_AI,
   #                                                                            self.waiting_time)
   #                   if bool_receive:
-  #                       # print(f'm_can_obj.Data[4]:{self.m_can_obj.Data[4]}')
-  #                       # print(f'm_can_obj.Data[5]:{self.m_can_obj.Data[5]}')
-  #                       # print(f'AIRangeArray[0]:{self.AIRangeArray[0]}')
-  #                       # print(f'AIRangeArray[1]:{self.AIRangeArray[1]}')
+  #                       # # print(f'm_can_obj.Data[4]:{self.m_can_obj.Data[4]}')
+  #                       # # print(f'm_can_obj.Data[5]:{self.m_can_obj.Data[5]}')
+  #                       # # print(f'AIRangeArray[0]:{self.AIRangeArray[0]}')
+  #                       # # print(f'AIRangeArray[1]:{self.AIRangeArray[1]}')
   #                       if hex(self.m_can_obj.Data[4]) == hex(self.AIRangeArray[10]) and hex(
   #                               self.m_can_obj.Data[5]) == hex(self.AIRangeArray[11]):
-  #                           print(f'{AIChannel}.成功设置AI通道{AIChannel}的量程为”电流(0-20)mA“。\n\n')
+  #                           # print(f'{AIChannel}.成功设置AI通道{AIChannel}的量程为”电流(0-20)mA“。\n\n')
   #                           self.showInf(f'{AIChannel}.成功设置AI通道{AIChannel}的量程为”电流(0-20)mA“。\n\n')
   #                           break
   #                       else:
   #                           self.showInf(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”电流(0-20)mA“。\n\n')
-  #                           print(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”电流(0-20)mA“。\n\n')
+  #                           # print(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”电流(0-20)mA“。\n\n')
   #               else:
   #                   self.showInf(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”电流(0-20)mA“。\n\n')
   #                   break
@@ -2516,21 +2635,21 @@ class Ui_Control(QMainWindow,Ui_Form):
   #                   bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(0x580 + self.CANAddr_AO,
   #                                                                            self.waiting_time)
   #                   if bool_receive:
-  #                       # print(f'm_can_obj.Data[4]:{self.m_can_obj.Data[4]}')
-  #                       # print(f'm_can_obj.Data[5]:{self.m_can_obj.Data[5]}')
-  #                       # print(f'AORangeArray[0]:{self.AORangeArray[0]}')
-  #                       # print(f'AORangeArray[1]:{self.AORangeArray[1]}')
+  #                       # # print(f'm_can_obj.Data[4]:{self.m_can_obj.Data[4]}')
+  #                       # # print(f'm_can_obj.Data[5]:{self.m_can_obj.Data[5]}')
+  #                       # # print(f'AORangeArray[0]:{self.AORangeArray[0]}')
+  #                       # # print(f'AORangeArray[1]:{self.AORangeArray[1]}')
   #                       if hex(self.m_can_obj.Data[4]) == hex(self.AORangeArray[0]) and hex(
   #                               self.m_can_obj.Data[5]) == hex(self.AORangeArray[1]):
-  #                           print(f'{AOChannel}.成功设置AO通道{AOChannel}的量程为”电压+/-10V“。\n\n')
+  #                           # print(f'{AOChannel}.成功设置AO通道{AOChannel}的量程为”电压+/-10V“。\n\n')
   #                           self.showInf(f'{AOChannel}.成功设置AO通道{AOChannel}的量程为”电压+/-10V“。\n\n')
   #                           break
   #                       else:
   #                           self.showInf(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”电压+/-10V“。\n\n')
-  #                           print(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”电压+/-10V“。\n\n')
+  #                           # print(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”电压+/-10V“。\n\n')
   #               else:
   #                   self.showInf(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”电压+/-10V“。\n\n')
-  #                   # print(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”电压+/-10V“。\n\n')
+  #                   # # print(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”电压+/-10V“。\n\n')
   #       elif type == 'AOCurrent' or type == 'AICurrent':
   #           self.m_transmitData[4] = self.AORangeArray[10]
   #           self.m_transmitData[5] = self.AORangeArray[11]
@@ -2543,18 +2662,18 @@ class Ui_Control(QMainWindow,Ui_Form):
   #                   bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(0x580 + self.CANAddr_AO,
   #                                                                            self.waiting_time)
   #                   if bool_receive:
-  #                       # print(f'm_can_obj.Data[4]:{self.m_can_obj.Data[4]}')
-  #                       # print(f'm_can_obj.Data[5]:{self.m_can_obj.Data[5]}')
-  #                       # print(f'AORangeArray[0]:{self.AORangeArray[0]}')
-  #                       # print(f'AORangeArray[1]:{self.AORangeArray[1]}')
+  #                       # # print(f'm_can_obj.Data[4]:{self.m_can_obj.Data[4]}')
+  #                       # # print(f'm_can_obj.Data[5]:{self.m_can_obj.Data[5]}')
+  #                       # # print(f'AORangeArray[0]:{self.AORangeArray[0]}')
+  #                       # # print(f'AORangeArray[1]:{self.AORangeArray[1]}')
   #                       if hex(self.m_can_obj.Data[4]) == hex(self.AORangeArray[10]) and hex(
   #                               self.m_can_obj.Data[5]) == hex(self.AORangeArray[11]):
-  #                           print(f'{AOChannel}.成功设置AO通道{AOChannel}的量程为”电流(0-20)mA“。\n\n')
+  #                           # print(f'{AOChannel}.成功设置AO通道{AOChannel}的量程为”电流(0-20)mA“。\n\n')
   #                           self.showInf(f'{AOChannel}.成功设置AO通道{AOChannel}的量程为”电流(0-20)mA“。\n\n')
   #                           break
   #                       else:
   #                           self.showInf(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”电流(0-20)mA“。\n\n')
-  #                           print(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”电流(0-20)mA“。\n\n')
+  #                           # print(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”电流(0-20)mA“。\n\n')
   #               else:
   #                   self.showInf(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”电流(0-20)mA“。\n\n')
   #                   break
@@ -2577,9 +2696,9 @@ class Ui_Control(QMainWindow,Ui_Form):
   #               break
   #       recv = [0,0,0,0]
   #       for i in range(self.m_Channels):
-  #           # print(f'i= {i}')
+  #           # # print(f'i= {i}')
   #           recv[i] = self.m_can_obj.Data[i*2] | self.m_can_obj.Data[i*2+1] << 8
-  #           # print(f'recv[{i}]={recv[i]}')
+  #           # # print(f'recv[{i}]={recv[i]}')
   #           self.isPause()
   #           # if not self.isStop():
   #           #     return
@@ -2634,16 +2753,16 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.textBrowser_5.moveCursor(self.textBrowser_5.textCursor().End)
 
     # def isPause(self):
-    #     # print(f'self.work_thread.pauseFlag:{self.work_thread.pauseFlag.isSet()}')
+    #     # # print(f'self.work_thread.pauseFlag:{self.work_thread.pauseFlag.isSet()}')
     #     if self.work_thread.pauseFlag.isSet():
     #         while True:
-    #             # print(f'while:{self.pause_num}')
+    #             # # print(f'while:{self.pause_num}')
     #             if self.pause_num == 1 and not self.work_thread.stopFlag.isSet():
     #                 self.pause_num += 1
     #                 self.showInf(self.HORIZONTAL_LINE + '暂停中…………'+self.HORIZONTAL_LINE)
     #
     #             QApplication.processEvents()
-    #             # print('暂停中…………')
+    #             # # print('暂停中…………')
     #             if not self.work_thread.pauseFlag.isSet():
     #                 self.pause_num = 1
     #                 break
@@ -2793,6 +2912,46 @@ class Ui_Control(QMainWindow,Ui_Form):
                 item.setText(f'{list[3]}')
         QApplication.processEvents()
 
+    def CPU_itemOperation(self,list):
+        '''
+        :param list = [row,state,result,operationTime]
+        :param row: 进行操作的单元行
+        :param state: 测试状态 ['无需检测','正在检测','检测完成','等待检测']
+        :param result: 测试结果 col2 = ['','通过','未通过']
+        :param operationTime: 测试时间
+        :return:
+        '''
+        mTable = self.tableWidget_CPU
+        col1 = ['无需检测','正在检测','检测完成','等待检测']
+        col2 = ['','通过','未通过']
+        font = QtGui.QColor(0, 0, 0)
+        if list[1] == 0:
+            color = QtGui.QColor(255, 255, 255)
+            font = QtGui.QColor(197, 197, 197)
+        elif list[1] == 1:
+            color = QtGui.QColor(255,255,0)
+        elif list[1] == 2 and list[2] == 1:
+            color = QtGui.QColor(0, 255, 0)
+        elif list[1] == 2 and list[2] == 2:
+            color = QtGui.QColor(255, 0, 0)
+            font = QtGui.QColor(255, 255, 255)
+        elif list[1] == 3:
+            color = QtGui.QColor(197, 197, 197)
+
+        for i in range(4):
+            item = mTable.item(list[0], i)
+            item.setBackground(color)
+            item.setForeground(font)
+            item.setTextAlignment(QtCore.Qt.AlignCenter)
+            if i == 1:
+                item.setText(col1[list[1]])
+            if i == 2:
+                item.setText(col2[list[2]])
+            if i == 3 and list[1] == 2:
+                item.setText(f'{list[3]}s')
+            if (i == 3 and list[1] == 0) or (i == 3 and list[1] == 3):
+                item.setText(f'{list[3]}')
+        QApplication.processEvents()
 
     def itemOperation(self,mTable,row,state,result,operationTime):
         '''
@@ -3458,20 +3617,20 @@ class Ui_Control(QMainWindow,Ui_Form):
     #     # elif module == 'DO':
     #     #     self.fillInDOData(station, book, sheet)
     #     # elif module == 'AI':
-    #     #     # print('打印AI检测结果')
+    #     #     # # print('打印AI检测结果')
     #     #     self.fillInAIData(station, book, sheet)
     #     # elif module == 'AO':
-    #     #     # print('打印AI检测结果')
+    #     #     # # print('打印AI检测结果')
     #     #     self.fillInAOData(station, book, sheet)
     #     if list[1] == 'DI':
     #         self.fillInDIData(list[0], book, sheet)
     #     elif list[1] == 'DO':
     #         self.fillInDOData(list[0], book, sheet)
     #     elif list[1] == 'AI':
-    #         # print('打印AI检测结果')
+    #         # # print('打印AI检测结果')
     #         self.fillInAIData(list[0], book, sheet)
     #     elif list[1] == 'AO':
-    #         # print('打印AI检测结果')
+    #         # # print('打印AI检测结果')
     #         self.fillInAOData(list[0], book, sheet)
     #
     #
@@ -4179,7 +4338,7 @@ class Ui_Control(QMainWindow,Ui_Form):
     #                 # 理论值
     #                 sheet.write(self.AI_row + 2 + j, 3 + 3 * i + 1, f'{self.currentTheory[i]}', pass_style)
     #                 # 测试值
-    #                 # print(j)
+    #                 # # print(j)
     #                 sheet.write(self.AI_row + 2 + j, 4 + 3 * i + 1, f'{self.curReceValue[i][j]}', pass_style)
     #                 # 精度
     #                 if abs(self.curPrecision[i][j]) < 2:
@@ -4191,16 +4350,16 @@ class Ui_Control(QMainWindow,Ui_Form):
     #
     #     if not self.isAITestVol and not self.isAITestCur:
     #         all_row = 9 + 4 + 4 + 2 + 2  # CPU + DI + DO + AI + AO
-    #     print(f'self.isAIPassTest:{self.isAIPassTest}')
+    #     # print(f'self.isAIPassTest:{self.isAIPassTest}')
     #     self.isAIPassTest = (((((self.isAIPassTest & self.isLEDRunOK) & self.isLEDErrOK) & self.CAN_runLED) & self.CAN_errorLED) & self.appearance)
     #     # self.showInf(f'self.isLEDRunOK:{self.isLEDRunOK}')
-    #     print(f'self.isAIPassTest:{self.isAIPassTest}')
-    #     print(f'self.isLEDRunOK:{self.isLEDRunOK}')
-    #     print(f'self.isLEDErrOK:{self.isLEDErrOK}')
-    #     print(f'self.CAN_runLED:{self.CAN_runLED}')
-    #     print(f'self.CAN_errorLED:{self.CAN_errorLED}')
-    #     print(f'self.appearance:{self.appearance}')
-    #     print(f'self.testNum:{self.testNum}')
+    #     # print(f'self.isAIPassTest:{self.isAIPassTest}')
+    #     # print(f'self.isLEDRunOK:{self.isLEDRunOK}')
+    #     # print(f'self.isLEDErrOK:{self.isLEDErrOK}')
+    #     # print(f'self.CAN_runLED:{self.CAN_runLED}')
+    #     # print(f'self.CAN_errorLED:{self.CAN_errorLED}')
+    #     # print(f'self.appearance:{self.appearance}')
+    #     # print(f'self.testNum:{self.testNum}')
     #     # self.showInf(f'self.testNum:{self.testNum}')
     #     name_save = ''
     #     if self.isAIPassTest and self.testNum == 0:
@@ -4456,7 +4615,7 @@ class Ui_Control(QMainWindow,Ui_Form):
     #                 # 理论值
     #                 sheet.write(self.AO_row + 2 + j, 3 + 3 * i + 1, f'{self.currentTheory[i]}', pass_style)
     #                 # 测试值
-    #                 # print(j)
+    #                 # # print(j)
     #                 sheet.write(self.AO_row + 2 + j, 4 + 3 * i + 1, f'{self.curReceValue[i][j]}', pass_style)
     #                 # 精度
     #                 if abs(self.curPrecision[i][j]) < 2:
@@ -4468,16 +4627,16 @@ class Ui_Control(QMainWindow,Ui_Form):
     #
     #     if not self.isAOTestVol and not self.isAOTestCur:
     #         all_row = 9 + 4 + 4 + 2 + 2  # CPU + DI + DO + AI + AO
-    #     print(f'self.isAOPassTest:{self.isAOPassTest}')
+    #     # print(f'self.isAOPassTest:{self.isAOPassTest}')
     #     self.isAOPassTest = (((((self.isAOPassTest & self.isLEDRunOK) & self.isLEDErrOK) & self.CAN_runLED) & self.CAN_errorLED) & self.appearance)
     #     # self.showInf(f'self.isLEDRunOK:{self.isLEDRunOK}')
-    #     print(f'self.isAOPassTest:{self.isAOPassTest}')
-    #     print(f'self.isLEDRunOK:{self.isLEDRunOK}')
-    #     print(f'self.isLEDErrOK:{self.isLEDErrOK}')
-    #     print(f'self.CAN_runLED:{self.CAN_runLED}')
-    #     print(f'self.CAN_errorLED:{self.CAN_errorLED}')
-    #     print(f'self.appearance:{self.appearance}')
-    #     print(f'self.testNum:{self.testNum}')
+    #     # print(f'self.isAOPassTest:{self.isAOPassTest}')
+    #     # print(f'self.isLEDRunOK:{self.isLEDRunOK}')
+    #     # print(f'self.isLEDErrOK:{self.isLEDErrOK}')
+    #     # print(f'self.CAN_runLED:{self.CAN_runLED}')
+    #     # print(f'self.CAN_errorLED:{self.CAN_errorLED}')
+    #     # print(f'self.appearance:{self.appearance}')
+    #     # print(f'self.testNum:{self.testNum}')
     #     # self.showInf(f'self.testNum:{self.testNum}')
     #     name_save = ''
     #     if self.isAOPassTest and self.testNum == 0:
@@ -4624,19 +4783,19 @@ def strToASCII(str):
         ascii_code = int(ord(char))
         ascii_list.append(ascii_code)
 
-    print(ascii_list)
+    # print(ascii_list)
     return ascii_list
 
 def ASCIIToHex(list):
     hex_list = [0x00 for x in range(len(list))]
-    print(f'hex_list = {hex_list}')
+    # print(f'hex_list = {hex_list}')
     num = 0
     for n in list:
-        print(type(hex_list[num]))
+        # print(type(hex_list[num]))
         hex_list[num] = hex(n)
-        print(type(hex_list[num]))
+        # print(type(hex_list[num]))
         num += 1
-    print(f'hex_list = {hex_list}')
+    # print(f'hex_list = {hex_list}')
     return hex_list
 
 def write3codeToPLC(addr,code_list):
@@ -4644,7 +4803,7 @@ def write3codeToPLC(addr,code_list):
     transmit_inf = ubyte_transmit(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
     #写入PN
     code_pn = code_list[0]
-    print(f'code_pn = {code_pn}')
+    # print(f'code_pn = {code_pn}')
     num1 = int(len(code_pn) / 4)
     num2 = len(code_pn) % 4
     if num1 != 0:
@@ -4680,7 +4839,7 @@ def write3codeToPLC(addr,code_list):
 
     # 写入SN
     code_sn = code_list[1]
-    print('code_sn = ',code_sn)
+    # print('code_sn = ',code_sn)
     num1 = int(len(code_sn) / 4)
     num2 = len(code_sn) % 4
     if num1 != 0:
@@ -4713,7 +4872,7 @@ def write3codeToPLC(addr,code_list):
         bool_sn, rece_sn = CAN_option.transmitCAN(0x602, transmit_inf)
         if not bool_sn:
             return False
-    print('code_sn = ', code_sn)
+    # print('code_sn = ', code_sn)
     # 写入REV
     code_rev = code_list[2]
     num1 = int(len(code_rev) / 4)
@@ -4786,11 +4945,11 @@ def get3codeFromPLC(addr):
         if not flag_pn:
             break
 
-    print('pn_list = ',pn_list)
+    # print('pn_list = ',pn_list)
     pnCode = ''
     for asc in pn_list:
         pnCode += chr(asc)
-    print('pnCode = ', pnCode)
+    # print('pnCode = ', pnCode)
 
     # 读设备SN
     sn_list = []
@@ -4823,11 +4982,11 @@ def get3codeFromPLC(addr):
         if not flag_sn:
             break
 
-    print('sn_list = ', sn_list)
+    # print('sn_list = ', sn_list)
     snCode = ''
     for asc in sn_list:
         snCode += chr(asc)
-    print('snCode = ', snCode)
+    # print('snCode = ', snCode)
 
     # 读设备rev
     rev_list = []
@@ -4860,11 +5019,11 @@ def get3codeFromPLC(addr):
         if not flag_rev:
             break
 
-    print('rev_list = ', rev_list)
+    # print('rev_list = ', rev_list)
     revCode = ''
     for asc in rev_list:
         revCode += chr(asc)
-    print('revCode = ', revCode)
+    # print('revCode = ', revCode)
 
     return True,[pnCode,snCode,revCode]
 
