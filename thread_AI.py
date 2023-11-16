@@ -7,6 +7,7 @@ from main_logic import *
 import threading
 from  CAN_option import *
 import struct
+import otherOption
 
 class AIThread(QObject):
     #result_signal：在运行日志框中显示信息
@@ -233,7 +234,77 @@ class AIThread(QObject):
 
     def AIOption(self):
         self.isExcel = True
-        # self.isTestCANRunErr=False#CAN灯暂时不开放
+        # 总线初始化
+        try:
+            time_online = time.time()
+            while True:
+                QApplication.processEvents()
+                if (time.time() - time_online) * 1000 > 2000:
+                    self.pauseOption()
+                    if not self.is_running:
+                        # 后续测试全部取消
+                        self.isTest = False
+                        self.isCalibrate = False
+                        self.isExcel = False
+                        break
+                    self.result_signal.emit(f'错误：总线初始化超时！' + self.HORIZONTAL_LINE)
+                    QMessageBox.critical(None, '错误', '总线初始化超时！请检查CAN分析仪或各设备是否正确连接',
+                                         QMessageBox.Yes |
+                                         QMessageBox.No, QMessageBox.Yes)
+                    # 后续测试全部取消
+                    self.isTest = False
+                    self.isCalibrate = False
+                    self.isExcel = False
+                    break
+
+                bool_online, eID = otherOption.isModulesOnline(self.CANAddr_AO, self.CANAddr_AI, self.module_1,
+                                                               self.module_2, self.waiting_time, self.CANAddr_relay,
+                                                               'AI')
+                if bool_online:
+                    self.pauseOption()
+                    if not self.is_running:
+                        # 后续测试全部取消
+                        self.isTest = False
+                        self.isCalibrate = False
+                        self.isExcel = False
+                        break
+                    self.result_signal.emit(f'总线初始化成功！' + self.HORIZONTAL_LINE)
+                    break
+                else:
+                    self.pauseOption()
+                    if not self.is_running:
+                        # 后续测试全部取消
+                        self.isTest = False
+                        self.isCalibrate = False
+                        self.isExcel = False
+                        break
+                    if eID == 0:
+                        self.result_signal.emit(f'错误：未发现{self.module_1}' + self.HORIZONTAL_LINE)
+                    elif eID == 1:
+                        self.result_signal.emit(f'错误：未发现{self.module_2}' + self.HORIZONTAL_LINE)
+                    elif eID == 3:
+                        self.result_signal.emit(f'错误：未发现继电器1' + self.HORIZONTAL_LINE)
+                    elif eID == 7:
+                        self.result_signal.emit(f'错误：未发现继电器2' + self.HORIZONTAL_LINE)
+                    self.result_signal.emit(f'错误：总线初始化失败！再次尝试初始化。' + self.HORIZONTAL_LINE)
+
+            self.result_signal.emit('模块在线检测结束！' + self.HORIZONTAL_LINE)
+
+        except:
+            self.pauseOption()
+            if not self.is_running:
+                # 后续测试全部取消
+                self.isTest = False
+                self.isCalibrate = False
+                self.isExcel = False
+
+            QMessageBox(QMessageBox.Critical, '错误提示', '总线初始化异常，请检查设备').exec_()
+            # 后续测试全部取消
+            self.isTest = False
+            self.isCalibrate = False
+            self.isExcel = False
+            self.result_signal.emit('模块在线检测结束！' + self.HORIZONTAL_LINE)
+        #开始测试
         if self.isTest:
             if self.isTestRunErr or self.isTestCANRunErr:
                 # 进入指示灯测试模式
@@ -332,8 +403,11 @@ class AIThread(QObject):
             self.result_signal.emit('开始生成校准校验表…………' + self.HORIZONTAL_LINE)
             self.generateExcel(self.isAIPassTest, 'AI')
             self.result_signal.emit('生成校准校验表成功' + self.HORIZONTAL_LINE)
+
+            if not self.isAIVolPass or not self.isAICurPass:
+                self.result_signal.emit(f'不通过原因：\n{self.errorInf}' + self.HORIZONTAL_LINE)
         elif not self.isExcel:
-            self.result_signal.emit('测试停止，校准校验表生成失败…………' + self.HORIZONTAL_LINE)
+            self.result_signal.emit('测试停止，未生成校准校验表！' + self.HORIZONTAL_LINE)
 
         self.allFinished_signal.emit()
         if bool_calibrate:
@@ -2229,25 +2303,18 @@ class AIThread(QObject):
         self.DO_row = 18
         sheet.write_merge(self.DO_row, self.DO_row + 3, 0, 0, 'DO信号', leftTitle_style)
         self.AI_row = 22
-        if (self.isAITestVol and not self.isAITestCur) or (not self.isAITestVol and self.isAITestCur):
-            sheet.write_merge(self.AI_row, self.AI_row + 1 + self.AI_Channels, 0, 0, 'AI信号', leftTitle_style)
-            self.AO_row = self.AI_row + 2 + self.AI_Channels
+        if (self.isAITestVol and not self.isAITestCur):
+            sheet.write_merge(self.AI_row, self.AI_row + 1 + self.AI_Channels*5, 0, 0, 'AI信号', leftTitle_style)
+            self.AO_row = self.AI_row + 2 + self.AI_Channels*5
+        elif  not self.isAITestVol and self.isAITestCur:
+            sheet.write_merge(self.AI_row, self.AI_row + 1 + self.AI_Channels * 2, 0, 0, 'AO信号', leftTitle_style)
+            self.AO_row = self.AI_row + 2 + self.AI_Channels * 2
         elif self.isAITestVol and self.isAITestCur:
-            sheet.write_merge(self.AI_row, self.AI_row + 1 + 2 * self.AI_Channels, 0, 0, 'AI信号', leftTitle_style)
-            self.AO_row = self.AI_row + 2 + 2 * self.AI_Channels
+            sheet.write_merge(self.AI_row, self.AI_row + 1 + 7 * self.AI_Channels, 0, 0, 'AI信号', leftTitle_style)
+            self.AO_row = self.AI_row + 2 + 7 * self.AI_Channels
         elif not self.isAITestVol and not self.isAITestCur:
             sheet.write_merge(self.AI_row, self.AI_row + 1, 0, 0, 'AI信号', leftTitle_style)
             self.AO_row = self.AI_row + 2
-
-        # if (self.isAOTestVol and not self.isAOTestCur) or (not self.isAOTestVol and self.isAOTestCur):
-        #     sheet.write_merge(self.AO_row, self.AO_row + 1 + self.AO_Channels, 0, 0, 'AO信号', leftTitle_style)
-        #     self.result_row = self.AO_row + 2 + self.AO_Channels
-        # elif self.isAOTestVol and self.isAOTestCur:
-        #     sheet.write_merge(self.AO_row, self.AO_row + 1 + 2 * self.AO_Channels, 0, 0, 'AO信号', leftTitle_style)
-        #     self.result_row = self.AO_row + 2 + 2 * self.AO_Channels
-        # elif not self.isAOTestVol and not self.isAOTestCur:
-        #     sheet.write_merge(self.AO_row, self.AO_row + 1, 0, 0, 'AO信号', leftTitle_style)
-        #     self.result_row = self.AO_row + 2
 
         # sheet.write_merge(self.AO_row, self.AO_row + 1 + self.AO_Channels, 0, 0, 'AO信号', leftTitle_style)
         sheet.write_merge(self.AO_row, self.AO_row + 1, 0, 0, 'AO信号', leftTitle_style)

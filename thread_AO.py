@@ -228,7 +228,6 @@ class AOThread(QObject):
 
     def AOOption(self):
         self.isExcel = True
-        bool_online = False
         #总线初始化
         try:
             time_online = time.time()

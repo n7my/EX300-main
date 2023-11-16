@@ -784,6 +784,24 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.checkBox.setChecked(self.config_param["DIDO_检测CAN"])
         self.checkBox_2.setChecked(self.config_param["DIDO_检测run"])
 
+        # CPU页面配置
+        self.comboBox_20.setCurrentIndex(self.config_param["CPU_型号"])
+        self.comboBox_21.setCurrentIndex(self.config_param["CPU_232COM"])
+        self.comboBox_22.setCurrentIndex(self.config_param["CPU_485COM"])
+        self.comboBox_23.setCurrentIndex(self.config_param["CPU_typecCOM"])
+        self.lineEdit_33.setText(self.config_param["CPU_IP"])
+        CPU_checkBox_array = [self.checkBox_50, self.checkBox_51, self.checkBox_52, self.checkBox_53,
+                              self.checkBox_54, self.checkBox_55, self.checkBox_56, self.checkBox_57,
+                              self.checkBox_58, self.checkBox_59, self.checkBox_60, self.checkBox_61,
+                              self.checkBox_62, self.checkBox_63, self.checkBox_64, self.checkBox_65,
+                              self.checkBox_66, self.checkBox_67, self.checkBox_68, self.checkBox_69,
+                              self.checkBox_70]
+        CPU_checkBoxName_array = ["U盘读写", "型号检查", "SRAM", "FLASH", "MAC/三码写入", "FPGA", "拨杆测试", "MFK按键",
+                                  "RTC测试", "掉电保存", "各指示灯", "本体IN", "本体OUT", "以太网", "RS-232C", "RS-485",
+                                  "右扩CAN", "MA0202", "测试报告", "固件烧录", "外观检测"]
+        for i in range(len(CPU_checkBox_array)):
+            CPU_checkBox_array[i].setChecked(self.config_param[CPU_checkBoxName_array[i]])
+
     def saveConfig(self):
         self.config_param["savePath"] = self.label_41.text()
         self.config_param["currentIndex"] = self.tabWidget.currentIndex()
@@ -841,6 +859,26 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.config_param["DIDO_附加_循环次数"] = self.lineEdit_14.text()
         self.config_param["DIDO_检测CAN"] = self.checkBox.isChecked()
         self.config_param["DIDO_检测run"] = self.checkBox_2.isChecked()
+
+        #CPU页面配置
+        self.config_param["CPU_型号"] = self.comboBox_20.currentIndex()
+        self.config_param["CPU_IP"] = self.lineEdit_33.text()
+        self.config_param["CPU_232COM"] = self.comboBox_21.currentIndex()
+        self.config_param["CPU_485COM"] = self.comboBox_22.currentIndex()
+        self.config_param["CPU_typecCOM"] = self.comboBox_23.currentIndex()
+        CPU_checkBox_array = [self.checkBox_50,self.checkBox_51,self.checkBox_52,self.checkBox_53,
+                              self.checkBox_54,self.checkBox_55,self.checkBox_56,self.checkBox_57,
+                              self.checkBox_58,self.checkBox_59,self.checkBox_60,self.checkBox_61,
+                              self.checkBox_62,self.checkBox_63,self.checkBox_64,self.checkBox_65,
+                              self.checkBox_66,self.checkBox_67,self.checkBox_68,self.checkBox_69,
+                              self.checkBox_70]
+        CPU_checkBoxName_array=["U盘读写","型号检查","SRAM","FLASH","MAC/三码写入","FPGA","拨杆测试","MFK按键",
+                                "RTC测试","掉电保存","各指示灯","本体IN","本体OUT","以太网","RS-232C","RS-485",
+                                "右扩CAN","MA0202","测试报告","固件烧录","外观检测"]
+        for i in range(len(CPU_checkBox_array)):
+            self.config_param[CPU_checkBoxName_array[i]] = CPU_checkBox_array[i].isChecked()
+
+        #save
         config_str = str(self.config_param)
         config_str1=''
         pos=0
