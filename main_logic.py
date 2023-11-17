@@ -227,12 +227,12 @@ class Ui_Control(QMainWindow,Ui_Form):
                                    self.checkBox_58, self.checkBox_59, self.checkBox_60, self.checkBox_61,
                                    self.checkBox_62, self.checkBox_63, self.checkBox_64, self.checkBox_65,
                                    self.checkBox_66, self.checkBox_67, self.checkBox_68, self.checkBox_69,
-                                   self.checkBox_70, self.checkBox_71]
-        self.CPU_checkBoxName_array = ["U盘读写", "型号检查", "SRAM", "FLASH", "MAC/三码写入", "FPGA", "拨杆测试",
+                                   self.checkBox_72, self.checkBox_71]
+        self.CPU_checkBoxName_array = ["外观检测", "型号检查", "SRAM", "FLASH", "MAC/三码写入", "FPGA", "拨杆测试",
                                        "MFK按键",
                                        "RTC测试", "掉电保存", "各指示灯", "本体IN", "本体OUT", "以太网", "RS-232C",
                                        "RS-485",
-                                       "右扩CAN", "MA0202", "测试报告", "固件烧录", "外观检测", "修改参数"]
+                                       "右扩CAN", "MA0202", "测试报告", "固件烧录", "U盘读写", "修改参数"]
 
         self.setWindowFlags(Qt.FramelessWindowHint)  # 无边框窗口
         self.label_6.mousePressEvent = self.label_mousePressEvent
@@ -2295,16 +2295,16 @@ class Ui_Control(QMainWindow,Ui_Form):
                                    self.serialPort_typeC, self.saveDir]
             #获取检测信息
             self.inf_CPU_test =[False for x in range(self.CPU_test_array)]
-            self.CPU_test_array = [self.checkBox_70, self.checkBox_50, self.checkBox_51, self.checkBox_52,
-                                   self.checkBox_53,
+            self.CPU_test_array = [self.checkBox_50, self.checkBox_51, self.checkBox_52,self.checkBox_53,
                                    self.checkBox_54, self.checkBox_55, self.checkBox_56, self.checkBox_57,
                                    self.checkBox_58, self.checkBox_59, self.checkBox_60, self.checkBox_61,
                                    self.checkBox_62, self.checkBox_63, self.checkBox_64, self.checkBox_65,
                                    self.checkBox_66, self.checkBox_67, self.checkBox_68, self.checkBox_69,
-                                   ]
-            self.CPU_testName_array = [ "外观检测","U盘读写", "型号检查", "SRAM", "FLASH", "MAC/三码写入", "FPGA",
+                                   self.checkBox_72]
+            self.CPU_testName_array = [ "外观检测", "型号检查", "SRAM", "FLASH", "MAC/三码写入", "FPGA",
                                         "拨杆测试","MFK按键","RTC测试", "掉电保存", "各指示灯", "本体IN", "本体OUT",
-                                        "以太网","RS-232C","RS-485","右扩CAN", "MA0202", "测试报告", "固件烧录"]
+                                        "以太网","RS-232C","RS-485","右扩CAN", "MA0202", "测试报告", "固件烧录",
+                                        "U盘读写"]
 
             for i in range(len(self.CPU_test_array)):
                 self.inf_CPU_test[i] = self.CPU_test_array[i].isChecked()
