@@ -1721,30 +1721,36 @@
      <widget class="QWidget" name="layoutWidget_20">
       <property name="geometry">
        <rect>
-        <x>540</x>
+        <x>530</x>
         <y>40</y>
-        <width>69</width>
+        <width>83</width>
         <height>31</height>
        </rect>
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout_30">
        <item>
         <widget class="QLabel" name="label_56">
+         <property name="styleSheet">
+          <string notr="true">font: 87 12pt &quot;Arial Black&quot;;
+</string>
+         </property>
          <property name="text">
-          <string>REV</string>
+          <string>REV:</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
          </property>
         </widget>
        </item>
-       <item>
+       <item alignment="Qt::AlignHCenter|Qt::AlignVCenter">
         <widget class="QLineEdit" name="lineEdit_32">
          <property name="styleSheet">
-          <string notr="true">background-color: rgb(255, 255, 255);</string>
+          <string notr="true">background-color: rgb(208, 208, 208);
+font: 87 11pt &quot;Arial Black&quot;;
+border: none;</string>
          </property>
          <property name="text">
-          <string/>
+          <string>06</string>
          </property>
         </widget>
        </item>
@@ -1753,30 +1759,37 @@
      <widget class="QWidget" name="layoutWidget_21">
       <property name="geometry">
        <rect>
-        <x>390</x>
+        <x>355</x>
         <y>40</y>
-        <width>111</width>
+        <width>161</width>
         <height>31</height>
        </rect>
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout_31">
        <item>
         <widget class="QLabel" name="label_57">
+         <property name="styleSheet">
+          <string notr="true">font: 87 12pt &quot;Arial Black&quot;;
+</string>
+         </property>
          <property name="text">
-          <string>SN</string>
+          <string>SN:</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
          </property>
         </widget>
        </item>
-       <item>
+       <item alignment="Qt::AlignHCenter|Qt::AlignVCenter">
         <widget class="QLineEdit" name="lineEdit_31">
          <property name="styleSheet">
-          <string notr="true">background-color: rgb(255, 255, 255);</string>
+          <string notr="true">background-color: rgb(208, 208, 208);
+font: 87 11pt &quot;Arial Black&quot;;
+border: none;
+</string>
          </property>
          <property name="text">
-          <string/>
+          <string>S1223-001082</string>
          </property>
         </widget>
        </item>
@@ -1785,27 +1798,33 @@
      <widget class="QWidget" name="layoutWidget_22">
       <property name="geometry">
        <rect>
-        <x>200</x>
+        <x>150</x>
         <y>40</y>
-        <width>153</width>
+        <width>191</width>
         <height>31</height>
        </rect>
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout_32">
        <item>
         <widget class="QLabel" name="label_58">
+         <property name="styleSheet">
+          <string notr="true">font: 87 12pt &quot;Arial Black&quot;;
+</string>
+         </property>
          <property name="text">
-          <string>PN</string>
+          <string>PN:</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
          </property>
         </widget>
        </item>
-       <item>
+       <item alignment="Qt::AlignHCenter|Qt::AlignVCenter">
         <widget class="QLineEdit" name="lineEdit_30">
          <property name="styleSheet">
-          <string notr="true">background-color: rgb(255, 255, 255);</string>
+          <string notr="true">background-color: rgb(208, 208, 208);
+font: 87 11pt &quot;Arial Black&quot;;
+border: none;</string>
          </property>
          <property name="text">
           <string>P0000010390631</string>
@@ -1818,7 +1837,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>40</y>
+        <y>80</y>
         <width>131</width>
         <height>30</height>
        </rect>
@@ -1848,7 +1867,7 @@
      <widget class="QWidget" name="layoutWidget_24">
       <property name="geometry">
        <rect>
-        <x>326</x>
+        <x>311</x>
         <y>80</y>
         <width>91</width>
         <height>30</height>
@@ -1874,7 +1893,7 @@
      <widget class="QWidget" name="layoutWidget_25">
       <property name="geometry">
        <rect>
-        <x>440</x>
+        <x>425</x>
         <y>80</y>
         <width>91</width>
         <height>30</height>
@@ -1900,7 +1919,7 @@
      <widget class="QWidget" name="layoutWidget_3">
       <property name="geometry">
        <rect>
-        <x>90</x>
+        <x>80</x>
         <y>123</y>
         <width>81</width>
         <height>30</height>
@@ -1929,7 +1948,7 @@
      <widget class="QWidget" name="layoutWidget_4">
       <property name="geometry">
        <rect>
-        <x>190</x>
+        <x>180</x>
         <y>123</y>
         <width>87</width>
         <height>30</height>
@@ -1958,7 +1977,7 @@
      <widget class="QWidget" name="layoutWidget_5">
       <property name="geometry">
        <rect>
-        <x>290</x>
+        <x>280</x>
         <y>123</y>
         <width>91</width>
         <height>30</height>
@@ -1987,7 +2006,7 @@
      <widget class="QWidget" name="layoutWidget_6">
       <property name="geometry">
        <rect>
-        <x>390</x>
+        <x>380</x>
         <y>123</y>
         <width>87</width>
         <height>30</height>
@@ -2016,7 +2035,7 @@
      <widget class="QWidget" name="layoutWidget_8">
       <property name="geometry">
        <rect>
-        <x>490</x>
+        <x>480</x>
         <y>123</y>
         <width>87</width>
         <height>30</height>
@@ -2076,7 +2095,7 @@ background-color: rgb(76, 165, 132);</string>
      <widget class="QWidget" name="layoutWidget_26">
       <property name="geometry">
        <rect>
-        <x>200</x>
+        <x>185</x>
         <y>80</y>
         <width>101</width>
         <height>30</height>
@@ -2129,23 +2148,29 @@ background-color: rgb(76, 165, 132);</string>
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>80</y>
-        <width>161</width>
-        <height>30</height>
+        <y>40</y>
+        <width>141</width>
+        <height>31</height>
        </rect>
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout_7">
        <item>
         <widget class="QLabel" name="label_61">
+         <property name="styleSheet">
+          <string notr="true">font: 87 12pt &quot;Arial Black&quot;;
+</string>
+         </property>
          <property name="text">
-          <string>MAC地址</string>
+          <string>MAC:</string>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QLineEdit" name="lineEdit_33">
          <property name="styleSheet">
-          <string notr="true">background-color: rgb(255, 255, 255);</string>
+          <string notr="true">background-color: rgb(208, 208, 208);
+font: 87 11pt &quot;Arial Black&quot;;
+border: none;</string>
          </property>
          <property name="text">
           <string>DCT9527</string>
@@ -2173,6 +2198,8 @@ background-color: rgb(76, 165, 132);</string>
      <zorder>pushButton_renewSerial</zorder>
      <zorder>layoutWidget_26</zorder>
      <zorder>label_90</zorder>
+     <zorder>label_58</zorder>
+     <zorder>lineEdit_30</zorder>
     </widget>
     <widget class="QGroupBox" name="groupBox_19">
      <property name="geometry">
@@ -2189,225 +2216,30 @@ background-color: rgb(76, 165, 132);</string>
      <widget class="QCheckBox" name="checkBox_53">
       <property name="geometry">
        <rect>
-        <x>500</x>
+        <x>10</x>
+        <y>170</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>4.FLASH</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_69">
+      <property name="geometry">
+       <rect>
+        <x>460</x>
         <y>20</y>
         <width>101</width>
         <height>16</height>
        </rect>
       </property>
       <property name="text">
-       <string>FLASH</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="checkBox_54">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>70</y>
-        <width>101</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>MAC/三码写入</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="checkBox_69">
-      <property name="geometry">
-       <rect>
-        <x>500</x>
-        <y>220</y>
-        <width>101</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>固件烧录</string>
+       <string>20.固件烧录</string>
       </property>
      </widget>
      <widget class="QCheckBox" name="checkBox_56">
-      <property name="geometry">
-       <rect>
-        <x>340</x>
-        <y>70</y>
-        <width>101</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>拨杆测试</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="checkBox_55">
-      <property name="geometry">
-       <rect>
-        <x>170</x>
-        <y>70</y>
-        <width>101</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>FPGA</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="checkBox_57">
-      <property name="geometry">
-       <rect>
-        <x>500</x>
-        <y>70</y>
-        <width>101</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>MFK按键</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="checkBox_58">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>120</y>
-        <width>101</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>RTC测试</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="checkBox_60">
-      <property name="geometry">
-       <rect>
-        <x>340</x>
-        <y>120</y>
-        <width>101</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>各指示灯</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="checkBox_59">
-      <property name="geometry">
-       <rect>
-        <x>170</x>
-        <y>120</y>
-        <width>101</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>掉电保存</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="checkBox_61">
-      <property name="geometry">
-       <rect>
-        <x>500</x>
-        <y>120</y>
-        <width>101</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>本体IN</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="checkBox_62">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>170</y>
-        <width>101</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>本体OUT</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="checkBox_64">
-      <property name="geometry">
-       <rect>
-        <x>340</x>
-        <y>170</y>
-        <width>101</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>RS-232C</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="checkBox_63">
-      <property name="geometry">
-       <rect>
-        <x>170</x>
-        <y>170</y>
-        <width>101</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>以太网</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="checkBox_65">
-      <property name="geometry">
-       <rect>
-        <x>500</x>
-        <y>170</y>
-        <width>101</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>RS-485</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="checkBox_66">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>220</y>
-        <width>101</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>右扩CAN</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="checkBox_68">
-      <property name="geometry">
-       <rect>
-        <x>340</x>
-        <y>220</y>
-        <width>101</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>测试报告</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="checkBox_67">
-      <property name="geometry">
-       <rect>
-        <x>170</x>
-        <y>220</y>
-        <width>101</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>MA0202</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="checkBox_70">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -2417,7 +2249,176 @@ background-color: rgb(76, 165, 132);</string>
        </rect>
       </property>
       <property name="text">
-       <string>外观检查</string>
+       <string>7.拨杆测试</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_55">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>220</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>6.FPGA</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_57">
+      <property name="geometry">
+       <rect>
+        <x>160</x>
+        <y>20</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>8.MFK按键</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_58">
+      <property name="geometry">
+       <rect>
+        <x>160</x>
+        <y>70</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>9.RTC测试</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_60">
+      <property name="geometry">
+       <rect>
+        <x>160</x>
+        <y>170</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>11.各指示灯</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_59">
+      <property name="geometry">
+       <rect>
+        <x>160</x>
+        <y>120</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>10.掉电保存</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_61">
+      <property name="geometry">
+       <rect>
+        <x>160</x>
+        <y>220</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>12.本体IN</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_62">
+      <property name="geometry">
+       <rect>
+        <x>160</x>
+        <y>270</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>13.本体OUT</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_64">
+      <property name="geometry">
+       <rect>
+        <x>310</x>
+        <y>70</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>15.RS-232C</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_63">
+      <property name="geometry">
+       <rect>
+        <x>310</x>
+        <y>20</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>14.以太网</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_65">
+      <property name="geometry">
+       <rect>
+        <x>310</x>
+        <y>120</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>16.RS-485</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_66">
+      <property name="geometry">
+       <rect>
+        <x>310</x>
+        <y>170</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>17.右扩CAN</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_68">
+      <property name="geometry">
+       <rect>
+        <x>310</x>
+        <y>270</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>19.测试报告</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_67">
+      <property name="geometry">
+       <rect>
+        <x>310</x>
+        <y>220</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>18.MA0202</string>
       </property>
      </widget>
      <widget class="QCheckBox" name="checkBox_50">
@@ -2430,33 +2431,72 @@ background-color: rgb(76, 165, 132);</string>
        </rect>
       </property>
       <property name="text">
+       <string>1.外观检查</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_54">
+      <property name="geometry">
+       <rect>
+        <x>460</x>
+        <y>70</y>
+        <width>111</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>21.MAC/三码写入</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_14">
+      <property name="geometry">
+       <rect>
+        <x>495</x>
+        <y>280</y>
+        <width>121</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>默认IP:192.168.1.66</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_72">
+      <property name="geometry">
+       <rect>
+        <x>460</x>
+        <y>110</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
        <string>U盘读写</string>
       </property>
      </widget>
      <widget class="QCheckBox" name="checkBox_51">
       <property name="geometry">
        <rect>
-        <x>170</x>
-        <y>20</y>
+        <x>10</x>
+        <y>70</y>
         <width>101</width>
         <height>16</height>
        </rect>
       </property>
       <property name="text">
-       <string>型号检查</string>
+       <string>2.型号检查</string>
       </property>
      </widget>
      <widget class="QCheckBox" name="checkBox_52">
       <property name="geometry">
        <rect>
-        <x>340</x>
-        <y>20</y>
+        <x>10</x>
+        <y>120</y>
         <width>101</width>
         <height>16</height>
        </rect>
       </property>
       <property name="text">
-       <string>SRAM</string>
+       <string>3.SRAM</string>
       </property>
      </widget>
     </widget>
@@ -2790,7 +2830,7 @@ background-color: rgb(76, 165, 132);</string>
   <widget class="QLabel" name="label_4">
    <property name="geometry">
     <rect>
-     <x>1064</x>
+     <x>1010</x>
      <y>220</y>
      <width>24</width>
      <height>20</height>
@@ -2803,7 +2843,7 @@ background-color: rgb(76, 165, 132);</string>
   <widget class="QLabel" name="label_5">
    <property name="geometry">
     <rect>
-     <x>1294</x>
+     <x>1174</x>
      <y>220</y>
      <width>24</width>
      <height>20</height>
@@ -2890,7 +2930,7 @@ color: rgb(255, 255, 255);
     <rect>
      <x>784</x>
      <y>215</y>
-     <width>259</width>
+     <width>211</width>
      <height>29</height>
     </rect>
    </property>
@@ -2901,9 +2941,9 @@ color: rgb(255, 255, 255);
   <widget class="QLineEdit" name="lineEdit_4">
    <property name="geometry">
     <rect>
-     <x>1094</x>
+     <x>1040</x>
      <y>215</y>
-     <width>179</width>
+     <width>121</width>
      <height>29</height>
     </rect>
    </property>
@@ -2914,9 +2954,9 @@ color: rgb(255, 255, 255);
   <widget class="QLineEdit" name="lineEdit_8">
    <property name="geometry">
     <rect>
-     <x>1330</x>
+     <x>1210</x>
      <y>215</y>
-     <width>93</width>
+     <width>41</width>
      <height>29</height>
     </rect>
    </property>
@@ -3509,6 +3549,32 @@ background-color: rgb(76, 165, 132);</string>
     <enum>Qt::Vertical</enum>
    </property>
   </widget>
+  <widget class="QLabel" name="label_13">
+   <property name="geometry">
+    <rect>
+     <x>1270</x>
+     <y>220</y>
+     <width>24</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>MAC：</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="lineEdit_MAC">
+   <property name="geometry">
+    <rect>
+     <x>1300</x>
+     <y>215</y>
+     <width>121</width>
+     <height>29</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: rgb(255, 255, 255);</string>
+   </property>
+  </widget>
   <zorder>pushButton_9</zorder>
   <zorder>line_3</zorder>
   <zorder>label_39</zorder>
@@ -3555,6 +3621,8 @@ background-color: rgb(76, 165, 132);</string>
   <zorder>pushButton_12</zorder>
   <zorder>label_11</zorder>
   <zorder>line_4</zorder>
+  <zorder>label_13</zorder>
+  <zorder>lineEdit_MAC</zorder>
  </widget>
  <resources>
   <include location="../../Desktop/EX300_x64_python/pushbutton.qrc"/>

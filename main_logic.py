@@ -20,13 +20,10 @@ import psutil
 import xlwt
 import signal
 from PyQt5 import QtCore, QtGui, QtWidgets
-from thread_AI import AIThread
-from thread_AO import AOThread
-from thread_DIDO import DIDOThread
-from thread_CPU import CPUThread
+
 import threading
 import queue
-
+import serial.tools.list_ports
 
 
 q = queue.Queue()
@@ -220,6 +217,23 @@ class Ui_Control(QMainWindow,Ui_Form):
     def __init__(self,parent = None):
         super(Ui_Control,self).__init__(parent)
         self.setupUi(self)
+
+        # CPU页面参数配置
+        self.CPU_lineEdit_array = [self.lineEdit_33, self.lineEdit_34, self.lineEdit_35, self.lineEdit_36,
+                                   self.lineEdit_37, self.lineEdit_38]
+        self.CPU_lineEditName_array = ["CPU_IP", "工装1", "工装2", "工装3", "工装4", "工装5"]
+        self.CPU_checkBox_array = [self.checkBox_50, self.checkBox_51, self.checkBox_52, self.checkBox_53,
+                                   self.checkBox_54, self.checkBox_55, self.checkBox_56, self.checkBox_57,
+                                   self.checkBox_58, self.checkBox_59, self.checkBox_60, self.checkBox_61,
+                                   self.checkBox_62, self.checkBox_63, self.checkBox_64, self.checkBox_65,
+                                   self.checkBox_66, self.checkBox_67, self.checkBox_68, self.checkBox_69,
+                                   self.checkBox_70, self.checkBox_71]
+        self.CPU_checkBoxName_array = ["U盘读写", "型号检查", "SRAM", "FLASH", "MAC/三码写入", "FPGA", "拨杆测试",
+                                       "MFK按键",
+                                       "RTC测试", "掉电保存", "各指示灯", "本体IN", "本体OUT", "以太网", "RS-232C",
+                                       "RS-485",
+                                       "右扩CAN", "MA0202", "测试报告", "固件烧录", "外观检测", "修改参数"]
+
         self.setWindowFlags(Qt.FramelessWindowHint)  # 无边框窗口
         self.label_6.mousePressEvent = self.label_mousePressEvent
         self.label_6.mouseMoveEvent = self.label_mouseMoveEvent
@@ -228,13 +242,11 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.label_41.setAlignment(QtCore.Qt.AlignLeft|Qt.AlignVCenter)
         #屏蔽pushbutton_9
         self.pushButton_9.setVisible(False)
-        try:
-            # 读页面配置
-            self.loadConfig()
-        except:
-            #若配置文件有问题就以默认方式初始化页面
-            pass
 
+        # 读页面配置
+        # self.loadConfig()必须放在类似comboBox.currentIndexChanged.connect(self.saveConfig)的代码之前
+        # 某则一修改参数就会触发saveConfig，导致还没修改的参数被默认参数覆盖。
+        self.loadConfig()
 
         #显示当前时间
         self.update_time()
@@ -257,19 +269,10 @@ class Ui_Control(QMainWindow,Ui_Form):
         #                             padding: 2px;
         #                         }
         #                     """)
-        #CPU页面参数配置
-        self.CPU_lineEdit_array = [self.lineEdit_33, self.lineEdit_34, self.lineEdit_35, self.lineEdit_36,
-                              self.lineEdit_37, self.lineEdit_38]
-        self.CPU_lineEditName_array = ["CPU_IP", "工装1", "工装2", "工装3", "工装4", "工装5"]
-        self.CPU_checkBox_array = [self.checkBox_50, self.checkBox_51, self.checkBox_52, self.checkBox_53,
-                              self.checkBox_54, self.checkBox_55, self.checkBox_56, self.checkBox_57,
-                              self.checkBox_58, self.checkBox_59, self.checkBox_60, self.checkBox_61,
-                              self.checkBox_62, self.checkBox_63, self.checkBox_64, self.checkBox_65,
-                              self.checkBox_66, self.checkBox_67, self.checkBox_68, self.checkBox_69,
-                              self.checkBox_70, self.checkBox_71]
-        self.CPU_checkBoxName_array = ["U盘读写", "型号检查", "SRAM", "FLASH", "MAC/三码写入", "FPGA", "拨杆测试", "MFK按键",
-                                  "RTC测试", "掉电保存", "各指示灯", "本体IN", "本体OUT", "以太网", "RS-232C", "RS-485",
-                                  "右扩CAN", "MA0202", "测试报告", "固件烧录", "外观检测", "修改参数"]
+
+        self.getSerialInf()
+
+
         for tW in [self.tableWidget_AI, self.tableWidget_AO, self.tableWidget_DIDO,self.tableWidget_CPU]:
             tW.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
@@ -340,7 +343,7 @@ class Ui_Control(QMainWindow,Ui_Form):
 
         # 设置按钮悬停时的样式
         self.hover_color = QColor("#11826C").lighter(150)
-        listPushButton = [self.pushButton_5,self.pushButton_6,self.pushButton_10]
+        listPushButton = [self.pushButton_5,self.pushButton_6,self.pushButton_10,self.pushButton_renewSerial]
         for pB in listPushButton:
             pB.setStyleSheet(f"""
                         QPushButton {{
@@ -640,20 +643,20 @@ class Ui_Control(QMainWindow,Ui_Form):
 
 
         #CPU页面初始化
-        self.cpu_comboBox_array = [self.comboBox_20,self.comboBox_21,self.comboBox_22,self.comboBox_23]
-        self.cpu_lineEdit_array = [self.lineEdit_33,self.lineEdit_34,self.lineEdit_35,self.lineEdit_36,
-                                   self.lineEdit_37,self.lineEdit_38]
-        self.cpu_checkBox_array = [self.checkBox_50,self.checkBox_51,self.checkBox_52,self.checkBox_53,
-                                    self.checkBox_54,self.checkBox_55,self.checkBox_56,self.checkBox_57,
-                                    self.checkBox_58,self.checkBox_59,self.checkBox_60,self.checkBox_61,
-                                    self.checkBox_62,self.checkBox_63,self.checkBox_64,self.checkBox_65,
-                                    self.checkBox_66,self.checkBox_67,self.checkBox_68,self.checkBox_69,
-                                   self.checkBox_70,self.checkBox_71]
-        for comboBox in self.cpu_comboBox_array:
+        self.CPU_comboBox_array = [self.comboBox_20,self.comboBox_21,self.comboBox_22,self.comboBox_23]
+        # self.cpu_lineEdit_array = [self.lineEdit_33,self.lineEdit_34,self.lineEdit_35,self.lineEdit_36,
+        #                            self.lineEdit_37,self.lineEdit_38]
+        # self.cpu_checkBox_array = [self.checkBox_50,self.checkBox_51,self.checkBox_52,self.checkBox_53,
+        #                             self.checkBox_54,self.checkBox_55,self.checkBox_56,self.checkBox_57,
+        #                             self.checkBox_58,self.checkBox_59,self.checkBox_60,self.checkBox_61,
+        #                             self.checkBox_62,self.checkBox_63,self.checkBox_64,self.checkBox_65,
+        #                             self.checkBox_66,self.checkBox_67,self.checkBox_68,self.checkBox_69,
+        #                            self.checkBox_70,self.checkBox_71]
+        for comboBox in self.CPU_comboBox_array:
             comboBox.currentIndexChanged.connect(self.saveConfig)
-        for lineEdit in self.cpu_lineEdit_array:
+        for lineEdit in self.CPU_lineEdit_array:
             lineEdit.textChanged.connect(self.saveConfig)
-        for checkBox in self.cpu_checkBox_array:
+        for checkBox in self.CPU_checkBox_array:
             checkBox.toggled.connect(self.saveConfig)
         self.CPU_paramChanged()
         self.checkBox_71.stateChanged.connect(self.CPU_paramChanged)
@@ -742,12 +745,109 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.pushButton_12.setEnabled(False)
         self.pushButton_12.setVisible(False)
         self.pushButton_12.clicked.connect(self.uiRecovery)
+        #更新串口
+        self.pushButton_renewSerial.clicked.connect(self.getSerialInf)
         global isMainRunning
         isMainRunning = True
 
+    def generateDefaultConfigFile(self):
+        config_str = "{'savePath': 'D:/MyData/wujun89/Desktop/EX300_x64_python'," \
+                     "'currentIndex': 0," \
+                     "'AO_型号': 0," \
+                     "'AO_CAN_修改参数': False," \
+                     "'AO_CAN_工装': '1'," \
+                     "'AO_CAN_待检': '2'," \
+                     "'AO_CAN_继电器': '3'," \
+                     "'AO_附加_修改参数': False," \
+                     "'AO_附加_波特率': '1000'," \
+                     "'AO_附加_等待时间': '5000'," \
+                     "'AO_附加_接收次数': '8'," \
+                     "'AO_不标定': False," \
+                     "'AO_仅标定1': False," \
+                     "'AO_标定all': False," \
+                     "'AO_标定电压': False," \
+                     "'AO_标定电流': False," \
+                     "'AO_不检测': False," \
+                     "'AO_检测': False," \
+                     "'AO_检测电压': False," \
+                     "'AO_检测电流': False," \
+                     "'AO_检测CAN': False," \
+                     "'AO_检测run': False," \
+                     "'AI_型号': 0," \
+                     "'AI_CAN_修改参数': False," \
+                     "'AI_CAN_工装': '1'," \
+                     "'AI_CAN_待检': '2'," \
+                     "'AI_CAN_继电器': '3'," \
+                     "'AI_附加_修改参数': False," \
+                     "'AI_附加_波特率': '1000'," \
+                     "'AI_附加_等待时间': '5000'," \
+                     "'AI_附加_接收次数': '8'," \
+                     "'AI_不标定': False," \
+                     "'AI_仅标定1': False," \
+                     "'AI_标定all': False," \
+                     "'AI_标定电压': False," \
+                     "'AI_标定电流': False," \
+                     "'AI_不检测': False," \
+                     "'AI_检测': False," \
+                     "'AI_检测电压': False," \
+                     "'AI_检测电流': False," \
+                     "'AI_检测CAN': False," \
+                     "'AI_检测run': False," \
+                     "'DIDO_型号': 0," \
+                     "'DIDO_CAN_修改参数': False," \
+                     "'DIDO_CAN_工装': '1'," \
+                     "'DIDO_CAN_待检': '2'," \
+                     "'DIDO_附加_修改参数': False," \
+                     "'DIDO_附加_波特率': '1000'," \
+                     "'DIDO_附加_间隔时间': '5000'," \
+                     "'DIDO_附加_循环次数': '1'," \
+                     "'DIDO_检测CAN': False," \
+                     "'DIDO_检测run': False," \
+                     "'CPU_型号': 0," \
+                     "'CPU_IP': '192.168.1.55'," \
+                     "'CPU_232COM': 0," \
+                     "'CPU_485COM': 0," \
+                     "'CPU_typecCOM': 0," \
+                     "'U盘读写': False," \
+                     "'型号检查': False," \
+                     "'SRAM': False," \
+                     "'FLASH': False," \
+                     "'MAC/三码写入': False," \
+                     "'FPGA': False," \
+                     "'拨杆测试': False," \
+                     "'MFK按键': False," \
+                     "'RTC测试': False," \
+                     "'掉电保存': False," \
+                     "'各指示灯': False," \
+                     "'本体IN': False," \
+                     "'本体OUT': False," \
+                     "'以太网': False," \
+                     "'RS-232C': False," \
+                     "'RS-485': False," \
+                     "'右扩CAN': False," \
+                     "'MA0202': False," \
+                     "'测试报告': False," \
+                     "'固件烧录': False," \
+                     "'外观检测': False," \
+                     "'工装1': '1'," \
+                     "'工装2': '2'," \
+                     "'工装3': '3'," \
+                     "'工装4': '4'," \
+                     "'工装5': '5'," \
+                     "'修改参数': False}"
+        self.configFile = open(f'{self.current_dir}/config.txt', 'w', encoding='utf-8')
+        self.configFile.write(config_str)
+        self.configFile.close()
     def loadConfig(self):
-        with open(f'{self.current_dir}/config.txt','r+',encoding='utf-8') as file:
-            config_content = file.read()
+        try:
+            with open(f'{self.current_dir}/config.txt','r+',encoding='utf-8') as file:
+                config_content = file.read()
+        except:
+            self.showInf("配置文件不存在，初始化界面！"+self.HORIZONTAL_LINE)
+            self.generateConfigFile()
+            with open(f'{self.current_dir}/config.txt','r+',encoding='utf-8') as file:
+                config_content = file.read()
+
         self.config_param = eval(config_content)
         self.label_41.setText(self.config_param["savePath"])
         self.tabWidget.setCurrentIndex(self.config_param["currentIndex"])
@@ -1307,6 +1407,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                 self.testFlag = 'DO'
 
             self.DIDO_thread = QThread()
+            from thread_DIDO import DIDOThread
             self.DIDO_option = DIDOThread(self.inf_DIDOlist, self.result_queue, self.appearance, self.testFlag)
             self.DIDO_option.result_signal.connect(self.showInf)
             self.DIDO_option.item_signal.connect(self.DIDO_itemOperation)
@@ -1389,6 +1490,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                 # self.result_queue = Queue()
 
                 self.AI_thread = QThread()
+                from thread_AI import AIThread
                 self.AI_option = AIThread(self.inf_AIlist,self.result_queue,self.appearance)
                 self.AI_option.result_signal.connect(self.showInf)
                 self.AI_option.item_signal.connect(self.AI_itemOperation)
@@ -1424,6 +1526,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                 # self.result_queue = Queue()
 
                 self.AO_thread = QThread()
+                from thread_AO import AOThread
                 self.AO_option = AOThread(self.inf_AOlist, self.result_queue, self.appearance)
                 self.AO_option.result_signal.connect(self.showInf)
                 self.AO_option.item_signal.connect(self.AO_itemOperation)
@@ -1457,6 +1560,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                 # self.result_queue = Queue()
 
                 self.CPU_thread = QThread()
+                from thread_CPU import CPUThread
                 self.CPU_option = CPUThread(self.inf_CPUlist, self.result_queue)
                 self.CPU_option.result_signal.connect(self.showInf)
                 self.CPU_option.item_signal.connect(self.CPU_itemOperation)
@@ -2317,6 +2421,32 @@ class Ui_Control(QMainWindow,Ui_Form):
 #            return
         return True
 
+    def getSerialInf(self):
+        self.textBrowser_5.clear()
+        #清空串口选项
+        for i in range(self.comboBox_21.count()):
+            self.comboBox_21.removeItem(i)
+            self.comboBox_22.removeItem(i)
+            self.comboBox_23.removeItem(i)
+        # 获取电脑上可用的串口列表
+        ports = serial.tools.list_ports.comports()
+
+        # 遍历串口列表并打印串口信息
+        for i in range(len(ports)):
+            self.comboBox_21.addItem("")
+            self.comboBox_22.addItem("")
+            self.comboBox_23.addItem("")
+            self.comboBox_21.setItemText(i, ports[i].device)
+            self.comboBox_22.setItemText(i, ports[i].device)
+            self.comboBox_23.setItemText(i, ports[i].device)
+            if i ==0:
+                self.showInf(f'可用串口：\n')
+            self.showInf(f'({i + 1}){ports[i].description}\n')
+            # self.showInf(f'({i+1}){ports[i].device}, {ports[i].name}, {ports[i].description}\n')
+
+        self.comboBox_21.removeItem(len(ports))
+        self.comboBox_22.removeItem(len(ports))
+        self.comboBox_23.removeItem(len(ports))
     def CANFail(self):
         self.endOfTest()
         self.initPara()

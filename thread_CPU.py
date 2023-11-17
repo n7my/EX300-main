@@ -10,6 +10,7 @@ import win32print
 import struct
 import otherOption
 
+
 class CPUThread(QObject):
     result_signal = pyqtSignal(str)
     item_signal = pyqtSignal(list)
@@ -70,6 +71,12 @@ class CPUThread(QObject):
     RESERVED_3 = ubyte_array_3(0, 0, 0)
     m_can_obj = CAN_option.VCI_CAN_OBJ(RECEIVE_ID, TIME_STAMP, TIME_FLAG, RECEIVE_SEND_TYPE,
                                        REMOTE_FLAG, EXTERN_FLAG, DATA_LEN, DATA, RESERVED_3)
+
+    # 发送的数据
+    ubyte_array_transmit = c_ubyte * 8
+    m_transmitData = ubyte_array_transmit(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
+    # 主副线程弹窗结果
+    result_queue = 0
 
     def __init__(self, inf_CPUlist: list, result_queue):
         super().__init__()
@@ -187,10 +194,48 @@ class CPUThread(QObject):
             for i in range(len(self.CPU_test)):
                 if not self.CPU_test[i]:
                     if i == 0:#外观检测
-                        self.CPU_appearanceTest()
-                    if i == 1:#U盘读写
+                        self.CPU_appearanceCheck()
+                    elif i == 1:#U盘读写
                         pass
-
+                    elif i == 2:#型号检查
+                        self.CPU_typeCheck()
+                        pass
+                    elif i == 3:#SRAM
+                        pass
+                    elif i == 4:#FLASH
+                        pass
+                    elif i == 5:#MAC/三码写入
+                        pass
+                    elif i == 6:#FPGA
+                        pass
+                    elif i == 7:#拨杆测试
+                        pass
+                    elif i == 8:#MFK按钮
+                        pass
+                    elif i == 9:#RTC测试
+                        pass
+                    elif i == 10:#掉点保存
+                        pass
+                    elif i == 11:#各指示灯
+                        pass
+                    elif i == 12:#本体IN
+                        pass
+                    elif i == 13:#本体OUT
+                        pass
+                    elif i == 14:#以太网
+                        pass
+                    elif i == 15:#RS-232C
+                        pass
+                    elif i == 16:#RS-485
+                        pass
+                    elif i == 17:#右扩CAN
+                        pass
+                    elif i == 18:#MA0202
+                        pass
+                    elif i == 19:#测试报告
+                        pass
+                    elif i == 20:#固件烧录
+                        pass
 
 
 
@@ -200,8 +245,8 @@ class CPUThread(QObject):
             self.result_signal.emit('测试出现问题，请检查测试程序和测试设备！' + self.HORIZONTAL_LINE)
             self.allFinished_signal.emit()
             self.pass_signal.emit(False)
-
-    def CPU_appearanceTest(self):
+    #CPU外观检查
+    def CPU_appearanceCheck(self):
         appearanceStart_time = time.time()
         self.item_signal.emit([0, 1, 0, ''])
         self.messageBox_signal.emit(['外观检测', '产品外观是否完好?'])
@@ -219,7 +264,14 @@ class CPUThread(QObject):
 
         self.testNum = self.testNum - 1
 
-
+    #CPU型号检查
+    def CPU_typeCheck(self):
+        self.clearList(self.m_transmitData)
+        self.m_transmitData = [0xAC,0x06,0x00,0x00,0x0E,0x00]
+    #数组元素归零
+    def clearList(self, array):
+        for i in range(len(array)):
+            array[i] = 0x00
     def pause_work(self):
         self.is_pause = True
 
