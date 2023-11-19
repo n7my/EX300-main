@@ -1,6 +1,6 @@
 1.".ui"文件转“.py”文件指令
 
-pyuic5 -o 1115.py new1440_all.ui
+pyuic5 -o 1117.py new1440_all.ui
 
 
 2.打包成python程序打包成exe文件
@@ -16,4 +16,4 @@ pyinstaller.exe -D -w --add-data "ControlCAN.dll;." --add-data "config.txt;." --
 3.进入conda环境
 conda activate EX300_env_py38
 进入d盘
- cd d:/
+D:

@@ -667,6 +667,8 @@ class Ui_Control(QMainWindow,Ui_Form):
         # self.lineEdit_SN.setReadOnly(True)
         self.lineEdit_REV.setPlaceholderText('请输入REV码')
         self.lineEdit_REV.setReadOnly(True)
+        self.lineEdit_MAC.setPlaceholderText('请输入MAC码')
+        self.lineEdit_MAC.setReadOnly(True)
         # self.lineEdit_PN.setFocus()
         # self.lineEdit_PN.editingFinished.connect(self.inputPN)
         self.lineEdit_SN.setFocus()

@@ -2503,7 +2503,7 @@ border: none;</string>
       <property name="geometry">
        <rect>
         <x>460</x>
-        <y>110</y>
+        <y>120</y>
         <width>101</width>
         <height>16</height>
        </rect>
