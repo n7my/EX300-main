@@ -395,8 +395,16 @@ class AOThread(QObject):
         if self.isExcel:
 
             self.result_signal.emit('开始生成校准校验表…………' + self.HORIZONTAL_LINE)
-            self.generateExcel(self.isAOPassTest, 'AO')
-            self.result_signal.emit('生成校准校验表成功' + self.HORIZONTAL_LINE)
+            code_array = [self.module_pn,self.module_sn,self.module_rev]
+            station_array = [self.isAOPassTest,self.isAOTestVol,self.isAOTestCur]
+
+            excel_bool,book,sheet,self.AO_row=otherOption.generateExcel(code_array,
+                                                                        station_array, self.AO_Channels, 'AO')
+            if not excel_bool:
+                self.result_signal.emit('校准校验表生成出错！请检查代码！' + self.HORIZONTAL_LINE)
+            else:
+                self.fillInAOData(self.isAOPassTest, book, sheet)
+                self.result_signal.emit('生成校准校验表成功' + self.HORIZONTAL_LINE)
 
             if not self.isAOVolPass or not self.isAOCurPass:
                 self.result_signal.emit(f'不通过原因：\n{self.errorInf}' + self.HORIZONTAL_LINE)
@@ -1198,7 +1206,18 @@ class AOThread(QObject):
             self.result_signal.emit(f'{i + 1}.计算得到AO通道{i + 1} 零值：{usZeroValue}，量程值：{usSpanValue}\n\n')
 
             """向通道写入零值与量程值"""
-            self.writeParaToChannel(i + 1, usZeroValue, usSpanValue)
+            if not self.writeParaToChannel(i + 1, usZeroValue, usSpanValue):
+                if type == 'AOVoltage':
+                    self.result_signal.emit(f'更新通道{i + 1}在"{self.vol_name_array[typeNum]}"量程的标定值失败！\n\n')
+                elif type == 'AOCurrent':
+                    self.result_signal.emit(f'更新通道{i + 1}在"{self.cur_name_array[typeNum]}"量程的标定值失败！\n\n')
+            else:
+                if type == 'AOVoltage':
+                    self.result_signal.emit(
+                        f'成功更新通道{i + 1}在"{self.vol_name_array[typeNum]}"量程的标定值！\n\n')
+                elif type == 'AOCurrent':
+                    self.result_signal.emit(
+                        f'成功更新通道{i + 1}在"{self.cur_name_array[typeNum]}"量程的标定值！\n\n')
             # 若只标定第一个通道，则需要把第一个通道的零值和量程值也写入其他三个通道
             if channelNum == 1:
                 self.pauseOption()
@@ -1270,24 +1289,25 @@ class AOThread(QObject):
         # AO保存校正下限值
         self.m_transmitData[4] = (usZero & 0xff)
         self.m_transmitData[5] = ((usZero >> 8) & 0xff)
-        CAN_option.transmitCAN(can_id, self.m_transmitData)
+        bool_transmit_low, self.m_can_obj = CAN_option.transmitCAN(can_id, self.m_transmitData)
 
         time.sleep(0.1)
 
-        # AO保存校正上限值
-        self.m_transmitData[1] = 0x4e
-        self.m_transmitData[4] = (usSpan & 0xff)
-        self.m_transmitData[5] = ((usSpan >> 8) & 0xff)
-        CAN_option.transmitCAN(can_id, self.m_transmitData)
+        # # AO保存校正上限值
+        # self.m_transmitData[1] = 0x4e
+        # self.m_transmitData[4] = (usSpan & 0xff)
+        # self.m_transmitData[5] = ((usSpan >> 8) & 0xff)
+        # CAN_option.transmitCAN(can_id, self.m_transmitData)
 
-        time.sleep(0.1)
+        # time.sleep(0.1)
 
         # AO保存校正上限值
         self.m_transmitData[1] = 0x3e
         self.m_transmitData[4] = (usSpan & 0xff)
         self.m_transmitData[5] = ((usSpan >> 8) & 0xff)
         self.m_transmitData[6] = ((usSpan >> 16) & 0xff)
-        bool_transmit, self.m_can_obj = CAN_option.transmitCAN(can_id, self.m_transmitData)
+        bool_transmit_high, self.m_can_obj = CAN_option.transmitCAN(can_id, self.m_transmitData)
+        return bool_transmit_low & bool_transmit_high
 
     def receive_WriteToAO(self, value, type, channelNum,typeNum):
         # # [(367422 - 156866), (314993 - 209295), (314679 - 262038), (367212 - 261933),(314658 - 272545)]
@@ -1349,25 +1369,6 @@ class AOThread(QObject):
             usRecValue = [0]
         elif channelNum == 4:
             usRecValue = [0, 0, 0, 0]
-
-        # if type == 'AOVoltage':
-        #     if value == 27648:
-        #         standardValue = 367002
-        #     elif value == 37888:
-        #         standardValue = 157286
-        #     # headInf = self.arrayVol_1010
-        # elif type == 'AOCurrent':
-        #     if value == 27648:
-        #         standardValue = 314777
-        #     elif value == 0:
-        #         standardValue = 262144
-        # if value == 59849:#highCurrent_0020/highVoltage_1010
-        #     standardValue = 27648
-        # elif value == 32768:#highCurrent_0020
-        #     standardValue = 0
-        # elif value == 5687:#lowVoltage_1010
-        #     standardValue = -27648
-
 
         inf = '接收到的AI数据：'
         inf_average = '接收到AI数据的平均值：'
@@ -2610,27 +2611,27 @@ class AOThread(QObject):
         # AI
         sheet.write_merge(self.AI_row, self.AI_row + 1, 1, 1, '信号类型', contentTitle_style)
         sheet.write_merge(self.AI_row, self.AI_row + 1, 2, 3, '通道号', contentTitle_style)
-        sheet.write_merge(self.AI_row, self.AI_row, 3 + 1, 5 + 1, '测试点1', contentTitle_style)
+        sheet.write_merge(self.AI_row, self.AI_row, 3 + 1, 5 + 1, '测试点1(100%)', contentTitle_style)
         sheet.write(self.AI_row + 1, 3 + 1, '理论值', contentTitle_style)
         sheet.write(self.AI_row + 1, 4 + 1, '测试值', contentTitle_style)
         sheet.write(self.AI_row + 1, 5 + 1, '精度', contentTitle_style)
 
-        sheet.write_merge(self.AI_row, self.AI_row, 6 + 1, 8 + 1, '测试点2', contentTitle_style)
+        sheet.write_merge(self.AI_row, self.AI_row, 6 + 1, 8 + 1, '测试点2(75%)', contentTitle_style)
         sheet.write(self.AI_row + 1, 6 + 1, '理论值', contentTitle_style)
         sheet.write(self.AI_row + 1, 7 + 1, '测试值', contentTitle_style)
         sheet.write(self.AI_row + 1, 8 + 1, '精度', contentTitle_style)
 
-        sheet.write_merge(self.AI_row, self.AI_row, 9 + 1, 11 + 1, '测试点3', contentTitle_style)
+        sheet.write_merge(self.AI_row, self.AI_row, 9 + 1, 11 + 1, '测试点3(50%)', contentTitle_style)
         sheet.write(self.AI_row + 1, 9 + 1, '理论值', contentTitle_style)
         sheet.write(self.AI_row + 1, 10 + 1, '测试值', contentTitle_style)
         sheet.write(self.AI_row + 1, 11 + 1, '精度', contentTitle_style)
 
-        sheet.write_merge(self.AI_row, self.AI_row, 12 + 1, 14 + 1, '测试点4', contentTitle_style)
+        sheet.write_merge(self.AI_row, self.AI_row, 12 + 1, 14 + 1, '测试点4(25%)', contentTitle_style)
         sheet.write(self.AI_row + 1, 12 + 1, '理论值', contentTitle_style)
         sheet.write(self.AI_row + 1, 13 + 1, '测试值', contentTitle_style)
         sheet.write(self.AI_row + 1, 14 + 1, '精度', contentTitle_style)
 
-        sheet.write_merge(self.AI_row, self.AI_row, 15 + 1, 17 + 1, '测试点5', contentTitle_style)
+        sheet.write_merge(self.AI_row, self.AI_row, 15 + 1, 17 + 1, '测试点5(0%)', contentTitle_style)
 
         sheet.write(self.AI_row + 1, 15 + 1, '理论值', contentTitle_style)
         sheet.write(self.AI_row + 1, 16 + 1, '测试值', contentTitle_style)
@@ -2706,6 +2707,7 @@ class AOThread(QObject):
 
 
     def fillInAOData(self, station, book, sheet):
+        self.generalTest_row = 4
         # 通过单元格样式
         # 为样式创建字体
         pass_font = xlwt.Font()
@@ -2896,7 +2898,6 @@ class AOThread(QObject):
                     for j in range(self.AO_Channels):
                         # 通道号
                         sheet.write(self.AO_row + 2 + j + self.AO_Channels * typeNum,3, f'CH{j + 1}',pass_style)
-
                         # 理论值
                         sheet.write(self.AO_row + 2 + j + self.AO_Channels * typeNum, 3 + 3 * i + 1,
                                     f'{int(self.volValue_array[typeNum][i])}', pass_style)
@@ -3032,8 +3033,8 @@ class AOThread(QObject):
         elif not self.isAOTestVol and not self.isAOTestCur:
             all_row = 9 + 4 + 4 + 2 + 2  # CPU + DI + DO + AI + AO
         # print(f'self.isAOPassTest:{self.isAOPassTest}')
-        self.isAOPassTest = (((((
-                                            self.isAOPassTest & self.isLEDRunOK) & self.isLEDErrOK) & self.CAN_runLED) & self.CAN_errorLED) & self.appearance)
+        self.isAOPassTest = (((((self.isAOPassTest & self.isLEDRunOK) & self.isLEDErrOK)
+                               & self.CAN_runLED) & self.CAN_errorLED) & self.appearance)
         # self.result_signal.emit(f'self.isLEDRunOK:{self.isLEDRunOK}')
         # print(f'self.isAOPassTest:{self.isAOPassTest}')
         # print(f'self.isLEDRunOK:{self.isLEDRunOK}')

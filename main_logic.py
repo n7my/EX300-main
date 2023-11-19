@@ -463,6 +463,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.tableWidget_DIDO.setVisible(True)
             self.tableWidget_AI.setVisible(False)
             self.tableWidget_AO.setVisible(False)
+            self.tableWidget_CPU.setVisible(False)
             self.label_7.setText("DI/DO")
             if self.comboBox.currentIndex()==1:
                 self.lineEdit_PN.setText('P0000010391877')
@@ -475,6 +476,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.tableWidget_DIDO.setVisible(False)
             self.tableWidget_AI.setVisible(True)
             self.tableWidget_AO.setVisible(False)
+            self.tableWidget_CPU.setVisible(False)
             self.label_7.setText("AI")
             if self.comboBox_3.currentIndex()==0:
                 self.lineEdit_PN.setText('P0000010392361')
@@ -483,6 +485,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.tableWidget_DIDO.setVisible(False)
             self.tableWidget_AI.setVisible(False)
             self.tableWidget_AO.setVisible(True)
+            self.tableWidget_CPU.setVisible(False)
             self.label_7.setText("AO")
             if self.comboBox_5.currentIndex()==0:
                 self.lineEdit_PN.setText('P0000010392365')
@@ -1420,8 +1423,8 @@ class Ui_Control(QMainWindow,Ui_Form):
             # self.DIDO_option.excel_signal.connect(self.generateExcel)
             self.DIDO_option.allFinished_signal.connect(self.allFinished)
             self.DIDO_option.label_signal.connect(self.labelChange)
-            # self.DIDO_option.saveExcel_signal.connect(self.saveExcel)
-            # self.DIDO_option.print_signal.connect(self.printResult)
+            self.DIDO_option.saveExcel_signal.connect(self.saveExcel)
+            self.DIDO_option.print_signal.connect(self.printResult)
 
             self.pushButton_3.clicked.connect(self.DIDO_option.stop_work)
             self.pushButton_pause.clicked.connect(self.DIDO_option.pause_work)
@@ -1540,7 +1543,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                 self.AO_option.allFinished_signal.connect(self.allFinished)
                 self.AO_option.label_signal.connect(self.labelChange)
                 self.AO_option.saveExcel_signal.connect(self.saveExcel)
-                # self.AO_option.print_signal.connect(self.printResult)
+                self.AO_option.print_signal.connect(self.printResult)
 
                 self.pushButton_3.clicked.connect(self.AO_option.stop_work)
                 self.pushButton_pause.clicked.connect(self.AO_option.pause_work)
@@ -2444,7 +2447,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             if i ==0:
                 self.showInf(f'可用串口：\n')
             self.showInf(f'({i + 1}){ports[i].description}\n')
-            # self.showInf(f'({i+1}){ports[i].device}, {ports[i].name}, {ports[i].description}\n')
+            self.showInf(f'({i+1}){ports[i].device}, {ports[i].name}, {ports[i].description}\n')
 
         self.comboBox_21.removeItem(len(ports))
         self.comboBox_22.removeItem(len(ports))

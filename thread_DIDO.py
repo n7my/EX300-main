@@ -6,6 +6,7 @@ from PyQt5.QtCore import QThread, pyqtSignal
 from main_logic import *
 import threading
 from CAN_option import *
+import otherOption
 
 
 class DIDOThread(QObject):
@@ -178,15 +179,32 @@ class DIDOThread(QObject):
         elif self.testFlage == 'DO':
             self.testDO()
 
-        # if isExcel:
-        #     self.result_signal.emit('开始生成校准校验表…………' + self.HORIZONTAL_LINE)
-        #     if self.testFlage == 'DI':
-        #         self.generateExcel(self.isDIPassTest, self.testFlage)
-        #     elif self.testFlage == 'DO':
-        #         self.generateExcel(self.isDOPassTest, self.testFlage)
-        #     self.result_signal.emit('生成校准校验表成功' + self.HORIZONTAL_LINE)
-        # elif not isExcel:
-        #     self.result_signal.emit('测试停止，校准校验表生成失败…………' + self.HORIZONTAL_LINE)
+        if isExcel:
+            self.result_signal.emit('开始生成校准校验表…………' + self.HORIZONTAL_LINE)
+            code_array = [self.module_pn, self.module_sn, self.module_rev]
+
+            if self.testFlage == 'DI':
+                station_array = [self.isDIPassTest, '', '']
+                excel_bool, book, sheet, self.DI_row = otherOption.generateExcel(code_array,
+                                                                                 station_array,
+                                                                                 self.DIDO_Channels, 'DI')
+                if not excel_bool:
+                    self.result_signal.emit('校准校验表生成出错！请检查代码！' + self.HORIZONTAL_LINE)
+                else:
+                    self.fillInDIData(self.isDIPassTest, book, sheet)
+                    self.result_signal.emit('生成校准校验表成功' + self.HORIZONTAL_LINE)
+            elif self.testFlage == 'DO':
+                station_array = [self.isDOPassTest, '', '']
+                excel_bool, book, sheet, self.DO_row = otherOption.generateExcel(code_array,
+                                                                                 station_array,
+                                                                                 self.DIDO_Channels, 'DO')
+                if not excel_bool:
+                    self.result_signal.emit('校准校验表生成出错！请检查代码！' + self.HORIZONTAL_LINE)
+                else:
+                    self.fillInDOData(self.isDOPassTest, book, sheet)
+                    self.result_signal.emit('生成校准校验表成功' + self.HORIZONTAL_LINE)
+        elif not isExcel:
+            self.result_signal.emit('测试停止，校准校验表生成失败…………' + self.HORIZONTAL_LINE)
 
         self.allFinished_signal.emit()
         self.pass_signal.emit(True)

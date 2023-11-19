@@ -195,48 +195,47 @@ class CPUThread(QObject):
                 if not self.CPU_test[i]:
                     if i == 0:#外观检测
                         self.CPU_appearanceCheck()
-                    elif i == 1:#U盘读写
-                        pass
-                    elif i == 2:#型号检查
+                    elif i == 1:#型号检查
                         self.CPU_typeCheck()
                         pass
-                    elif i == 3:#SRAM
+                    elif i == 2:#SRAM
                         pass
-                    elif i == 4:#FLASH
+                    elif i == 3:#FLASH
                         pass
-                    elif i == 5:#MAC/三码写入
+                    elif i == 4:#FPGA
                         pass
-                    elif i == 6:#FPGA
+                    elif i == 5:#拨杆测试
                         pass
-                    elif i == 7:#拨杆测试
+                    elif i == 6:#MFK按钮
                         pass
-                    elif i == 8:#MFK按钮
+                    elif i == 7:#RTC测试
                         pass
-                    elif i == 9:#RTC测试
+                    elif i == 8:#掉电保存
                         pass
-                    elif i == 10:#掉点保存
+                    elif i == 9:#各指示灯
                         pass
-                    elif i == 11:#各指示灯
+                    elif i == 10:#本体IN
                         pass
-                    elif i == 12:#本体IN
+                    elif i == 11:#本体OUT
                         pass
-                    elif i == 13:#本体OUT
+                    elif i == 12:#以太网
                         pass
-                    elif i == 14:#以太网
+                    elif i == 13:#RS-232C
                         pass
-                    elif i == 15:#RS-232C
+                    elif i == 14:#RS-485
                         pass
-                    elif i == 16:#RS-485
+                    elif i == 15:#右扩CAN
                         pass
-                    elif i == 17:#右扩CAN
+                    elif i == 16:#MA0202
                         pass
-                    elif i == 18:#MA0202
+                    elif i == 17:#测试报告
                         pass
-                    elif i == 19:#测试报告
+                    elif i == 18:#固件烧录
                         pass
-                    elif i == 20:#固件烧录
+                    elif i == 19:#MAC/三码写入
                         pass
-
+                    elif i == 20:#U盘读写
+                        pass
 
 
         except:
@@ -268,6 +267,8 @@ class CPUThread(QObject):
     def CPU_typeCheck(self):
         self.clearList(self.m_transmitData)
         self.m_transmitData = [0xAC,0x06,0x00,0x00,0x0E,0x00]
+        typeC_serial = self.che
+        ser = serial.Serial('COM1', 9600, timeout=1)
     #数组元素归零
     def clearList(self, array):
         for i in range(len(array)):
