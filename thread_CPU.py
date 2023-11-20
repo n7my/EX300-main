@@ -267,7 +267,7 @@ class CPUThread(QObject):
     def CPU_typeCheck(self):
         self.clearList(self.m_transmitData)
         self.m_transmitData = [0xAC,0x06,0x00,0x00,0x0E,0x00]
-        typeC_serial = self.che
+        # typeC_serial = self.che
         ser = serial.Serial('COM1', 9600, timeout=1)
     #数组元素归零
     def clearList(self, array):

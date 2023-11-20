@@ -75,9 +75,9 @@ def check_heartbeat(can_addr, inf, max_waiting):
     bool_receive,  m_can_obj = CAN_option.receiveCANbyID(can_id, max_waiting)
     print( m_can_obj.Data)
     if bool_receive == False:
-        # self.result_signal.emit(f'错误：未发现{inf}' + self.HORIZONTAL_LINE)
+        # self.result_signal.emit(f'错误:未发现{inf}' + self.HORIZONTAL_LINE)
         return False
-    # self.result_signal.emit(f'发现{inf}：收到心跳帧：{hex(self.m_can_obj.ID)}\n\n')
+    # self.result_signal.emit(f'发现{inf}:收到心跳帧:{hex(self.m_can_obj.ID)}\n\n')
     return True
 
 def generateExcel(code_array:list,station_array:list, channels:int,module:str):
@@ -87,17 +87,22 @@ def generateExcel(code_array:list,station_array:list, channels:int,module:str):
     :param code_array: 三码和MAC
     :param station_array: station_array[0]测试是否通过，station_array[1]是否进行电压测试，station_array[2]是否进行电流测试
     :param channels: 设备通道
-    :param module: 设备类型：DI，DO，AI，AO，CPU
+    :param module: 设备类型:DI，DO，AI，AO，CPU
     :return:
     """
     try:
+        # eID = 0
         book = xlwt.Workbook(encoding='utf-8')
+        # eID = 1
         sheet = book.add_sheet('校准校验表', cell_overwrite_ok=True)
-        # 如果出现报错：Exception: Attempt to overwrite cell: sheetname='sheet1' rowx=0 colx=0
-        # 需要加上：cell_overwrite_ok=True)
+        # eID = 2
+        # 如果出现报错:Exception: Attempt to overwrite cell: sheetname='sheet1' rowx=0 colx=0
+        # 需要加上:cell_overwrite_ok=True)
         # 这是因为重复操作一个单元格导致的
         sheet.col(0).width = 256 * 12
+        # eID = 3
         for i in range(99):
+            # eID += 1
             #     sheet.w
             #     tall_style = xlwt.easyxf('font:height 240;')  # 36pt,类型小初的字号
             first_row = sheet.row(i)
@@ -105,6 +110,7 @@ def generateExcel(code_array:list,station_array:list, channels:int,module:str):
             first_row.height = 20 * 20
 
         # 为样式创建字体
+
         title_font = xlwt.Font()
         # 字体类型
         title_font.name = '宋'
@@ -112,17 +118,22 @@ def generateExcel(code_array:list,station_array:list, channels:int,module:str):
         title_font.colour_index = 0
         # 字体大小，11为字号，20为衡量单位
         title_font.height = 20 * 20
+        # eID += 1
         # 字体加粗
         title_font.bold = True
-
+        # eID += 1
         # 设置单元格对齐方式
         title_alignment = xlwt.Alignment()
+        # eID += 1
         # 0x01(左端对齐)、0x02(水平方向上居中对齐)、0x03(右端对齐)
         title_alignment.horz = 0x02
+        # eID += 1
         # 0x00(上端对齐)、 0x01(垂直方向上居中对齐)、0x02(底端对齐)
         title_alignment.vert = 0x01
+        # eID += 1
         # 设置自动换行
         title_alignment.wrap = 1
+        # eID += 1
 
         # 设置边框
         title_borders = xlwt.Borders()
@@ -205,12 +216,11 @@ def generateExcel(code_array:list,station_array:list, channels:int,module:str):
         # sheet.write(i, 1, u'背景', style1)
         # sheet.write(i, 2, u'对齐方式', style2)
         # sheet.write(i, 3, u'边框', style3)
-
-        sheet.write_merge(2, 2, 0, 2, 'PN：', row3_style)
+        sheet.write_merge(2, 2, 0, 2, 'PN:', row3_style)
         sheet.write_merge(2, 2, 3, 5, f'{code_array[0]}', row3_style)
-        sheet.write_merge(2, 2, 6, 8, 'SN：', row3_style)
+        sheet.write_merge(2, 2, 6, 8, 'SN:', row3_style)
         sheet.write_merge(2, 2, 9, 11, f'{code_array[1]}', row3_style)
-        sheet.write_merge(2, 2, 12, 14, 'REV：', row3_style)
+        sheet.write_merge(2, 2, 12, 14, 'REV:', row3_style)
         sheet.write_merge(2, 2, 15, 17, f'{code_array[2]}', row3_style)
 
         # leftTitle
@@ -711,24 +721,27 @@ def generateExcel(code_array:list,station_array:list, channels:int,module:str):
         sheet.write_merge(result_row + 1, result_row + 1, 6, 18, ' ', contentTitle_style)
 
         # 补充说明
-        sheet.write(result_row + 2, 0, '补充说明：', contentTitle_style)
+        sheet.write(result_row + 2, 0, '补充说明:', contentTitle_style)
         sheet.write_merge(result_row + 2, result_row + 2, 1, 18,
                           'AI/AO信号检验要记录数据，电压和电流的精度为1‰以下为合格；其他测试项合格打“√”，否则打“×”',
                           contentTitle_style)
 
         # 检测信息
-        sheet.write_merge(result_row + 3, result_row + 3, 0, 1, '检验员：', contentTitle_style)
+        sheet.write_merge(result_row + 3, result_row + 3, 0, 1, '检验员:', contentTitle_style)
         sheet.write_merge(result_row + 3, result_row + 3, 2, 3, '555', contentTitle_style)
-        sheet.write_merge(result_row + 3, result_row + 3, 4, 5, '检验日期：', contentTitle_style)
-        sheet.write_merge(result_row + 3, result_row + 3, 6, 8, f'{time.strftime("%Y-%m-%d %H：%M：%S")}',
+        sheet.write_merge(result_row + 3, result_row + 3, 4, 5, '检验日期:', contentTitle_style)
+        sheet.write_merge(result_row + 3, result_row + 3, 6, 8, f'{time.strftime("%Y-%m-%d %H:%M:%S")}',
                           contentTitle_style)
-        sheet.write_merge(result_row + 3, result_row + 3, 9, 10, '审核：', contentTitle_style)
+        sheet.write_merge(result_row + 3, result_row + 3, 9, 10, '审核:', contentTitle_style)
         sheet.write_merge(result_row + 3, result_row + 3, 11, 13, ' ', contentTitle_style)
-        sheet.write_merge(result_row + 3, result_row + 3, 14, 15, '审核日期：', contentTitle_style)
+        sheet.write_merge(result_row + 3, result_row + 3, 14, 15, '审核日期:', contentTitle_style)
         sheet.write_merge(result_row + 3, result_row + 3, 16, 18, ' ', contentTitle_style)
         return True, book,sheet,returnRow
-    except:
+        # print("eID: ",eID)
+    except Exception as e:
+        print("Error:",e)
         return False, book,sheet,returnRow
+        # print("eID: ", eID)
 
     # self.fillInAOData(station_array[0], book, sheet)
     # if module == 'DI':

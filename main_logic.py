@@ -24,6 +24,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 import threading
 import queue
 import serial.tools.list_ports
+import traceback
 
 
 q = queue.Queue()
@@ -217,7 +218,7 @@ class Ui_Control(QMainWindow,Ui_Form):
     def __init__(self,parent = None):
         super(Ui_Control,self).__init__(parent)
         self.setupUi(self)
-
+        self.label_11.setPixmap(QtGui.QPixmap(f"{current_dir}/beast5.png"))
         # CPU页面参数配置
         self.CPU_lineEdit_array = [self.lineEdit_33, self.lineEdit_34, self.lineEdit_35, self.lineEdit_36,
                                    self.lineEdit_37, self.lineEdit_38]
@@ -1331,263 +1332,279 @@ class Ui_Control(QMainWindow,Ui_Form):
         isMainRunning = False
 
     def startTest(self):
-        # 启动CAN分析仪
-        can_thread=threading.Thread(target = canInit_thread)
-        can_thread.start()
-        event_canInit.wait()
-        list_canInit = q.get()
-        # # print('list_canInit:',list_canInit)
-        if not list_canInit[0]:
-            self.showMessageBox(list_canInit[1])
-            self.CANFail()
-            return False
-
-        CAN_option.receiveRun()
-        CAN_option.receiveResume()
-        self.pushButton_10.setEnabled(False)
-        self.pushButton_10.setStyleSheet('color: rgb(255, 255, 255);background-color: rgb(197, 197, 197);')
-        if not self.sendMessage():
-            return False
-
-        QApplication.processEvents()
-
-        #节点分配
-        if self.tabIndex == 0:
-            if not self.configCANAddr(int(self.lineEdit_6.text()), int(self.lineEdit_7.text()), '', '', ''):
-                return False
-        elif self.tabIndex == 1:
-            if not self.configCANAddr(int(self.lineEdit_18.text()),int(self.lineEdit_23.text()),
-                                      int(self.lineEdit_23.text())+1, int(self.lineEdit_19.text()), ''):
-                return False
-        elif self.tabIndex == 2:
-            if not self.configCANAddr(int(self.lineEdit_39.text()),int(self.lineEdit_41.text()),
-                                      int(self.lineEdit_41.text())+1, int(self.lineEdit_40.text()), ''):
-                return False
-        elif self.tabIndex == 3:
-            if not self.configCANAddr(int(self.lineEdit_34.text()), int(self.lineEdit_35.text()),
-                                      int(self.lineEdit_36.text()), int(self.lineEdit_37.text()),
-                                      int(self.lineEdit_38.text())):
+        try:
+            # 启动CAN分析仪
+            can_thread=threading.Thread(target = canInit_thread)
+            can_thread.start()
+            event_canInit.wait()
+            list_canInit = q.get()
+            # # print('list_canInit:',list_canInit)
+            if not list_canInit[0]:
+                self.showMessageBox(list_canInit[1])
+                self.CANFail()
                 return False
 
-        self.result_queue = Queue()
-        self.testFlag = ''
+            CAN_option.receiveRun()
+            CAN_option.receiveResume()
+            self.pushButton_10.setEnabled(False)
+            self.pushButton_10.setStyleSheet('color: rgb(255, 255, 255);background-color: rgb(197, 197, 197);')
+            try:
+                if not self.sendMessage():
+                    return False
+            except Exception as e:
+                self.showInf(f"sendMessageError:{e}+{self.HORIZONTAL_LINE}")
+                # 捕获异常并输出详细的错误信息
+                traceback.print_exc()
+                return False
 
-        # #读设备三码
-        # bool_3code,code_list = get3codeFromPLC(2)
-        # if bool_3code:
-        #     QMessageBox.about(None, '通过', f'三码一致！\nPN:{code_list[0]}\nSN:{code_list[1]}\nREV:{code_list[2]}')
-        # else:
-        #     QMessageBox.critical(None, '警告', f'三码不一致！\nPN:{code_list[0]}\nSN:{code_list[1]}\nREV:{code_list[2]}',
-        #                          QMessageBox.Yes | QMessageBox.No,
-        #                          QMessageBox.Yes)
-        #     return False
+            QApplication.processEvents()
+
+            #节点分配
+            if self.tabIndex == 0:
+                if not self.configCANAddr(int(self.lineEdit_6.text()), int(self.lineEdit_7.text()), '', '', ''):
+                    return False
+            elif self.tabIndex == 1:
+                if not self.configCANAddr(int(self.lineEdit_18.text()),int(self.lineEdit_23.text()),
+                                          int(self.lineEdit_23.text())+1, int(self.lineEdit_19.text()), ''):
+                    return False
+            elif self.tabIndex == 2:
+                if not self.configCANAddr(int(self.lineEdit_39.text()),int(self.lineEdit_41.text()),
+                                          int(self.lineEdit_41.text())+1, int(self.lineEdit_40.text()), ''):
+                    return False
+            elif self.tabIndex == 3:
+                if not self.configCANAddr(int(self.lineEdit_34.text()), int(self.lineEdit_35.text()),
+                                          int(self.lineEdit_36.text()), int(self.lineEdit_37.text()),
+                                          int(self.lineEdit_38.text())):
+                    return False
+
+            self.result_queue = Queue()
+            self.testFlag = ''
+
+            # #读设备三码
+            # bool_3code,code_list = get3codeFromPLC(2)
+            # if bool_3code:
+            #     QMessageBox.about(None, '通过', f'三码一致！\nPN:{code_list[0]}\nSN:{code_list[1]}\nREV:{code_list[2]}')
+            # else:
+            #     QMessageBox.critical(None, '警告', f'三码不一致！\nPN:{code_list[0]}\nSN:{code_list[1]}\nREV:{code_list[2]}',
+            #                          QMessageBox.Yes | QMessageBox.No,
+            #                          QMessageBox.Yes)
+            #     return False
 
 
 
-        #开始时间
-        self.allStart_time = time.time()
-        if not mainThreadRunning():
-            return False
-
-        if not mainThreadRunning():
-            return False
-        if len(self.module_pn) == 0 or len(self.module_sn) == 0 or len(self.module_rev) == 0:
-            # self.isPause()
+            #开始时间
+            self.allStart_time = time.time()
             if not mainThreadRunning():
                 return False
-            reply = QMessageBox.warning(None, '警告', '产品三码信息不全，请重新扫入！',
-                                        QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+
+            if not mainThreadRunning():
+                return False
+            if len(self.module_pn) == 0 or len(self.module_sn) == 0 or len(self.module_rev) == 0:
+                # self.isPause()
+                if not mainThreadRunning():
+                    return False
+                reply = QMessageBox.warning(None, '警告', '产品三码信息不全，请重新扫入！',
+                                            QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+                return False
+
+            if self.tabWidget.currentIndex() == 0:
+                self.testFlag = 'DIDO'
+                self.appearanceTest(self.testFlag)
+                mTable = self.tableWidget_DIDO
+                if self.comboBox.currentIndex() == 0 or self.comboBox.currentIndex() == 1 \
+                        or self.comboBox.currentIndex() == 2:
+                    self.testFlag = 'DI'
+
+                elif self.comboBox.currentIndex() == 3 or self.comboBox.currentIndex() == 4 \
+                        or self.comboBox.currentIndex() == 5 or self.comboBox.currentIndex() == 6:
+                    self.testFlag = 'DO'
+
+                self.DIDO_thread = QThread()
+                from thread_DIDO import DIDOThread
+                self.DIDO_option = DIDOThread(self.inf_DIDOlist, self.result_queue, self.appearance, self.testFlag)
+                self.DIDO_option.result_signal.connect(self.showInf)
+                self.DIDO_option.item_signal.connect(self.DIDO_itemOperation)
+                self.DIDO_option.pass_signal.connect(self.PassOrFail)
+                # self.DIDO_option.RunErr_signal.connect(self.testRunErr)
+                # self.DIDO_option.CANRunErr_signal.connect(self.testCANRunErr)
+                self.DIDO_option.messageBox_signal.connect(self.showMessageBox)
+                # self.DIDO_option.excel_signal.connect(self.generateExcel)
+                self.DIDO_option.allFinished_signal.connect(self.allFinished)
+                self.DIDO_option.label_signal.connect(self.labelChange)
+                self.DIDO_option.saveExcel_signal.connect(self.saveExcel)
+                self.DIDO_option.print_signal.connect(self.printResult)
+
+                self.pushButton_3.clicked.connect(self.DIDO_option.stop_work)
+                self.pushButton_pause.clicked.connect(self.DIDO_option.pause_work)
+                self.pushButton_resume.clicked.connect(self.DIDO_option.resume_work)
+
+                self.DIDO_option.moveToThread(self.DIDO_thread)
+                self.DIDO_thread.started.connect(self.DIDO_option.DIDOOption)
+                self.DIDO_thread.start()
+
+
+            if self.tabWidget.currentIndex() == 1:
+                # self.lineEdit_PN = 'PRDr9HPA06Mz-00'
+                # self.lineEdit_SN = 'S1223-001083'
+                # self.lineEdit_REV = '06'
+
+                self.testFlag = 'AI'
+                self.appearanceTest(self.testFlag)
+                # self.appearance = True
+                # self.showInf(f'self.tabWidget.currentIndex()={self.tabWidget.currentIndex()}\n\n')
+                mTable = self.tableWidget_AI
+                # isPassVol = True
+                # isPassCur = True
+                if self.isTest:
+                    if self.isTestRunErr:
+                        self.testNum = self.testNum - 1
+                        # self.testRunErr(self.CANAddr_AI)
+                    elif not self.isTestRunErr:
+                        if not mainThreadRunning():
+                            return False
+                        self.AI_itemOperation([1, 0, 0, ''])
+                        if not mainThreadRunning():
+                            return False
+                        self.AI_itemOperation([2, 0, 0, ''])
+                    # self.showInf(f'RunErrself.testNum = {self.testNum}\n\n')
+                    if self.isTestCANRunErr:
+                        self.testNum = self.testNum - 1
+                        # self.testCANRunErr(self.CANAddr_AI)
+                    elif not self.isTestCANRunErr:
+                        if not mainThreadRunning():
+                            return False
+                        self.AI_itemOperation([3, 0, 0, ''])
+                        if not mainThreadRunning():
+                            return False
+                        self.AI_itemOperation([4, 0, 0, ''])
+                        # self.itemOperation(mTable, 3, 0, 0, '')
+                        # self.itemOperation(mTable, 4, 0, 0, '')
+                    if self.isAITestVol:
+                        self.testNum = self.testNum - 1
+                    elif not self.isAITestVol:
+                        if not mainThreadRunning():
+                            return False
+                        self.AI_itemOperation([7, 0, 0, ''])
+                    if self.isAITestCur:
+                        self.testNum = self.testNum - 1
+                    elif not self.isAITestCur:
+                        if not mainThreadRunning():
+                            return False
+                        self.AI_itemOperation([8, 0, 0, ''])
+
+
+
+                # if self.isCalibrate:
+                    # self.calibrateAI(mTable)
+                self.AI_thread = None
+                self.worker = None
+                if not self.AI_thread or not self.worker_thread.isRunning():
+                    # # 创建队列用于主线程和子线程之间的通信
+                    # self.result_queue = Queue()
+
+                    self.AI_thread = QThread()
+                    from thread_AI import AIThread
+                    self.AI_option = AIThread(self.inf_AIlist,self.result_queue,self.appearance)
+
+                    self.AI_option.result_signal.connect(self.showInf)
+                    self.AI_option.item_signal.connect(self.AI_itemOperation)
+                    self.AI_option.pass_signal.connect(self.PassOrFail)
+                    # self.AI_option.RunErr_signal.connect(self.testRunErr)
+                    # self.AI_option.CANRunErr_signal.connect(self.testCANRunErr)
+                    self.AI_option.messageBox_signal.connect(self.showMessageBox)
+                    # self.AI_option.excel_signal.connect(self.generateExcel)
+                    self.AI_option.allFinished_signal.connect(self.allFinished)
+                    self.AI_option.label_signal.connect(self.labelChange)
+                    self.AI_option.saveExcel_signal.connect(self.saveExcel)#保存测试报告
+                    self.AI_option.print_signal.connect(self.printResult)#打印测试标签
+
+                    self.pushButton_3.clicked.connect(self.AI_option.stop_work)
+                    self.pushButton_pause.clicked.connect(self.AI_option.pause_work)
+                    self.pushButton_resume.clicked.connect(self.AI_option.resume_work)
+
+                    self.AI_option.moveToThread(self.AI_thread)
+                    self.AI_thread.started.connect(self.AI_option.AIOption)
+                    self.AI_thread.start()
+
+
+
+            elif self.tabWidget.currentIndex() == 2:
+                self.testFlag = 'AO'
+                mTable = self.tableWidget_AO
+
+                self.appearanceTest(self.testFlag)
+                self.AO_thread = None
+                self.worker = None
+                if not self.AO_thread or not self.worker_thread.isRunning():
+                    # # 创建队列用于主线程和子线程之间的通信
+                    # self.result_queue = Queue()
+
+                    self.AO_thread = QThread()
+                    from thread_AO import AOThread
+                    self.AO_option = AOThread(self.inf_AOlist, self.result_queue, self.appearance)
+                    self.AO_option.result_signal.connect(self.showInf)
+                    self.AO_option.item_signal.connect(self.AO_itemOperation)
+                    self.AO_option.pass_signal.connect(self.PassOrFail)
+                    # self.AO_option.RunErr_signal.connect(self.testRunErr)
+                    # self.AO_option.CANRunErr_signal.connect(self.testCANRunErr)
+                    self.AO_option.messageBox_signal.connect(self.showMessageBox)
+                    # self.AO_option.excel_signal.connect(self.generateExcel)
+                    self.AO_option.allFinished_signal.connect(self.allFinished)
+                    self.AO_option.label_signal.connect(self.labelChange)
+                    self.AO_option.saveExcel_signal.connect(self.saveExcel)
+                    self.AO_option.print_signal.connect(self.printResult)
+
+                    self.pushButton_3.clicked.connect(self.AO_option.stop_work)
+                    self.pushButton_pause.clicked.connect(self.AO_option.pause_work)
+                    self.pushButton_resume.clicked.connect(self.AO_option.resume_work)
+
+                    self.AO_option.moveToThread(self.AO_thread)
+                    self.AO_thread.started.connect(self.AO_option.AOOption)
+                    self.AO_thread.start()
+
+            elif self.tabWidget.currentIndex() == 3:
+                self.testFlag = 'CPU'
+                mTable = self.tableWidget_CPU
+                #CPU的外观检测选项放在子线程里进行并且可选
+                #self.appearanceTest(self.testFlag)
+                self.CPU_thread = None
+                self.worker = None
+                if not self.CPU_thread or not self.worker_thread.isRunning():
+                    # # 创建队列用于主线程和子线程之间的通信
+                    # self.result_queue = Queue()
+
+                    self.CPU_thread = QThread()
+                    from thread_CPU import CPUThread
+                    self.CPU_option = CPUThread(self.inf_CPUlist, self.result_queue)
+                    self.CPU_option.result_signal.connect(self.showInf)
+                    self.CPU_option.item_signal.connect(self.CPU_itemOperation)
+                    self.CPU_option.pass_signal.connect(self.PassOrFail)
+                    # self.CPU_option.RunErr_signal.connect(self.testRunErr)
+                    # self.CPU_option.CANRunErr_signal.connect(self.testCANRunErr)
+                    self.CPU_option.messageBox_signal.connect(self.showMessageBox)
+                    # self.CPU_option.excel_signal.connect(self.generateExcel)
+                    self.CPU_option.allFinished_signal.connect(self.allFinished)
+                    self.CPU_option.label_signal.connect(self.labelChange)
+                    self.CPU_option.saveExcel_signal.connect(self.saveExcel)
+                    self.CPU_option.print_signal.connect(self.printResult)
+
+                    self.pushButton_3.clicked.connect(self.CPU_option.stop_work)
+                    self.pushButton_pause.clicked.connect(self.CPU_option.pause_work)
+                    self.pushButton_resume.clicked.connect(self.CPU_option.resume_work)
+
+                    self.CPU_option.moveToThread(self.CPU_thread)
+                    self.CPU_thread.started.connect(self.CPU_option.CPUOption)
+                    self.CPU_thread.start()
+
+
+        except Exception as e:
+
+            self.showInf(f"startTestError:{e}+{self.HORIZONTAL_LINE}")
+
+            # 捕获异常并输出详细的错误信息
+
+            traceback.print_exc()
             return False
-
-        if self.tabWidget.currentIndex() == 0:
-            self.testFlag = 'DIDO'
-            self.appearanceTest(self.testFlag)
-            mTable = self.tableWidget_DIDO
-            if self.comboBox.currentIndex() == 0 or self.comboBox.currentIndex() == 1 \
-                    or self.comboBox.currentIndex() == 2:
-                self.testFlag = 'DI'
-
-            elif self.comboBox.currentIndex() == 3 or self.comboBox.currentIndex() == 4 \
-                    or self.comboBox.currentIndex() == 5 or self.comboBox.currentIndex() == 6:
-                self.testFlag = 'DO'
-
-            self.DIDO_thread = QThread()
-            from thread_DIDO import DIDOThread
-            self.DIDO_option = DIDOThread(self.inf_DIDOlist, self.result_queue, self.appearance, self.testFlag)
-            self.DIDO_option.result_signal.connect(self.showInf)
-            self.DIDO_option.item_signal.connect(self.DIDO_itemOperation)
-            self.DIDO_option.pass_signal.connect(self.PassOrFail)
-            # self.DIDO_option.RunErr_signal.connect(self.testRunErr)
-            # self.DIDO_option.CANRunErr_signal.connect(self.testCANRunErr)
-            self.DIDO_option.messageBox_signal.connect(self.showMessageBox)
-            # self.DIDO_option.excel_signal.connect(self.generateExcel)
-            self.DIDO_option.allFinished_signal.connect(self.allFinished)
-            self.DIDO_option.label_signal.connect(self.labelChange)
-            self.DIDO_option.saveExcel_signal.connect(self.saveExcel)
-            self.DIDO_option.print_signal.connect(self.printResult)
-
-            self.pushButton_3.clicked.connect(self.DIDO_option.stop_work)
-            self.pushButton_pause.clicked.connect(self.DIDO_option.pause_work)
-            self.pushButton_resume.clicked.connect(self.DIDO_option.resume_work)
-
-            self.DIDO_option.moveToThread(self.DIDO_thread)
-            self.DIDO_thread.started.connect(self.DIDO_option.DIDOOption)
-            self.DIDO_thread.start()
-
-
-        if self.tabWidget.currentIndex() == 1:
-            # self.lineEdit_PN = 'PRDr9HPA06Mz-00'
-            # self.lineEdit_SN = 'S1223-001083'
-            # self.lineEdit_REV = '06'
-
-            self.testFlag = 'AI'
-            self.appearanceTest(self.testFlag)
-            # self.appearance = True
-            # self.showInf(f'self.tabWidget.currentIndex()={self.tabWidget.currentIndex()}\n\n')
-            mTable = self.tableWidget_AI
-            # isPassVol = True
-            # isPassCur = True
-            if self.isTest:
-                if self.isTestRunErr:
-                    self.testNum = self.testNum - 1
-                    # self.testRunErr(self.CANAddr_AI)
-                elif not self.isTestRunErr:
-                    if not mainThreadRunning():
-                        return False
-                    self.AI_itemOperation([1, 0, 0, ''])
-                    if not mainThreadRunning():
-                        return False
-                    self.AI_itemOperation([2, 0, 0, ''])
-                # self.showInf(f'RunErrself.testNum = {self.testNum}\n\n')
-                if self.isTestCANRunErr:
-                    self.testNum = self.testNum - 1
-                    # self.testCANRunErr(self.CANAddr_AI)
-                elif not self.isTestCANRunErr:
-                    if not mainThreadRunning():
-                        return False
-                    self.AI_itemOperation([3, 0, 0, ''])
-                    if not mainThreadRunning():
-                        return False
-                    self.AI_itemOperation([4, 0, 0, ''])
-                    # self.itemOperation(mTable, 3, 0, 0, '')
-                    # self.itemOperation(mTable, 4, 0, 0, '')
-                if self.isAITestVol:
-                    self.testNum = self.testNum - 1
-                elif not self.isAITestVol:
-                    if not mainThreadRunning():
-                        return False
-                    self.AI_itemOperation([7, 0, 0, ''])
-                if self.isAITestCur:
-                    self.testNum = self.testNum - 1
-                elif not self.isAITestCur:
-                    if not mainThreadRunning():
-                        return False
-                    self.AI_itemOperation([8, 0, 0, ''])
-
-
-
-            # if self.isCalibrate:
-                # self.calibrateAI(mTable)
-            self.AI_thread = None
-            self.worker = None
-            if not self.AI_thread or not self.worker_thread.isRunning():
-                # # 创建队列用于主线程和子线程之间的通信
-                # self.result_queue = Queue()
-
-                self.AI_thread = QThread()
-                from thread_AI import AIThread
-                self.AI_option = AIThread(self.inf_AIlist,self.result_queue,self.appearance)
-                self.AI_option.result_signal.connect(self.showInf)
-                self.AI_option.item_signal.connect(self.AI_itemOperation)
-                self.AI_option.pass_signal.connect(self.PassOrFail)
-                # self.AI_option.RunErr_signal.connect(self.testRunErr)
-                # self.AI_option.CANRunErr_signal.connect(self.testCANRunErr)
-                self.AI_option.messageBox_signal.connect(self.showMessageBox)
-                # self.AI_option.excel_signal.connect(self.generateExcel)
-                self.AI_option.allFinished_signal.connect(self.allFinished)
-                self.AI_option.label_signal.connect(self.labelChange)
-                self.AI_option.saveExcel_signal.connect(self.saveExcel)#保存测试报告
-                self.AI_option.print_signal.connect(self.printResult)#打印测试标签
-
-                self.pushButton_3.clicked.connect(self.AI_option.stop_work)
-                self.pushButton_pause.clicked.connect(self.AI_option.pause_work)
-                self.pushButton_resume.clicked.connect(self.AI_option.resume_work)
-
-                self.AI_option.moveToThread(self.AI_thread)
-                self.AI_thread.started.connect(self.AI_option.AIOption)
-                self.AI_thread.start()
-
-
-
-        elif self.tabWidget.currentIndex() == 2:
-            self.testFlag = 'AO'
-            mTable = self.tableWidget_AO
-
-            self.appearanceTest(self.testFlag)
-            self.AO_thread = None
-            self.worker = None
-            if not self.AO_thread or not self.worker_thread.isRunning():
-                # # 创建队列用于主线程和子线程之间的通信
-                # self.result_queue = Queue()
-
-                self.AO_thread = QThread()
-                from thread_AO import AOThread
-                self.AO_option = AOThread(self.inf_AOlist, self.result_queue, self.appearance)
-                self.AO_option.result_signal.connect(self.showInf)
-                self.AO_option.item_signal.connect(self.AO_itemOperation)
-                self.AO_option.pass_signal.connect(self.PassOrFail)
-                # self.AO_option.RunErr_signal.connect(self.testRunErr)
-                # self.AO_option.CANRunErr_signal.connect(self.testCANRunErr)
-                self.AO_option.messageBox_signal.connect(self.showMessageBox)
-                # self.AO_option.excel_signal.connect(self.generateExcel)
-                self.AO_option.allFinished_signal.connect(self.allFinished)
-                self.AO_option.label_signal.connect(self.labelChange)
-                self.AO_option.saveExcel_signal.connect(self.saveExcel)
-                self.AO_option.print_signal.connect(self.printResult)
-
-                self.pushButton_3.clicked.connect(self.AO_option.stop_work)
-                self.pushButton_pause.clicked.connect(self.AO_option.pause_work)
-                self.pushButton_resume.clicked.connect(self.AO_option.resume_work)
-
-                self.AO_option.moveToThread(self.AO_thread)
-                self.AO_thread.started.connect(self.AO_option.AOOption)
-                self.AO_thread.start()
-
-        elif self.tabWidget.currentIndex() == 3:
-            self.testFlag = 'CPU'
-            mTable = self.tableWidget_CPU
-            #CPU的外观检测选项放在子线程里进行并且可选
-            #self.appearanceTest(self.testFlag)
-            self.CPU_thread = None
-            self.worker = None
-            if not self.CPU_thread or not self.worker_thread.isRunning():
-                # # 创建队列用于主线程和子线程之间的通信
-                # self.result_queue = Queue()
-
-                self.CPU_thread = QThread()
-                from thread_CPU import CPUThread
-                self.CPU_option = CPUThread(self.inf_CPUlist, self.result_queue)
-                self.CPU_option.result_signal.connect(self.showInf)
-                self.CPU_option.item_signal.connect(self.CPU_itemOperation)
-                self.CPU_option.pass_signal.connect(self.PassOrFail)
-                # self.CPU_option.RunErr_signal.connect(self.testRunErr)
-                # self.CPU_option.CANRunErr_signal.connect(self.testCANRunErr)
-                self.CPU_option.messageBox_signal.connect(self.showMessageBox)
-                # self.CPU_option.excel_signal.connect(self.generateExcel)
-                self.CPU_option.allFinished_signal.connect(self.allFinished)
-                self.CPU_option.label_signal.connect(self.labelChange)
-                self.CPU_option.saveExcel_signal.connect(self.saveExcel)
-                # self.CPU_option.print_signal.connect(self.printResult)
-
-                self.pushButton_3.clicked.connect(self.CPU_option.stop_work)
-                self.pushButton_pause.clicked.connect(self.CPU_option.pause_work)
-                self.pushButton_resume.clicked.connect(self.CPU_option.resume_work)
-
-                self.CPU_option.moveToThread(self.CPU_thread)
-                self.CPU_thread.started.connect(self.CPU_option.CPUOption)
-                self.CPU_thread.start()
-
-
 
         return True
 
@@ -1717,32 +1734,39 @@ class Ui_Control(QMainWindow,Ui_Form):
     def  stop_subThread(self):
         if self.testFlag == 'AI':
             if self.AI_thread and self.AI_thread.isRunning():
-                self.showInf(f'结束AI子线程' + self.HORIZONTAL_LINE)
-                # print('结束AI子线程')
-                # self.AI_option.stop_work()
-                self.AI_thread.quit()
-                self.AI_thread.wait()
+                try:
+                    self.AI_thread.quit()
+                    self.AI_thread.wait()
+                    # self.showInf(f'结束AI子线程成功！' + self.HORIZONTAL_LINE)
+                except Exception as e:
+                    self.showInf(f'结束AI线程异常！' + self.HORIZONTAL_LINE)
+                    traceback.print_exc()
         elif self.testFlag == 'AO':
             if self.AO_thread and self.AO_thread.isRunning():
-                # print('结束AO子线程')
-                self.showInf(f'结束AO子线程' + self.HORIZONTAL_LINE)
-                # self.AI_option.stop_work()
-                self.AO_thread.quit()
-                self.AO_thread.wait()
+                try:
+                    self.AO_thread.quit()
+                    self.AO_thread.wait()
+                except Exception as e:
+                    self.showInf(f'结束AO线程异常！' + self.HORIZONTAL_LINE)
+                    traceback.print_exc()
         elif self.testFlag == 'DO' or self.testFlag == 'DI' or self.testFlag == 'DIDO':
             if self.DIDO_thread and self.DIDO_thread.isRunning():
-                self.showInf(f'结束DIDO子线程' + self.HORIZONTAL_LINE)
-                # print('结束DIDO子线程')
-                # self.AI_option.stop_work()
-                self.DIDO_thread.quit()
-                self.DIDO_thread.wait()
+                # self.showInf(f'结束DIDO子线程' + self.HORIZONTAL_LINE)
+                try:
+                    self.DIDO_thread.quit()
+                    self.DIDO_thread.wait()
+                except Exception as e:
+                    self.showInf(f'结束DIDO线程异常！' + self.HORIZONTAL_LINE)
+                    traceback.print_exc()
         elif self.testFlag == 'CPU':
             if self.CPU_thread and self.CPU_thread.isRunning():
-                # print('结束CPU子线程')
-                self.showInf(f'结束CPU子线程' + self.HORIZONTAL_LINE)
-                # self.AI_option.stop_work()
-                self.CPU_thread.quit()
-                self.CPU_thread.wait()
+                try:
+                # self.showInf(f'结束CPU子线程' + self.HORIZONTAL_LINE)
+                    self.CPU_thread.quit()
+                    self.CPU_thread.wait()
+                except Exception as e:
+                    self.showInf(f'结束CPU线程异常！' + self.HORIZONTAL_LINE)
+                    traceback.print_exc()
         else:
             self.showInf(f'不存在运行的子线程' + self.HORIZONTAL_LINE)
     
@@ -2477,28 +2501,32 @@ class Ui_Control(QMainWindow,Ui_Form):
         # book.save(self.label_41.text() + saveDir)
 
     def printResult(self,list):
-        self.generateLabel(list)
-        content = list[1]
-        file_name = f'{self.label_41.text()}{list[0]}_label.docx'
-        # if list[1] == 'FAIL':
-        #     content += f'\n\n{list[2]}'
-        #
-        # with open(file_name, "w") as f:
-        #     for line in content.splitlines():
-        #         f.write(line + "\n")
+        try:
+            self.generateLabel(list)
+            content = list[1]
+            file_name = f'{self.label_41.text()}{list[0]}_label.docx'
+            # if list[1] == 'FAIL':
+            #     content += f'\n\n{list[2]}'
+            #
+            # with open(file_name, "w") as f:
+            #     for line in content.splitlines():
+            #         f.write(line + "\n")
 
-        win32api.ShellExecute(
-            0,
-            "print",
-            file_name,
-            #
-            # If this is None, the default printer will
-            # be used anyway.
-            #
-            '/d:"%s"' % win32print.GetDefaultPrinter(),
-            ".",
-            0
-        )
+            win32api.ShellExecute(
+                0,
+                "print",
+                file_name,
+                #
+                # If this is None, the default printer will
+                # be used anyway.
+                #
+                '/d:"%s"' % win32print.GetDefaultPrinter(),
+                ".",
+                0
+            )
+        except Exception as e:
+            self.showInf(f"printResultError:{e}+{self.HORIZONTAL_LINE}")
+            traceback.print_exc()
     def generateLabel(self,list):
         from docx import Document
 
@@ -2507,131 +2535,96 @@ class Ui_Control(QMainWindow,Ui_Form):
         from docx.shared import Cm, Pt
         from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
         from docx.document import Document as Doc
+        try:
+            # 创建代表Word文档的Doc对象
 
-        # 创建代表Word文档的Doc对象
+            document = Document()
+            default_section = document.sections[0]
+            # 默认宽度和高度
+            # # print(default_section.page_width.cm)  # 21.59
+            # # print(default_section.page_height.cm)  # 27.94
+            # 可直接修改宽度和高度，即纸张大小改为自定义
+            default_section.page_width = Cm(8)
+            default_section.page_height = Cm(12)
 
-        document = Document()
-        default_section = document.sections[0]
-        # 默认宽度和高度
-        # # print(default_section.page_width.cm)  # 21.59
-        # # print(default_section.page_height.cm)  # 27.94
-        # 可直接修改宽度和高度，即纸张大小改为自定义
-        default_section.page_width = Cm(8)
-        default_section.page_height = Cm(12)
+            # 修改页边距
+            default_section.top_margin = Cm(0.5)
+            default_section.right_margin = Cm(0.5)
+            default_section.bottom_margin = Cm(0.5)
+            default_section.left_margin = Cm(0.5)
 
-        # 修改页边距
-        default_section.top_margin = Cm(0.5)
-        default_section.right_margin = Cm(0.5)
-        default_section.bottom_margin = Cm(0.5)
-        default_section.left_margin = Cm(0.5)
-
-        # 添加图片（注意路径和图片必须要存在）
-        document.add_picture(self.current_dir+'/logo.png', width=Cm(6.1))
-
-        # # 添加带样式的段落
-        p = document.add_paragraph('')
-        p.paragraph_format.line_spacing = 1
-        PLC = p.add_run('PLC I/O')
-        PLC.font.name = 'Stencil'
-        PLC.font.size = Pt(24)
-        PLC.underline = False
-
-        s = p.add_run('s fac_Test')
-        s.font.name = 'Stencil'
-        s.font.size = Pt(16)
-        s.underline = False
-
-        pSN = document.add_paragraph('')
-        pSN.paragraph_format.line_spacing = 1
-        SN = pSN.add_run(f'UUT SN: {self.module_sn}')
-        SN.font.name = '等线'
-        SN.font.size = Pt(10.5)
-
-        pPN = document.add_paragraph('')
-        pPN.paragraph_format.line_spacing = 1
-        PN = pPN.add_run(f'UUT PN: {self.module_pn}')
-        PN.font.name = '等线'
-        PN.font.size = Pt(10.5)
-
-        pREV = document.add_paragraph('')
-        pREV.paragraph_format.line_spacing = 1
-        REV = pREV.add_run(f'UUT REV: {self.module_rev}')
-        REV.font.name = '等线'
-        REV.font.size = Pt(10.5)
-
-        pTime = document.add_paragraph('')
-        pTime.paragraph_format.line_spacing = 1
-        Time = pTime.add_run(f'Time Duration: {round(time.time() - self.allStart_time, 1)} 秒')
-        Time.font.name = '等线'
-        Time.font.size = Pt(12)
-        Time.bold = True
-        if list[1] == 'FAIL':
             # 添加图片（注意路径和图片必须要存在）
-            document.add_picture(self.current_dir+'/fail.png', width=Cm(5.5))
-            pFail = document.add_paragraph('')
-            pFail.paragraph_format.line_spacing = 1
-            Fail = pFail.add_run('FAILED ITEMS：')
-            Fail.font.name = '等线'
-            Fail.font.size = Pt(12)
-            Fail.bold = True
+            document.add_picture(self.current_dir+'/logo.png', width=Cm(6.1))
 
-            pFail_inf = document.add_paragraph('')
-            pFail_inf.paragraph_format.line_spacing = 1
-            fail_inf = pFail_inf.add_run(f'{list[2][1:]}')
-            fail_inf.font.name = '等线'
-            fail_inf.font.size = Pt(10)
-        elif list[1] == 'PASS':
-            # 添加图片（注意路径和图片必须要存在）
-            document.add_picture(self.current_dir+'/pass.png', width=Cm(5.5))
-        document.paragraphs[6].alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-
-
-        # 保存文档
-        for p in document.paragraphs:
+            # # 添加带样式的段落
+            p = document.add_paragraph('')
             p.paragraph_format.line_spacing = 1
-            p.paragraph_format.space_before = Pt(0)
-            p.paragraph_format.space_after = Pt(0)
-        document.save(self.label_41.text()+f'{list[0]}_label.docx')
+            PLC = p.add_run('PLC I/O')
+            PLC.font.name = 'Stencil'
+            PLC.font.size = Pt(24)
+            PLC.underline = False
+
+            s = p.add_run('s fac_Test')
+            s.font.name = 'Stencil'
+            s.font.size = Pt(16)
+            s.underline = False
+
+            pSN = document.add_paragraph('')
+            pSN.paragraph_format.line_spacing = 1
+            SN = pSN.add_run(f'UUT SN: {self.module_sn}')
+            SN.font.name = '等线'
+            SN.font.size = Pt(10.5)
+
+            pPN = document.add_paragraph('')
+            pPN.paragraph_format.line_spacing = 1
+            PN = pPN.add_run(f'UUT PN: {self.module_pn}')
+            PN.font.name = '等线'
+            PN.font.size = Pt(10.5)
+
+            pREV = document.add_paragraph('')
+            pREV.paragraph_format.line_spacing = 1
+            REV = pREV.add_run(f'UUT REV: {self.module_rev}')
+            REV.font.name = '等线'
+            REV.font.size = Pt(10.5)
+
+            pTime = document.add_paragraph('')
+            pTime.paragraph_format.line_spacing = 1
+            Time = pTime.add_run(f'Time Duration: {round(time.time() - self.allStart_time, 1)} 秒')
+            Time.font.name = '等线'
+            Time.font.size = Pt(12)
+            Time.bold = True
+            if list[1] == 'FAIL':
+                # 添加图片（注意路径和图片必须要存在）
+                document.add_picture(self.current_dir+'/fail.png', width=Cm(5.5))
+                pFail = document.add_paragraph('')
+                pFail.paragraph_format.line_spacing = 1
+                Fail = pFail.add_run('FAILED ITEMS：')
+                Fail.font.name = '等线'
+                Fail.font.size = Pt(12)
+                Fail.bold = True
+
+                pFail_inf = document.add_paragraph('')
+                pFail_inf.paragraph_format.line_spacing = 1
+                fail_inf = pFail_inf.add_run(f'{list[2][1:]}')
+                fail_inf.font.name = '等线'
+                fail_inf.font.size = Pt(10)
+            elif list[1] == 'PASS':
+                # 添加图片（注意路径和图片必须要存在）
+                document.add_picture(self.current_dir+'/pass.png', width=Cm(5.5))
+            document.paragraphs[6].alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
 
-    # def channelZero(self):
-    #     self.showInf(f'对所有通道值进行归零处理' + self.HORIZONTAL_LINE)
-    #     # # print('1111111111111111')
-    #     isZero = self.normal_writeValuetoAO(0)
-    #     # # print('2222222222222222')
-    #     if isZero == True:
-    #         self.showInf(f'所有通道归零成功' + self.HORIZONTAL_LINE)
-    #         self.isPause()
-    #         # if not self.isStop():
-    #         #     return
-    #
-    #     else:
-    #         self.showInf(f'所有通道归零失败' + self.HORIZONTAL_LINE)
-    #         self.isPause()
-    #         # if not self.isStop():
-    #         #     return
-    #
-    #
-    # def normal_writeValuetoAO(self,value):
-    #     bool_all = True
-    #     #CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
-    #     #self.can_start()
-    #     for i in range(self.m_Channels):
-    #         self.m_transmitData[0] = 0x2b
-    #         self.m_transmitData[1] = 0x11
-    #         self.m_transmitData[2] = 0x64
-    #         self.m_transmitData[3] = i+1
-    #         self.m_transmitData[4] = (value & 0xff)
-    #         self.m_transmitData[5] = ((value >> 8) & 0xff)
-    #         self.m_transmitData[6] = 0x00
-    #         self.m_transmitData[7] = 0x00
-    #         # # print(f'{self.module_1}地址:{0x600+self.CANAddr_AO}')
-    #         bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600+self.CANAddr_AO), self.m_transmitData)
-    #         bool_all = bool_all & bool_transmit
-    #         self.isPause()
-    #         # if not self.isStop():
-    #         #     return
-    #     return bool_all
+            # 保存文档
+            for p in document.paragraphs:
+                p.paragraph_format.line_spacing = 1
+                p.paragraph_format.space_before = Pt(0)
+                p.paragraph_format.space_after = Pt(0)
+            document.save(self.label_41.text()+f'{list[0]}_label.docx')
+        except Exception as e:
+            self.showInf(f"generateLabelError:{e}+{self.HORIZONTAL_LINE}")
+            # 捕获异常并输出详细的错误信息
+            traceback.print_exc()
+
 
     @abstractmethod
     def calibrateAO(self):

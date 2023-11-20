@@ -1,0 +1,7 @@
+1.报错：Cannot find reference 'Document' in 'docx.py'
+报错代码:
+from docx import Document
+from docx.shared import Cm, Pt
+from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+from docx.document import Document as Doc
+解决方式：由于导入的docx文件有问题，需要先卸载docx库“pip uninstall docx”，在下载python-docx库“pip install python-docx”
