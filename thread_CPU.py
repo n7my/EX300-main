@@ -4,12 +4,9 @@ import time
 
 from PyQt5.QtCore import QThread, pyqtSignal
 from main_logic import *
-import threading
 from CAN_option import *
-import win32print
-import struct
 import otherOption
-
+import logging
 
 class CPUThread(QObject):
     result_signal = pyqtSignal(str)
@@ -75,6 +72,8 @@ class CPUThread(QObject):
     # 发送的数据
     ubyte_array_transmit = c_ubyte * 8
     m_transmitData = ubyte_array_transmit(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
+    serial_transmitData =[]
+    serial_receiveData = []
     # 主副线程弹窗结果
     result_queue = 0
 
@@ -83,6 +82,7 @@ class CPUThread(QObject):
         self.result_queue = result_queue
         self.is_running = True
         self.is_pause = False
+        logging.basicConfig(filename='example.log', level=logging.DEBUG)
         # self.inf_CPUlist = [self.inf_param,self.inf_product, self.inf_CANIPAdrr,
         #                                 self.inf_serialPort, self.inf_CPU_test]
         # self.inf_param
@@ -196,9 +196,16 @@ class CPUThread(QObject):
                     if i == 0:#外观检测
                         self.CPU_appearanceCheck()
                     elif i == 1:#型号检查
-                        self.CPU_typeCheck()
+                        try:
+                            self.CPU_typeCheck()
+                        except Exception as e:
+                            self.showErrorInf()
                         pass
                     elif i == 2:#SRAM
+                        try:
+                            self.CPU_SRAMCheck()
+                        except Exception as e:
+                            self.showErrorInf()
                         pass
                     elif i == 3:#FLASH
                         pass
@@ -265,10 +272,88 @@ class CPUThread(QObject):
 
     #CPU型号检查
     def CPU_typeCheck(self):
+        testStartTime = time.time()
+        self.item_signal.emit([1, 1, 0, ''])
         self.clearList(self.m_transmitData)
-        self.m_transmitData = [0xAC,0x06,0x00,0x00,0x0E,0x00]
-        # typeC_serial = self.che
-        ser = serial.Serial('COM1', 9600, timeout=1)
+        self.serial_transmitData = [0xAC,0x06,0x00,0x00,0x0E,0x00]
+        #打开串口
+        typeC_serial = serial.Serial(port=str(self.comboBox_23.currentText()), baudrate=9600, timeout=1)
+
+        while True:
+            # 发送数据
+            typeC_serial.write(bytes(self.serial_transmitData))
+            # 等待0.5s后接收数据
+            time.sleep(0.5)
+            serial_receiveData = []
+            # 接收数组数据
+            serial_receiveData = typeC_serial.read(30)
+            # 关闭串口
+            typeC_serial.close()
+            startNum = 0
+            #确定数据头
+            for i in range(len(serial_receiveData)):
+                if serial_receiveData[i] == 0xCA:
+                    startNum = i
+                    isSendAgain = False
+                    break
+                if i == len(serial_receiveData) - 1 and serial_receiveData[i] != 0xCA:
+                    isSendAgain = True
+            if isSendAgain:
+                continue
+            dataLen = int(serial_receiveData[startNum+1])
+
+            #验证数据接收是否正确
+            dataSum = 0
+            for i in range(dataLen):
+                dataSum+=serial_receiveData[startNum+i]
+            ckeckSum = -int(dataSum)
+            if ckeckSum == int(serial_receiveData[startNum+dataLen]):
+                trueData = serial_receiveData[startNum:startNum+dataLen]
+                if
+            else:
+                continue
+
+
+            if serial_receiveData[5] == 0x00:
+                self.isPassTypeCheck = True
+                testEndTime = time.time()
+                testAllTime = round(testEndTime - testStartTime, 2)
+                self.item_signal.emit([1, 2, 1, testAllTime])
+            else:
+                self.isPassTypeCheck = False
+                self.messageBox_signal.emit(['测试警告', '测试设备型号错误，后续测试中止！'])
+                testEndTime = time.time()
+                testAllTime = round(testEndTime - testStartTime, 2)
+                self.item_signal.emit([1, 2, 2, testAllTime])
+
+    #SRAM检查
+    def CPU_SRAMCheck(self):
+        testStartTime = time.time()
+        self.item_signal.emit([2, 1, 0, ''])
+        self.clearList(self.m_transmitData)
+        self.serial_transmitData = [0xAC, 0x06, 0x00, 0x00, 0x0E, 0x00]
+        # 打开串口
+        typeC_serial = serial.Serial(port=str(self.comboBox_23.currentText()), baudrate=9600, timeout=1)
+        # 发送数据
+        typeC_serial.write(bytes(self.serial_transmitData))
+        # 等待0.5s后接收返回的数据
+        time.sleep(0.5)
+        # 接收数组数据
+        serial_receiveData = typeC_serial.read(6)
+        # 关闭串口
+        typeC_serial.close()
+        if serial_receiveData[5] == '':
+            self.isPassTypeCheck = True
+            testEndTime = time.time()
+            testAllTime = round(testEndTime - testStartTime, 2)
+            self.item_signal.emit([2, 2, 1, testAllTime])
+        else:
+            self.isPassTypeCheck = False
+            self.messageBox_signal.emit(['测试警告', '测试设备型号错误，后续测试中止！'])
+            testEndTime = time.time()
+            testAllTime = round(testEndTime - testStartTime, 2)
+            self.item_signal.emit([2, 2, 2, testAllTime])
+
     #数组元素归零
     def clearList(self, array):
         for i in range(len(array)):
@@ -294,3 +379,8 @@ class CPUThread(QObject):
         self.is_running = False
         self.setAOChOutCalibrate()
         self.labe_signal.emit(['fail', '测试停止'])
+
+    def showErrorInf(self):
+        # 捕获异常并输出详细的错误信息
+        self.showInf(f"ErrorInf:\n{traceback.format_exc()}")
+

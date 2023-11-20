@@ -228,12 +228,12 @@ class Ui_Control(QMainWindow,Ui_Form):
                                    self.checkBox_58, self.checkBox_59, self.checkBox_60, self.checkBox_61,
                                    self.checkBox_62, self.checkBox_63, self.checkBox_64, self.checkBox_65,
                                    self.checkBox_66, self.checkBox_67, self.checkBox_68, self.checkBox_69,
-                                   self.checkBox_72, self.checkBox_71]
+                                   self.checkBox_72, self.checkBox_71,self.checkBox_73]
         self.CPU_checkBoxName_array = ["外观检测", "型号检查", "SRAM", "FLASH", "MAC/三码写入", "FPGA", "拨杆测试",
                                        "MFK按键",
                                        "RTC测试", "掉电保存", "各指示灯", "本体IN", "本体OUT", "以太网", "RS-232C",
                                        "RS-485",
-                                       "右扩CAN", "MA0202", "测试报告", "固件烧录", "U盘读写", "修改参数"]
+                                       "右扩CAN", "MA0202", "测试报告", "固件烧录", "U盘读写", "修改参数","全选"]
 
         self.setWindowFlags(Qt.FramelessWindowHint)  # 无边框窗口
         self.label_6.mousePressEvent = self.label_mousePressEvent
@@ -664,6 +664,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             checkBox.toggled.connect(self.saveConfig)
         self.CPU_paramChanged()
         self.checkBox_71.stateChanged.connect(self.CPU_paramChanged)
+        self.checkBox_73.stateChanged.connect(self.testAllorNot)
 
 
         # self.lineEdit_PN.setPlaceholderText('请输入PN码')
@@ -1598,11 +1599,8 @@ class Ui_Control(QMainWindow,Ui_Form):
 
 
         except Exception as e:
-
             self.showInf(f"startTestError:{e}+{self.HORIZONTAL_LINE}")
-
             # 捕获异常并输出详细的错误信息
-
             traceback.print_exc()
             return False
 
@@ -1826,6 +1824,21 @@ class Ui_Control(QMainWindow,Ui_Form):
 
         # self.saveConfig()
 
+    def testAllorNot(self):
+        CPU_test_array = [self.checkBox_50, self.checkBox_51, self.checkBox_52, self.checkBox_53,
+                               self.checkBox_54, self.checkBox_55, self.checkBox_56, self.checkBox_57,
+                               self.checkBox_58, self.checkBox_59, self.checkBox_60, self.checkBox_61,
+                               self.checkBox_62, self.checkBox_63, self.checkBox_64, self.checkBox_65,
+                               self.checkBox_66, self.checkBox_67, self.checkBox_68, self.checkBox_69,
+                               self.checkBox_72]
+        if self.checkBox_73.isChecked():
+            self.checkBox_73.setText("取消全选")
+            for i in range(len(CPU_test_array)):
+                CPU_test_array[i].setChecked(True)
+        else:
+            self.checkBox_73.setText("全选")
+            for i in range(len(CPU_test_array)):
+                CPU_test_array[i].setChecked(False)
     def AI_NotCalibrate(self):
         self.checkBox_5.setEnabled(False)
         self.checkBox_6.setEnabled(False)
@@ -2471,7 +2484,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             if i ==0:
                 self.showInf(f'可用串口：\n')
             self.showInf(f'({i + 1}){ports[i].description}\n')
-            self.showInf(f'({i+1}){ports[i].device}, {ports[i].name}, {ports[i].description}\n')
+            # self.showInf(f'({i+1}){ports[i].device}, {ports[i].name}, {ports[i].description}\n')
 
         self.comboBox_21.removeItem(len(ports))
         self.comboBox_22.removeItem(len(ports))

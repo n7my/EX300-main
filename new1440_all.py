@@ -998,7 +998,11 @@ class Ui_Form(object):
         self.checkBox_54.setGeometry(QtCore.QRect(460, 70, 111, 16))
         self.checkBox_54.setObjectName("checkBox_54")
         self.label_14 = QtWidgets.QLabel(self.groupBox_19)
-        self.label_14.setGeometry(QtCore.QRect(495, 280, 121, 16))
+        self.label_14.setGeometry(QtCore.QRect(460, 276, 141, 20))
+        self.label_14.setStyleSheet("background-color: rgb(126, 126, 126);\n"
+                                    "color: rgb(255, 255, 255);\n"
+                                    "background-color: rgb(76, 165, 132);")
+        self.label_14.setAlignment(QtCore.Qt.AlignCenter)
         self.label_14.setObjectName("label_14")
         self.line_6 = QtWidgets.QFrame(self.groupBox_19)
         self.line_6.setGeometry(QtCore.QRect(130, 10, 21, 281))
@@ -1024,6 +1028,10 @@ class Ui_Form(object):
         self.checkBox_52 = QtWidgets.QCheckBox(self.groupBox_19)
         self.checkBox_52.setGeometry(QtCore.QRect(10, 120, 101, 16))
         self.checkBox_52.setObjectName("checkBox_52")
+        self.checkBox_73 = QtWidgets.QCheckBox(self.groupBox_19)
+        self.checkBox_73.setGeometry(QtCore.QRect(530, 250, 71, 16))
+        self.checkBox_73.setLayoutDirection(QtCore.Qt.RightToLeft)
+        self.checkBox_73.setObjectName("checkBox_73")
         self.tabWidget.addTab(self.tab_4, "")
 
         self.pushButton = QtWidgets.QPushButton(Form)
@@ -2064,6 +2072,7 @@ class Ui_Form(object):
         self.checkBox_72.setText(_translate("Form", "21.U盘读写"))
         self.checkBox_51.setText(_translate("Form", "2.型号检查"))
         self.checkBox_52.setText(_translate("Form", "3.SRAM"))
+        self.checkBox_73.setText(_translate("Form", "取消全选"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_4), _translate("Form", "CPU"))
         self.pushButton.setText(_translate("Form", "用户\n"
 "登录"))
