@@ -2299,9 +2299,10 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.module_3 = '工装3（QN0016）'
             self.module_4 = '工装4（AE0400）'
             self.module_5 = '工装5（AQ0004）'
-            self.testNum = 21  # ["U盘读写", "型号检查", "SRAM", "FLASH", "MAC/三码写入", "FPGA", "拨杆测试", "MFK按键",
-                                  # "RTC测试", "掉电保存", "各指示灯", "本体IN", "本体OUT", "以太网", "RS-232C", "RS-485",
-                                  # "右扩CAN", "MA0202", "测试报告", "固件烧录", "外观检测"]
+            self.testNum = 21  # ["外观检测", "型号检查", "SRAM", "FLASH", "FPGA", "拨杆测试", "MFK按键",
+                                  # "RTC测试", "掉电保存", "各指示灯", "本体IN", "本体OUT", "以太网",
+                                    # "RS-232C", "RS-485",
+                                  # "右扩CAN", "MA0202", "测试报告", "固件烧录", "MAC/三码写入","U盘读写" ]
 
             self.inf_param = [mTable, self.module_1, self.module_2, self.module_3,
                               self.module_4,self.module_5,self.testNum]
