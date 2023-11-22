@@ -228,13 +228,13 @@ class Ui_Control(QMainWindow,Ui_Form):
                                    self.checkBox_54, self.checkBox_55, self.checkBox_56, self.checkBox_57,
                                    self.checkBox_58, self.checkBox_59, self.checkBox_60, self.checkBox_61,
                                    self.checkBox_62, self.checkBox_63, self.checkBox_64, self.checkBox_65,
-                                   self.checkBox_66, self.checkBox_67, self.checkBox_68, self.checkBox_69,
-                                   self.checkBox_72, self.checkBox_71,self.checkBox_73]
+                                   self.checkBox_66, self.checkBox_67, self.checkBox_68,
+                                   self.checkBox_71,self.checkBox_73]
         self.CPU_checkBoxName_array = ["外观检测", "型号检查", "SRAM", "FLASH", "MAC/三码写入", "FPGA", "拨杆测试",
                                        "MFK按键",
                                        "RTC测试", "掉电保存", "各指示灯", "本体IN", "本体OUT", "以太网", "RS-232C",
                                        "RS-485",
-                                       "右扩CAN", "MA0202", "测试报告", "固件烧录", "U盘读写", "修改参数","全选"]
+                                       "右扩CAN", "MA0202", "测试报告", "修改参数","全选"]
 
         self.setWindowFlags(Qt.FramelessWindowHint)  # 无边框窗口
         self.label_6.mousePressEvent = self.label_mousePressEvent
@@ -249,6 +249,10 @@ class Ui_Control(QMainWindow,Ui_Form):
         # self.loadConfig()必须放在类似comboBox.currentIndexChanged.connect(self.saveConfig)的代码之前
         # 某则一修改参数就会触发saveConfig，导致还没修改的参数被默认参数覆盖。
         self.loadConfig()
+        if self.checkBox_73.isChecked():
+            self.checkBox_73.setText("取消全选")
+        else:
+            self.checkBox_73.setText("全选")
 
         #显示当前时间
         self.update_time()
@@ -280,7 +284,8 @@ class Ui_Control(QMainWindow,Ui_Form):
 
         #批量设置lineEdit只读
         lE_arr = [self.lineEdit,self.lineEdit_3,self.lineEdit_5,self.lineEdit_20,self.lineEdit_21,self.lineEdit_22,
-                  self.lineEdit_45,self.lineEdit_46,self.lineEdit_47,self.lineEdit_30,self.lineEdit_31,self.lineEdit_32]
+                  self.lineEdit_45,self.lineEdit_46,self.lineEdit_47,self.lineEdit_30,self.lineEdit_31,self.lineEdit_32
+                  ,self.lineEdit_33]
         for lE in lE_arr:
             lE.setReadOnly(True)
 
@@ -673,7 +678,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         # self.lineEdit_SN.setReadOnly(True)
         self.lineEdit_REV.setPlaceholderText('请输入REV码')
         self.lineEdit_REV.setReadOnly(True)
-        self.lineEdit_MAC.setPlaceholderText('请输入MAC码')
+        self.lineEdit_MAC.setPlaceholderText('请输入MAC地址')
         self.lineEdit_MAC.setReadOnly(True)
         # self.lineEdit_PN.setFocus()
         # self.lineEdit_PN.editingFinished.connect(self.inputPN)
@@ -818,7 +823,6 @@ class Ui_Control(QMainWindow,Ui_Form):
                      "'CPU_232COM': 0," \
                      "'CPU_485COM': 0," \
                      "'CPU_typecCOM': 0," \
-                     "'U盘读写': False," \
                      "'型号检查': False," \
                      "'SRAM': False," \
                      "'FLASH': False," \
@@ -837,7 +841,6 @@ class Ui_Control(QMainWindow,Ui_Form):
                      "'右扩CAN': False," \
                      "'MA0202': False," \
                      "'测试报告': False," \
-                     "'固件烧录': False," \
                      "'外观检测': False," \
                      "'工装1': '1'," \
                      "'工装2': '2'," \
@@ -1819,11 +1822,11 @@ class Ui_Control(QMainWindow,Ui_Form):
         # self.saveConfig()
 
     def CPU_paramChanged(self):
-        CPU_param_array=[self.lineEdit_33, self.lineEdit_34, self.lineEdit_35, self.lineEdit_36,
+        CPU_param_array=[ self.lineEdit_34, self.lineEdit_35, self.lineEdit_36,
                          self.lineEdit_37, self.lineEdit_38,self.comboBox_20,self.comboBox_21,
-                         self.comboBox_22,self.comboBox_23,self.label_59,self.label_60,self.label_61
-                         ,self.label_64,self.label_66,self.label_67,self.label_68,self.label_69,
-                         self.label_70,self.label_71]
+                         self.comboBox_22,self.comboBox_23,self.label_59,self.label_60,
+                         self.label_64,self.label_66,self.label_67,self.label_68,self.label_69,
+                         self.label_70,self.label_71,self.label_90]
         for Cparam in CPU_param_array:
             Cparam.setEnabled(self.checkBox_71.isChecked())
 
@@ -1834,8 +1837,8 @@ class Ui_Control(QMainWindow,Ui_Form):
                                self.checkBox_54, self.checkBox_55, self.checkBox_56, self.checkBox_57,
                                self.checkBox_58, self.checkBox_59, self.checkBox_60, self.checkBox_61,
                                self.checkBox_62, self.checkBox_63, self.checkBox_64, self.checkBox_65,
-                               self.checkBox_66, self.checkBox_67, self.checkBox_68, self.checkBox_69,
-                               self.checkBox_72]
+                               self.checkBox_66, self.checkBox_67
+                               ]
         if self.checkBox_73.isChecked():
             self.checkBox_73.setText("取消全选")
             for i in range(len(CPU_test_array)):
@@ -2307,7 +2310,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.testNum = 21  # ["外观检测", "型号检查", "SRAM", "FLASH", "FPGA", "拨杆测试", "MFK按键",
                                   # "RTC测试", "掉电保存", "各指示灯", "本体IN", "本体OUT", "以太网",
                                     # "RS-232C", "RS-485",
-                                  # "右扩CAN", "MA0202", "测试报告", "固件烧录", "MAC/三码写入","U盘读写" ]
+                                  # "右扩CAN", "MA0202", "测试报告", "固件烧录", "MAC/三码写入"]
 
             self.inf_param = [mTable, self.module_1, self.module_2, self.module_3,
                               self.module_4,self.module_5,self.testNum]
@@ -2328,9 +2331,8 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.CANAddr3 = int(self.lineEdit_36.text())
             self.CANAddr4 = int(self.lineEdit_37.text())
             self.CANAddr5 = int(self.lineEdit_38.text())
-            # self.CAN1 = self.CANAddr_AI
-            # self.CAN2 = self.CANAddr_AO
-            self.IPAddr = int(self.lineEdit_33.text())
+
+            self.IPAddr = '192.168.1.66'
             self.inf_CANIPAdrr = [self.CANAddr1,self.CANAddr2,self.CANAddr3,self.CANAddr4,
                                   self.CANAddr5,self.IPAddr]
             #获取串口信息
@@ -2347,12 +2349,11 @@ class Ui_Control(QMainWindow,Ui_Form):
                                    self.checkBox_54, self.checkBox_55, self.checkBox_56, self.checkBox_57,
                                    self.checkBox_58, self.checkBox_59, self.checkBox_60, self.checkBox_61,
                                    self.checkBox_62, self.checkBox_63, self.checkBox_64, self.checkBox_65,
-                                   self.checkBox_66, self.checkBox_67, self.checkBox_68, self.checkBox_69,
-                                   self.checkBox_72]
+                                   self.checkBox_66, self.checkBox_67, self.checkBox_68
+                                   ]
             self.CPU_testName_array = [ "外观检测", "型号检查", "SRAM", "FLASH", "MAC/三码写入", "FPGA",
                                         "拨杆测试","MFK按键","RTC测试", "掉电保存", "各指示灯", "本体IN", "本体OUT",
-                                        "以太网","RS-232C","RS-485","右扩CAN", "MA0202", "测试报告", "固件烧录",
-                                        "U盘读写"]
+                                        "以太网","RS-232C","RS-485","右扩CAN", "MA0202", "测试报告"]
 
             for i in range(len(self.CPU_test_array)):
                 self.inf_CPU_test[i] = self.CPU_test_array[i].isChecked()

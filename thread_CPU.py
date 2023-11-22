@@ -268,13 +268,13 @@ class CPUThread(QObject):
                     elif i == 5:#拨杆测试
                         try:
                             testStartTime = time.time()
-                            self.messageBox_signal(["操作提示","请向上拨动拨杆。"])
+                            self.messageBox_signal(["操作提示","请将拨杆拨至STOP位置。"])
                             reply = self.result_queue.get()
                             if reply == QMessageBox.Yes or QMessageBox.No:
                                 self.CPU_LeverTest(0,itemRow=i)
                                 if self.isCancelAllTest:
                                     break
-                                self.messageBox_signal(["操作提示", "请向下拨动拨杆。"])
+                                self.messageBox_signal(["操作提示", "请将拨杆拨至RUN位置。"])
                                 if reply == QMessageBox.Yes or QMessageBox.No:
                                     self.CPU_LeverTest(1,itemRow=i)
                             if self.isPassLever:
