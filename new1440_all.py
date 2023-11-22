@@ -1001,7 +1001,7 @@ class Ui_Form(object):
         self.label_14.setGeometry(QtCore.QRect(460, 276, 141, 20))
         self.label_14.setStyleSheet("background-color: rgb(126, 126, 126);\n"
                                     "color: rgb(255, 255, 255);\n"
-                                    "background-color: rgb(76, 165, 132);")
+                                    "background-color: #11826C;")
         self.label_14.setAlignment(QtCore.Qt.AlignCenter)
         self.label_14.setObjectName("label_14")
         self.line_6 = QtWidgets.QFrame(self.groupBox_19)
@@ -1840,6 +1840,13 @@ class Ui_Form(object):
         self.lineEdit_MAC.setGeometry(QtCore.QRect(1300, 215, 121, 29))
         self.lineEdit_MAC.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.lineEdit_MAC.setObjectName("lineEdit_MAC")
+        self.pushButton_13 = QtWidgets.QPushButton(Form)
+        self.pushButton_13.setGeometry(QtCore.QRect(1080, 160, 31, 31))
+        self.pushButton_13.setStyleSheet("background-color: rgb(126, 126, 126);\n"
+                                         "color: rgb(255, 255, 255);\n"
+                                         "background-color: rgb(76, 165, 132);")
+        self.pushButton_13.setText("")
+        self.pushButton_13.setObjectName("pushButton_13")
 
         self.label_38.raise_()
         self.tabWidget.raise_()
@@ -1892,6 +1899,7 @@ class Ui_Form(object):
         self.label.raise_()
         self.pushButton_6.raise_()
         self.lineEdit_MAC.raise_()
+        self.pushButton_13.raise_()
 
         self.retranslateUi(Form)
         self.tabWidget.setCurrentIndex(0)
@@ -2060,9 +2068,9 @@ class Ui_Form(object):
         self.checkBox_59.setText(_translate("Form", "9.掉电保存"))
         self.checkBox_61.setText(_translate("Form", "11.本体IN"))
         self.checkBox_62.setText(_translate("Form", "12.本体OUT"))
-        self.checkBox_64.setText(_translate("Form", "14.RS-232C"))
+        self.checkBox_64.setText(_translate("Form", "14.RS232"))
         self.checkBox_63.setText(_translate("Form", "13.以太网"))
-        self.checkBox_65.setText(_translate("Form", "15.RS-485"))
+        self.checkBox_65.setText(_translate("Form", "15.RS485"))
         self.checkBox_66.setText(_translate("Form", "16.右扩CAN"))
         self.checkBox_68.setText(_translate("Form", "18.测试报告"))
         self.checkBox_67.setText(_translate("Form", "17.MA0202"))
@@ -2502,7 +2510,7 @@ class Ui_Form(object):
         item.setBackground(brush)
         tabIndex = self.tabWidget.currentIndex()
         itemText_array = ["外观检测","型号检查","SRAM","FLASH","FPGA","拨杆测试","MFK按键","RTC测试",
-                          "掉电保存","各指示灯","本体IN","本体OUT","以太网","RS-232C","RS-485","右扩CAN","MA0202","测试报告",
+                          "掉电保存","各指示灯","本体IN","本体OUT","以太网","RS232","RS485","右扩CAN","MA0202","测试报告",
                           "固件烧录","MAC/三码写入","U盘读写"]
         for i in range(29):
             item = QtWidgets.QTableWidgetItem()

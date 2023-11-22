@@ -577,8 +577,14 @@ class AOThread(QObject):
                     if not self.setAOInputType(i + 1, type, typeNum):
                         return False
 
-                if not self.vol_cur_test(type,m_name,m_valueTheory, m_arrayVal, m_range,typeNum):
-                    self.isAOVolPass = False
+                try:
+                    if not self.vol_cur_test(type,m_name,m_valueTheory, m_arrayVal, m_range,typeNum):
+                        self.isAOVolPass = False
+                except Exception as e:
+                    self.showInf(f"testVolError:{e}+{self.HORIZONTAL_LINE}")
+                    # 捕获异常并输出详细的错误信息
+                    traceback.print_exc()
+
 
 
         elif type == 'AOCurrent':
@@ -615,8 +621,13 @@ class AOThread(QObject):
                         return False
                     if not self.setAOInputType(i + 1, type, typeNum):
                         return False
-                if not self.vol_cur_test(type,m_name, m_valueTheory, m_arrayVal, m_range, typeNum):
-                    self.isAOCurPass = False
+                try:
+                    if not self.vol_cur_test(type,m_name, m_valueTheory, m_arrayVal, m_range, typeNum):
+                        self.isAOCurPass = False
+                except Exception as e:
+                    self.showInf(f"testCurError:{e}+{self.HORIZONTAL_LINE}")
+                    # 捕获异常并输出详细的错误信息
+                    traceback.print_exc()
 
         # 数据清零
         if not self.normal_writeValuetoAO(0):

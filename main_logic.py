@@ -218,6 +218,7 @@ class Ui_Control(QMainWindow,Ui_Form):
     def __init__(self,parent = None):
         super(Ui_Control,self).__init__(parent)
         self.setupUi(self)
+        # self.pushButton_13.setVisible(False)
         self.label_11.setPixmap(QtGui.QPixmap(f"{current_dir}/beast5.png"))
         # CPU页面参数配置
         self.CPU_lineEdit_array = [self.lineEdit_33, self.lineEdit_34, self.lineEdit_35, self.lineEdit_36,
@@ -271,7 +272,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         #                         }
         #                     """)
 
-        self.getSerialInf()
+        # self.getSerialInf()
 
 
         for tW in [self.tableWidget_AI, self.tableWidget_AO, self.tableWidget_DIDO,self.tableWidget_CPU]:
@@ -752,6 +753,8 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.pushButton_12.setEnabled(False)
         self.pushButton_12.setVisible(False)
         self.pushButton_12.clicked.connect(self.uiRecovery)
+        self.pushButton_13.clicked.connect(self.option_pushButton13)
+
         #更新串口
         self.pushButton_renewSerial.clicked.connect(self.getSerialInf)
         global isMainRunning
@@ -1040,7 +1043,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         try:
             os.kill(os.getpid(), signal.SIGTERM)
         except OSError as e:
-            print(f"无法杀死当前进程: {e}")
+            self.showInf(f"无法杀死当前进程: {e}\n")
 
 
     def label_mousePressEvent(self, event):
@@ -1433,7 +1436,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                 self.DIDO_option.allFinished_signal.connect(self.allFinished)
                 self.DIDO_option.label_signal.connect(self.labelChange)
                 self.DIDO_option.saveExcel_signal.connect(self.saveExcel)
-                self.DIDO_option.print_signal.connect(self.printResult)
+                # self.DIDO_option.print_signal.connect(self.printResult)
 
                 self.pushButton_3.clicked.connect(self.DIDO_option.stop_work)
                 self.pushButton_pause.clicked.connect(self.DIDO_option.pause_work)
@@ -1442,6 +1445,8 @@ class Ui_Control(QMainWindow,Ui_Form):
                 self.DIDO_option.moveToThread(self.DIDO_thread)
                 self.DIDO_thread.started.connect(self.DIDO_option.DIDOOption)
                 self.DIDO_thread.start()
+
+
 
 
             if self.tabWidget.currentIndex() == 1:
@@ -1517,7 +1522,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                     self.AI_option.allFinished_signal.connect(self.allFinished)
                     self.AI_option.label_signal.connect(self.labelChange)
                     self.AI_option.saveExcel_signal.connect(self.saveExcel)#保存测试报告
-                    self.AI_option.print_signal.connect(self.printResult)#打印测试标签
+                    # self.AI_option.print_signal.connect(self.printResult)#打印测试标签
 
                     self.pushButton_3.clicked.connect(self.AI_option.stop_work)
                     self.pushButton_pause.clicked.connect(self.AI_option.pause_work)
@@ -1553,7 +1558,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                     self.AO_option.allFinished_signal.connect(self.allFinished)
                     self.AO_option.label_signal.connect(self.labelChange)
                     self.AO_option.saveExcel_signal.connect(self.saveExcel)
-                    self.AO_option.print_signal.connect(self.printResult)
+                    # self.AO_option.print_signal.connect(self.printResult)
 
                     self.pushButton_3.clicked.connect(self.AO_option.stop_work)
                     self.pushButton_pause.clicked.connect(self.AO_option.pause_work)
@@ -1587,7 +1592,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                     self.CPU_option.allFinished_signal.connect(self.allFinished)
                     self.CPU_option.label_signal.connect(self.labelChange)
                     self.CPU_option.saveExcel_signal.connect(self.saveExcel)
-                    self.CPU_option.print_signal.connect(self.printResult)
+                    # self.CPU_option.print_signal.connect(self.printResult)
 
                     self.pushButton_3.clicked.connect(self.CPU_option.stop_work)
                     self.pushButton_pause.clicked.connect(self.CPU_option.pause_work)
@@ -1599,7 +1604,7 @@ class Ui_Control(QMainWindow,Ui_Form):
 
 
         except Exception as e:
-            self.showInf(f"startTestError:{e}+{self.HORIZONTAL_LINE}")
+            self.showInf(f"startTestError:{e}{self.HORIZONTAL_LINE}")
             # 捕获异常并输出详细的错误信息
             traceback.print_exc()
             return False
@@ -3135,6 +3140,10 @@ class Ui_Control(QMainWindow,Ui_Form):
             if (i == 3 and state == 0) or (i == 3 and state == 3):
                 item.setText(f'{operationTime}')
         QApplication.processEvents()
+
+    def option_pushButton13(self):
+        self.lineEdit_SN.setText('S1223-001083')
+        self.lineEdit_REV.setText('06')
 
     # def generateExcel(self, station, module):
     # def generateExcel(self, list):
@@ -5169,8 +5178,6 @@ def get3codeFromPLC(addr):
 
     return True,[pnCode,snCode,revCode]
 
-
-    
 # def online_thread():
 #     try:
 #         time_online = time.time()

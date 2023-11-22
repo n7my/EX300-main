@@ -73,7 +73,7 @@ def isModulesOnline(CANAddr_array,module_array,waiting_time):
 def check_heartbeat(can_addr, inf, max_waiting):
     can_id = 0x700 + can_addr
     bool_receive,  m_can_obj = CAN_option.receiveCANbyID(can_id, max_waiting)
-    print( m_can_obj.Data)
+    # print( m_can_obj.Data)
     if bool_receive == False:
         # self.result_signal.emit(f'错误:未发现{inf}' + self.HORIZONTAL_LINE)
         return False

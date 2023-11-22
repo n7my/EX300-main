@@ -1,13 +1,14 @@
 1.".ui"文件转“.py”文件指令
 
-pyuic5 -o 1119.py new1440_all_1117.ui
+pyuic5 -o 1120.py new1440_all_1120.ui
 
 
 2.打包成python程序打包成exe文件
 
 pyinstaller -D -w main.py
-pyinstaller.exe -D -c --add-data "ControlCAN.dll;." --add-data "config.txt;." --add-data "取消全屏按钮.png;." --add-data "取消全屏按钮2.png;." --add-data "全屏按钮.png;." --add-data "全屏按钮2.png;." --add-data "logo.png;." --add-data "pass.png;." --add-data "fail.png;." --add-data "ControlCAN.lib;." --add-data "pushbutton.qrc;." main.py
-pyinstaller.exe -D -w --add-data "ControlCAN.dll;." --add-data "config.txt;." --add-data "取消全屏按钮.png;." --add-data "取消全屏按钮2.png;." --add-data "全屏按钮.png;." --add-data "全屏按钮2.png;." --add-data "logo.png;." --add-data "pass.png;." --add-data "fail.png;." --add-data "ControlCAN.lib;." --add-data "pushbutton.qrc;." main.py
+pyinstaller.exe -D -c --add-data "ControlCAN.dll;." --add-data "config.txt;." --add-data "取消全屏按钮.png;." --add-data "取消全屏按钮2.png;." --add-data "全屏按钮.png;." --add-data "全屏按钮2.png;." --add-data "logo.png;." --add-data "pass.png;." --add-data "fail.png;." --add-data "ControlCAN.lib;." --add-data "pushbutton.qrc;." --add-data "beast5.png;." main.py
+pyinstaller.exe -D -w --add-data "ControlCAN.dll;." --add-data "config.txt;." --add-data "取消全屏按钮.png;." --add-data "取消全屏按钮2.png;." --add-data "全屏按钮.png;." --add-data "全屏按钮2.png;." --add-data "logo.png;." --add-data "pass.png;." --add-data "fail.png;." --add-data "ControlCAN.lib;." --add-data "pushbutton.qrc;." --add-data "beast5.png;." main.py
+pyinstaller.exe -D -c --add-data "ControlCAN.dll;." --add-data "config.txt;." --add-data "取消全屏按钮.png;." --add-data "取消全屏按钮2.png;." --add-data "全屏按钮.png;." --add-data "全屏按钮2.png;." --add-data "logo.png;." --add-data "pass.png;." --add-data "fail.png;." --add-data "ControlCAN.lib;." --add-data "pushbutton.qrc;." main.spec
 注：-F，打包成一个EXE文件。
       -D，创建一个目录，包含EXE和所有依赖文件。
       -c，使用控制台，无窗口。
@@ -17,3 +18,5 @@ pyinstaller.exe -D -w --add-data "ControlCAN.dll;." --add-data "config.txt;." --
 conda activate EX300_env_py38
 进入d盘
 D:
+
+
