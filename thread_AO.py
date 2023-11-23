@@ -421,12 +421,12 @@ class AOThread(QObject):
         # elif not self.isCalibrate and not self.isTest:
         #     self.pass_signal.emit(True)
 
-    def CAN_init(self):
-        CAN_option.connect(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_option.CAN_INDEX)
-
-        CAN_option.init(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_option.CAN_INDEX, init_config)
-
-        CAN_option.start(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_option.CAN_INDEX)
+    # def CAN_init(self):
+    #     CAN_option.connect(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_option.CAN_INDEX)
+    #
+    #     CAN_option.init(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_option.CAN_INDEX, init_config)
+    #
+    #     CAN_option.start(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_option.CAN_INDEX)
 
     def testAO(self, testType):
         """.1退出标定模式"""
@@ -436,7 +436,7 @@ class AOThread(QObject):
             if not self.is_running:
                 return False
             # 每次切换电压电流量程初始化CAN分析仪
-            self.CAN_init()
+            # self.CAN_init()
             self.result_signal.emit('切换到电压模式' + self.HORIZONTAL_LINE)
             # CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
             # self.can_start()
@@ -1069,7 +1069,7 @@ class AOThread(QObject):
             lowValue = self.cur_lowValue_array[typeNum]
             maxRange = self.cur_maxRange_array[typeNum]  # 上限最大值- 下限最小值
 
-        # self.CAN_init()
+
         # 0.防止之前可能在标定模式中，先退出标定模式
         self.setAOChOutCalibrate()
 

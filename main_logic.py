@@ -232,7 +232,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                                    self.checkBox_71,self.checkBox_73]
         self.CPU_checkBoxName_array = ["外观检测", "型号检查", "SRAM", "FLASH", "MAC/三码写入", "FPGA", "拨杆测试",
                                        "MFK按键",
-                                       "RTC测试", "掉电保存", "各指示灯", "本体IN", "本体OUT", "以太网", "RS-232C",
+                                       "掉电保存", "RTC测试", "各指示灯", "本体IN", "本体OUT", "以太网", "RS-232C",
                                        "RS-485",
                                        "右扩CAN", "MA0202", "测试报告", "修改参数","全选"]
 
@@ -654,14 +654,6 @@ class Ui_Control(QMainWindow,Ui_Form):
 
         #CPU页面初始化
         self.CPU_comboBox_array = [self.comboBox_20,self.comboBox_21,self.comboBox_22,self.comboBox_23]
-        # self.cpu_lineEdit_array = [self.lineEdit_33,self.lineEdit_34,self.lineEdit_35,self.lineEdit_36,
-        #                            self.lineEdit_37,self.lineEdit_38]
-        # self.cpu_checkBox_array = [self.checkBox_50,self.checkBox_51,self.checkBox_52,self.checkBox_53,
-        #                             self.checkBox_54,self.checkBox_55,self.checkBox_56,self.checkBox_57,
-        #                             self.checkBox_58,self.checkBox_59,self.checkBox_60,self.checkBox_61,
-        #                             self.checkBox_62,self.checkBox_63,self.checkBox_64,self.checkBox_65,
-        #                             self.checkBox_66,self.checkBox_67,self.checkBox_68,self.checkBox_69,
-        #                            self.checkBox_70,self.checkBox_71]
         for comboBox in self.CPU_comboBox_array:
             comboBox.currentIndexChanged.connect(self.saveConfig)
         for lineEdit in self.CPU_lineEdit_array:
@@ -671,6 +663,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.CPU_paramChanged()
         self.checkBox_71.stateChanged.connect(self.CPU_paramChanged)
         self.checkBox_73.stateChanged.connect(self.testAllorNot)
+        self.lineEdit_33.setText('00-E0-C0-4C-32-03-8B')
 
 
         # self.lineEdit_PN.setPlaceholderText('请输入PN码')
@@ -830,8 +823,8 @@ class Ui_Control(QMainWindow,Ui_Form):
                      "'FPGA': False," \
                      "'拨杆测试': False," \
                      "'MFK按键': False," \
-                     "'RTC测试': False," \
                      "'掉电保存': False," \
+                     "'RTC测试': False," \
                      "'各指示灯': False," \
                      "'本体IN': False," \
                      "'本体OUT': False," \
@@ -1359,7 +1352,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                 if not self.sendMessage():
                     return False
             except Exception as e:
-                self.showInf(f"sendMessageError:{e}+{self.HORIZONTAL_LINE}")
+                self.showInf(f"sendMessageError:{e}{self.HORIZONTAL_LINE}")
                 # 捕获异常并输出详细的错误信息
                 traceback.print_exc()
                 return False
@@ -1922,9 +1915,9 @@ class Ui_Control(QMainWindow,Ui_Form):
         # self.tableWidget_AO.setVisible(False)
         self.pushbutton_allScreen.setEnabled(False)
         self.pushbutton_allScreen.setVisible(False)
-        self.label_28.setGeometry(10, 199, 192, 30)
+        self.label_28.setGeometry(10, 210, 192, 30)
         self.textBrowser_5.setMaximumSize(711,800)
-        self.textBrowser_5.setGeometry(10, 664-415-20, 711, 151+415+20+30)
+        self.textBrowser_5.setGeometry(10, 240, 711, 601)
 
         self.pushbutton_cancelAllScreen.setEnabled(True)
         self.pushbutton_cancelAllScreen.setVisible(True)
@@ -1936,7 +1929,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.pushbutton_cancelAllScreen.setEnabled(False)
         self.pushbutton_cancelAllScreen.setVisible(False)
 
-        self.textBrowser_5.setGeometry(10, 664, 711, 181)
+        self.textBrowser_5.setGeometry(10, 664, 711, 177)
         self.label_28.setGeometry(10, 634, 192, 30)
         self.tabIndex = self.tabWidget.currentIndex()
 
@@ -2344,17 +2337,17 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.inf_serialPort = [self.serialPort_232, self.serialPort_485,
                                    self.serialPort_typeC, self.saveDir]
             #获取检测信息
-            self.inf_CPU_test =[False for x in range(self.CPU_test_array)]
+
             self.CPU_test_array = [self.checkBox_50, self.checkBox_51, self.checkBox_52,self.checkBox_53,
                                    self.checkBox_54, self.checkBox_55, self.checkBox_56, self.checkBox_57,
                                    self.checkBox_58, self.checkBox_59, self.checkBox_60, self.checkBox_61,
                                    self.checkBox_62, self.checkBox_63, self.checkBox_64, self.checkBox_65,
-                                   self.checkBox_66, self.checkBox_67, self.checkBox_68
+                                   self.checkBox_66, self.checkBox_67
                                    ]
             self.CPU_testName_array = [ "外观检测", "型号检查", "SRAM", "FLASH", "MAC/三码写入", "FPGA",
-                                        "拨杆测试","MFK按键","RTC测试", "掉电保存", "各指示灯", "本体IN", "本体OUT",
-                                        "以太网","RS-232C","RS-485","右扩CAN", "MA0202", "测试报告"]
-
+                                        "拨杆测试","MFK按键","掉电保存", "RTC测试", "各指示灯", "本体IN", "本体OUT",
+                                        "以太网","RS-232C","RS-485","右扩CAN", "MA0202"]
+            self.inf_CPU_test = [False for x in range(len(self.CPU_test_array))]
             for i in range(len(self.CPU_test_array)):
                 self.inf_CPU_test[i] = self.CPU_test_array[i].isChecked()
             # :param

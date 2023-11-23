@@ -441,12 +441,16 @@ class AIThread(QObject):
         # elif not self.isCalibrate and (bool_testVol or bool_testCur):
 
 
-    def CAN_init(self):
-        CAN_option.connect(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_option.CAN_INDEX)
-
-        CAN_option.init(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_option.CAN_INDEX, init_config)
-
-        CAN_option.start(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_option.CAN_INDEX)
+    # def CAN_init(self):
+    #     CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
+    #     time.sleep(0.1)
+    #     QApplication.processEvents()
+    #
+    #     CAN_option.connect(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_option.CAN_INDEX)
+    #
+    #     CAN_option.init(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_option.CAN_INDEX, init_config)
+    #
+    #     CAN_option.start(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_option.CAN_INDEX)
 
     def testAI(self,testType):
         #1.退出标定模式
@@ -457,7 +461,7 @@ class AIThread(QObject):
             if not self.is_running:
                 return False
             # 每次切换电压电流量程初始化CAN分析仪
-            self.CAN_init()
+            # self.CAN_init()
             self.result_signal.emit('切换到电压模式' + self.HORIZONTAL_LINE)
             #CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
             #self.can_start()
@@ -506,7 +510,7 @@ class AIThread(QObject):
             if not self.is_running:
                 return False
             # 每次切换电压电流量程初始化CAN分析仪
-            self.CAN_init()
+            # self.CAN_init()
             self.result_signal.emit('切换到电流模式'+self.HORIZONTAL_LINE)
 
             time.sleep(1)
@@ -914,7 +918,7 @@ class AIThread(QObject):
                 return False
             self.result_signal.emit('继电器切换到电压模式' + self.HORIZONTAL_LINE)
             #每次切换电压电流量程初始化CAN分析仪
-            self.CAN_init()
+            # self.CAN_init()
             # self.testNum = self.testNum - 1
             self.m_transmitData = [0x01,0x01,0x00,0x00,0x00,0x00,0x00,0x00]
             try:
@@ -1002,7 +1006,7 @@ class AIThread(QObject):
             if not self.is_running:
                 return False
             # 每次切换电压电流量程初始化CAN分析仪
-            self.CAN_init()
+            # self.CAN_init()
             self.result_signal.emit('继电器切换到电流模式' + self.HORIZONTAL_LINE)
 
             # self.testNum = self.testNum - 1
