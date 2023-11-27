@@ -34,7 +34,7 @@
      <x>753</x>
      <y>314</y>
      <width>671</width>
-     <height>521</height>
+     <height>525</height>
     </rect>
    </property>
    <property name="sizePolicy">
@@ -1721,9 +1721,9 @@
      <widget class="QWidget" name="layoutWidget_20">
       <property name="geometry">
        <rect>
-        <x>530</x>
+        <x>330</x>
         <y>20</y>
-        <width>83</width>
+        <width>71</width>
         <height>31</height>
        </rect>
       </property>
@@ -1731,7 +1731,7 @@
        <item>
         <widget class="QLabel" name="label_56">
          <property name="styleSheet">
-          <string notr="true">font: 87 12pt &quot;Arial Black&quot;;
+          <string notr="true">font: 87 10pt &quot;Arial Black&quot;;
 </string>
          </property>
          <property name="text">
@@ -1746,7 +1746,7 @@
         <widget class="QLineEdit" name="lineEdit_32">
          <property name="styleSheet">
           <string notr="true">background-color: rgb(208, 208, 208);
-font: 87 11pt &quot;Arial Black&quot;;
+font: 87 10pt &quot;Arial Black&quot;;
 border: none;</string>
          </property>
          <property name="text">
@@ -1759,9 +1759,9 @@ border: none;</string>
      <widget class="QWidget" name="layoutWidget_21">
       <property name="geometry">
        <rect>
-        <x>355</x>
+        <x>180</x>
         <y>20</y>
-        <width>161</width>
+        <width>141</width>
         <height>31</height>
        </rect>
       </property>
@@ -1769,7 +1769,7 @@ border: none;</string>
        <item>
         <widget class="QLabel" name="label_57">
          <property name="styleSheet">
-          <string notr="true">font: 87 12pt &quot;Arial Black&quot;;
+          <string notr="true">font: 87 10pt &quot;Arial Black&quot;;
 </string>
          </property>
          <property name="text">
@@ -1784,7 +1784,7 @@ border: none;</string>
         <widget class="QLineEdit" name="lineEdit_31">
          <property name="styleSheet">
           <string notr="true">background-color: rgb(208, 208, 208);
-font: 87 11pt &quot;Arial Black&quot;;
+font: 87 10pt &quot;Arial Black&quot;;
 border: none;
 </string>
          </property>
@@ -1798,9 +1798,9 @@ border: none;
      <widget class="QWidget" name="layoutWidget_22">
       <property name="geometry">
        <rect>
-        <x>150</x>
+        <x>10</x>
         <y>20</y>
-        <width>191</width>
+        <width>161</width>
         <height>31</height>
        </rect>
       </property>
@@ -1808,7 +1808,7 @@ border: none;
        <item>
         <widget class="QLabel" name="label_58">
          <property name="styleSheet">
-          <string notr="true">font: 87 12pt &quot;Arial Black&quot;;
+          <string notr="true">font: 87 10pt &quot;Arial Black&quot;;
 </string>
          </property>
          <property name="text">
@@ -1823,7 +1823,7 @@ border: none;
         <widget class="QLineEdit" name="lineEdit_30">
          <property name="styleSheet">
           <string notr="true">background-color: rgb(208, 208, 208);
-font: 87 11pt &quot;Arial Black&quot;;
+font: 87 10pt &quot;Arial Black&quot;;
 border: none;</string>
          </property>
          <property name="text">
@@ -2147,9 +2147,9 @@ background-color: rgb(76, 165, 132);</string>
      <widget class="QWidget" name="layoutWidget">
       <property name="geometry">
        <rect>
-        <x>10</x>
+        <x>410</x>
         <y>20</y>
-        <width>141</width>
+        <width>201</width>
         <height>31</height>
        </rect>
       </property>
@@ -2157,7 +2157,7 @@ background-color: rgb(76, 165, 132);</string>
        <item>
         <widget class="QLabel" name="label_61">
          <property name="styleSheet">
-          <string notr="true">font: 87 12pt &quot;Arial Black&quot;;
+          <string notr="true">font: 87 10pt &quot;Arial Black&quot;;
 </string>
          </property>
          <property name="text">
@@ -2169,11 +2169,11 @@ background-color: rgb(76, 165, 132);</string>
         <widget class="QLineEdit" name="lineEdit_33">
          <property name="styleSheet">
           <string notr="true">background-color: rgb(208, 208, 208);
-font: 87 11pt &quot;Arial Black&quot;;
+font: 87 10pt &quot;Arial Black&quot;;
 border: none;</string>
          </property>
          <property name="text">
-          <string>DCT9527</string>
+          <string>00-E0-C0-4C-32-03-8B</string>
          </property>
         </widget>
        </item>
@@ -2271,7 +2271,7 @@ border: none;</string>
        </rect>
       </property>
       <property name="text">
-       <string>8.RTC</string>
+       <string>8.掉电保存</string>
       </property>
      </widget>
      <widget class="QCheckBox" name="checkBox_60">
@@ -2297,7 +2297,7 @@ border: none;</string>
        </rect>
       </property>
       <property name="text">
-       <string>9.掉电保存</string>
+       <string>9.RTC</string>
       </property>
      </widget>
      <widget class="QCheckBox" name="checkBox_61">

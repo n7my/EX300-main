@@ -1103,6 +1103,9 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.lineEdit_21.clear()
         self.lineEdit_20.clear()
 
+        self.lineEdit_31.clear()
+        self.lineEdit_32.clear()
+
         # self.lineEdit_47.clear()
         self.lineEdit_46.clear()
         self.lineEdit_45.clear()

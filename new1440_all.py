@@ -182,7 +182,7 @@ class Ui_Form(object):
         self.lineEdit_14.setObjectName("lineEdit_14")
         self.horizontalLayout_13.addWidget(self.lineEdit_14)
         self.layoutWidget5 = QtWidgets.QWidget(self.groupBox_4)
-        self.layoutWidget5.setGeometry(QtCore.QRect(10, 20, 101, 31))
+        self.layoutWidget5.setGeometry(QtCore.QRect(10, 50, 101, 31))
         self.layoutWidget5.setObjectName("layoutWidget5")
         self.horizontalLayout_11 = QtWidgets.QHBoxLayout(self.layoutWidget5)
         self.horizontalLayout_11.setContentsMargins(0, 0, 0, 0)
@@ -717,57 +717,57 @@ class Ui_Form(object):
         self.groupBox_18.setGeometry(QtCore.QRect(10, 10, 621, 161))
         self.groupBox_18.setObjectName("groupBox_18")
         self.layoutWidget_20 = QtWidgets.QWidget(self.groupBox_18)
-        self.layoutWidget_20.setGeometry(QtCore.QRect(530, 20, 83, 31))
+        self.layoutWidget_20.setGeometry(QtCore.QRect(330, 20, 71, 31))
         self.layoutWidget_20.setObjectName("layoutWidget_20")
         self.horizontalLayout_30 = QtWidgets.QHBoxLayout(self.layoutWidget_20)
         self.horizontalLayout_30.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout_30.setObjectName("horizontalLayout_30")
         self.label_56 = QtWidgets.QLabel(self.layoutWidget_20)
-        self.label_56.setStyleSheet("font: 87 12pt \"Arial Black\";\n"
+        self.label_56.setStyleSheet("font: 87 10pt \"Arial Black\";\n"
                                     "")
         self.label_56.setAlignment(QtCore.Qt.AlignCenter)
         self.label_56.setObjectName("label_56")
         self.horizontalLayout_30.addWidget(self.label_56)
         self.lineEdit_32 = QtWidgets.QLineEdit(self.layoutWidget_20)
         self.lineEdit_32.setStyleSheet("background-color: rgb(208, 208, 208);\n"
-                                       "font: 87 11pt \"Arial Black\";\n"
+                                       "font: 87 10pt \"Arial Black\";\n"
                                        "border: none;")
         self.lineEdit_32.setObjectName("lineEdit_32")
         self.horizontalLayout_30.addWidget(self.lineEdit_32, 0, QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
         self.layoutWidget_21 = QtWidgets.QWidget(self.groupBox_18)
-        self.layoutWidget_21.setGeometry(QtCore.QRect(355, 20, 161, 31))
+        self.layoutWidget_21.setGeometry(QtCore.QRect(180, 20, 141, 31))
         self.layoutWidget_21.setObjectName("layoutWidget_21")
         self.horizontalLayout_31 = QtWidgets.QHBoxLayout(self.layoutWidget_21)
         self.horizontalLayout_31.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout_31.setObjectName("horizontalLayout_31")
         self.label_57 = QtWidgets.QLabel(self.layoutWidget_21)
-        self.label_57.setStyleSheet("font: 87 12pt \"Arial Black\";\n"
+        self.label_57.setStyleSheet("font: 87 10pt \"Arial Black\";\n"
                                     "")
         self.label_57.setAlignment(QtCore.Qt.AlignCenter)
         self.label_57.setObjectName("label_57")
         self.horizontalLayout_31.addWidget(self.label_57)
         self.lineEdit_31 = QtWidgets.QLineEdit(self.layoutWidget_21)
         self.lineEdit_31.setStyleSheet("background-color: rgb(208, 208, 208);\n"
-                                       "font: 87 11pt \"Arial Black\";\n"
+                                       "font: 87 10pt \"Arial Black\";\n"
                                        "border: none;\n"
                                        "")
         self.lineEdit_31.setObjectName("lineEdit_31")
         self.horizontalLayout_31.addWidget(self.lineEdit_31, 0, QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
         self.layoutWidget_22 = QtWidgets.QWidget(self.groupBox_18)
-        self.layoutWidget_22.setGeometry(QtCore.QRect(150, 20, 191, 31))
+        self.layoutWidget_22.setGeometry(QtCore.QRect(10, 20, 161, 31))
         self.layoutWidget_22.setObjectName("layoutWidget_22")
         self.horizontalLayout_32 = QtWidgets.QHBoxLayout(self.layoutWidget_22)
         self.horizontalLayout_32.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout_32.setObjectName("horizontalLayout_32")
         self.label_58 = QtWidgets.QLabel(self.layoutWidget_22)
-        self.label_58.setStyleSheet("font: 87 12pt \"Arial Black\";\n"
+        self.label_58.setStyleSheet("font: 87 10pt \"Arial Black\";\n"
                                     "")
         self.label_58.setAlignment(QtCore.Qt.AlignCenter)
         self.label_58.setObjectName("label_58")
         self.horizontalLayout_32.addWidget(self.label_58)
         self.lineEdit_30 = QtWidgets.QLineEdit(self.layoutWidget_22)
         self.lineEdit_30.setStyleSheet("background-color: rgb(208, 208, 208);\n"
-                                       "font: 87 11pt \"Arial Black\";\n"
+                                       "font: 87 10pt \"Arial Black\";\n"
                                        "border: none;")
         self.lineEdit_30.setObjectName("lineEdit_30")
         self.horizontalLayout_32.addWidget(self.lineEdit_30, 0, QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
@@ -907,19 +907,19 @@ class Ui_Form(object):
         self.line_5.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.line_5.setObjectName("line_5")
         self.layoutWidget11 = QtWidgets.QWidget(self.groupBox_18)
-        self.layoutWidget11.setGeometry(QtCore.QRect(10, 20, 141, 31))
+        self.layoutWidget11.setGeometry(QtCore.QRect(410, 20, 201, 31))
         self.layoutWidget11.setObjectName("layoutWidget11")
         self.horizontalLayout_7 = QtWidgets.QHBoxLayout(self.layoutWidget11)
         self.horizontalLayout_7.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout_7.setObjectName("horizontalLayout_7")
         self.label_61 = QtWidgets.QLabel(self.layoutWidget11)
-        self.label_61.setStyleSheet("font: 87 12pt \"Arial Black\";\n"
+        self.label_61.setStyleSheet("font: 87 10pt \"Arial Black\";\n"
                                     "")
         self.label_61.setObjectName("label_61")
         self.horizontalLayout_7.addWidget(self.label_61)
         self.lineEdit_33 = QtWidgets.QLineEdit(self.layoutWidget11)
         self.lineEdit_33.setStyleSheet("background-color: rgb(208, 208, 208);\n"
-                                       "font: 87 11pt \"Arial Black\";\n"
+                                       "font: 87 10pt \"Arial Black\";\n"
                                        "border: none;")
         self.lineEdit_33.setObjectName("lineEdit_33")
         self.horizontalLayout_7.addWidget(self.lineEdit_33)

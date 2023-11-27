@@ -18,7 +18,7 @@ class DIDOThread(QObject):
     messageBox_signal = pyqtSignal(list)
     # excel_signal = pyqtSignal(list)
     allFinished_signal = pyqtSignal()
-    labe_signal = pyqtSignal(list)
+    label_signal = pyqtSignal(list)
     saveExcel_signal = pyqtSignal(list)
     print_signal = pyqtSignal(list)
 
@@ -172,6 +172,8 @@ class DIDOThread(QObject):
 
         self.isDIPassTest = True
         self.isDOPassTest = True
+        self.isPassOdd = True
+        self.isPassEven = True
     def DIDOOption(self):
         isExcel = True
         if self.testFlage == 'DI':
@@ -189,20 +191,20 @@ class DIDOThread(QObject):
                                                                                  station_array,
                                                                                  self.DIDO_Channels, 'DI')
                 if not excel_bool:
-                    self.result_signal.emit('校准校验表生成出错！请检查代码！' + self.HORIZONTAL_LINE)
+                    self.result_signal.emit('DI校准校验表生成出错！请检查代码！' + self.HORIZONTAL_LINE)
                 else:
                     self.fillInDIData(self.isDIPassTest, book, sheet)
-                    self.result_signal.emit('生成校准校验表成功' + self.HORIZONTAL_LINE)
+                    self.result_signal.emit('生成DI校准校验表成功' + self.HORIZONTAL_LINE)
             elif self.testFlage == 'DO':
                 station_array = [self.isDOPassTest, '', '']
                 excel_bool, book, sheet, self.DO_row = otherOption.generateExcel(code_array,
                                                                                  station_array,
                                                                                  self.DIDO_Channels, 'DO')
                 if not excel_bool:
-                    self.result_signal.emit('校准校验表生成出错！请检查代码！' + self.HORIZONTAL_LINE)
+                    self.result_signal.emit('DO校准校验表生成出错！请检查代码！' + self.HORIZONTAL_LINE)
                 else:
                     self.fillInDOData(self.isDOPassTest, book, sheet)
-                    self.result_signal.emit('生成校准校验表成功' + self.HORIZONTAL_LINE)
+                    self.result_signal.emit('生成DO校准校验表成功' + self.HORIZONTAL_LINE)
         elif not isExcel:
             self.result_signal.emit('测试停止，校准校验表生成失败…………' + self.HORIZONTAL_LINE)
 
@@ -286,32 +288,27 @@ class DIDOThread(QObject):
             CAN_option.Can_DLL.VCI_ClearBuffer(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_option.CAN_INDEX)
             time.sleep(self.interval / 1000)  # s
             # 通道全亮
-            self.testByIndex(32)
-            time.sleep(self.interval / 1000)
-            # 奇数通道全亮
-            self.testByIndex(34)
+            self.testByIndex(32,'DI')
             time.sleep(self.interval / 1000)
             # 偶数通道全亮
-            self.testByIndex(35)
+            self.testByIndex(34,'DI')
+            time.sleep(self.interval / 1000)
+            # 奇数通道全亮
+            self.testByIndex(35,'DI')
             time.sleep(self.interval / 1000)
             for j in range(self.m_Channels):
                 # if not self.isStop():
                 #     return
-                self.testByIndex(j)
+                self.testByIndex(j,'DI')
                 self.DI_channelData |= self.m_receiveData[0]
                 self.DI_channelData |= self.m_receiveData[1] << 8
                 self.DI_channelData |= self.m_receiveData[2] << 16
                 self.DI_channelData |= self.m_receiveData[3] << 24
                 time.sleep(self.interval / 1000)
-            self.testByIndex(33)
+            self.testByIndex(33,'DI')
         DI_endTime = time.time()
         DI_testTime = round((DI_endTime - DI_startTime),3)
         if self.isDIPassTest == False:
-
-            # if not self.isStop():
-            #     return
-            # reply = QMessageBox.warning(None, 'DI通道指示灯结果', f'DI通道指示灯未全部正常显示！',
-            #                             QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
             self.messageBox_signal.emit(['DI通道指示灯结果', f'DI通道指示灯未全部正常显示！'])
 
             self.result_signal.emit(self.HORIZONTAL_LINE + 'DI通道指示灯测试未通过\n' + self.HORIZONTAL_LINE)
@@ -395,24 +392,24 @@ class DIDOThread(QObject):
             CAN_option.Can_DLL.VCI_ClearBuffer(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_option.CAN_INDEX)
             time.sleep(self.interval / 1000)
             # 通道全亮
-            self.testByIndex(32)
-            time.sleep(self.interval / 1000)
-            # 奇数通道全亮
-            self.testByIndex(34)
+            self.testByIndex(32,'DO')
             time.sleep(self.interval / 1000)
             # 偶数通道全亮
-            self.testByIndex(35)
+            self.testByIndex(34,'DO')
+            time.sleep(self.interval / 1000)
+            # 奇数通道全亮
+            self.testByIndex(35,'DO')
             time.sleep(self.interval / 1000)
             for j in range(self.m_Channels):
                 # if not self.isStop():
                 #     return
-                self.testByIndex(j)
+                self.testByIndex(j,'DO')
                 self.DO_channelData |= self.m_receiveData[0]
                 self.DO_channelData |= self.m_receiveData[1] << 8
                 self.DO_channelData |= self.m_receiveData[2] << 16
                 self.DO_channelData |= self.m_receiveData[3] << 24
                 time.sleep(self.interval / 1000)
-            self.testByIndex(33)
+            self.testByIndex(33,'DO')
         DO_endTime = time.time()
         DO_testTime = round((DO_endTime - DO_startTime), 3)
         if self.isDOPassTest == False:
@@ -475,7 +472,7 @@ class DIDOThread(QObject):
     #                 f'{hex(self.m_receiveData[2])}  '
     #                 f'{hex(self.m_receiveData[3])}  收发不一致！\n\n')
     #             if index != 32 and index != 33:
-    #                 self.DIDataCheck[index] = False
+
     #             print('收发不一致！\n\n')
     #             self.isDIPassTest = False
     #             # reply = QMessageBox.about(None, '警告', '检测到收发不一致！')
@@ -504,12 +501,12 @@ class DIDOThread(QObject):
     #                   f'{hex(self.m_receiveData[2])}  {hex(self.m_receiveData[3])}  收发一致\n\n')
     #             return
 
-    def testByIndex(self, index):
+    def testByIndex(self, index,type:str):
         self.sendTestDataToDO(index)
         print(f'index={index}')
         if index == 32:
             self.result_signal.emit(
-                f'{1}.发送的数据：{hex(self.m_transmitData[0])}  {hex(self.m_transmitData[1])}  {hex(self.m_transmitData[2])}  '
+                f'{1}.发送的数据：{hex(self.m_transmitData[0])}  {hex(self.m_transmitData[1])}  {hex(self.m_transmitData[2]) }'
                 f'{hex(self.m_transmitData[3])}\n\n')
         elif index == 33:
             self.result_signal.emit(
@@ -534,10 +531,24 @@ class DIDOThread(QObject):
                 print(f'接收的数据：{hex(self.m_receiveData[0])}  {hex(self.m_receiveData[1])}  '
                       f'{hex(self.m_receiveData[2])}  '
                       f'{hex(self.m_receiveData[3])}  收发不一致！\n\n')
-                if index != 32 and index != 33:
-                    self.DODataCheck[index] = False
-                print('收发不一致！\n\n')
-                self.isDOPassTest = False
+
+                if type == 'DO':
+                    if index != 32 and index != 33 and index != 34 and index != 35:
+                        self.DODataCheck[index] = False
+                    if index == 34:
+                        self.isPassEven = False
+                    if index == 35:
+                        self.isPassOdd = False
+                    self.isDOPassTest = False
+                elif type == 'DI':
+                    if index != 32 and index != 33 and index != 34 and index != 35:
+                        self.DIDataCheck[index] = False
+                    if index == 34:
+                        self.isPassEven = False
+                    if index == 35:
+                        self.isPassOdd = False
+                    self.isDIPassTest = False
+
                 # reply = QMessageBox.about(None, '警告', '检测到收发不一致！')
                 self.messageBox_signal.emit(['警告', '检测到收发不一致！'])
                 reply = self.result_queue.get()
@@ -552,7 +563,12 @@ class DIDOThread(QObject):
             if bool_receive == False:
                 self.result_signal.emit('\n  接收数据超时！\n\n')
                 print('接收数据超时！')
-                self.isDOPassTest = False
+                if type == 'DO':
+                    self.isDOPassTest = False
+                    self.DODataCheck[index] = False
+                if type == 'DI':
+                    self.isDIPassTest = False
+                    self.DIDataCheck[index] = False
                 return
             elif self.m_transmitData[0] == self.m_receiveData[0] and \
                     self.m_transmitData[1] == self.m_receiveData[1] and \
@@ -1649,6 +1665,7 @@ class DIDOThread(QObject):
     #     #     self.fillInAOData(station, book, sheet)
 
     def fillInDIData(self, station, book, sheet):
+        self.generalTest_row = 4
         # 通过单元格样式
         # 为样式创建字体
         pass_font = xlwt.Font()
@@ -1876,7 +1893,7 @@ class DIDOThread(QObject):
         #     if not self.isAITestVol and not self.isAITestCur:
         #         all_row = 9 + 4 + 4 + 2 + 2  # CPU + DI + DO + AI + AO
         # 填写通道状态
-        # self.DODataCheck[0] = True
+
         for i in range(self.m_Channels):
             if i < 16:
                 if self.DIDataCheck[i]:
@@ -1900,7 +1917,7 @@ class DIDOThread(QObject):
         if self.isDIPassTest and self.testNum == 0:
             name_save = '合格'
             sheet.write(self.generalTest_row + all_row + 1, 4, '■ 合格', pass_style)
-            self.labe_signal.emit(['pass', '全部通过'])
+            self.label_signal.emit(['pass', '全部通过'])
             self.print_signal.emit(
                 [f'/{name_save}{self.module_type}_{time.strftime("%Y%m%d%H%M%S")}', 'PASS', ''])
             # self.label.setStyleSheet(self.testState_qss['pass'])
@@ -1910,16 +1927,22 @@ class DIDOThread(QObject):
             sheet.write(self.generalTest_row + all_row + 1, 4, '■ 部分合格', pass_style)
             sheet.write(self.generalTest_row + all_row + 1, 6,
                         '------------------ 注意：有部分项目未测试！！！ ------------------', warning_style)
-            self.labe_signal.emit(['testing', '部分通过'])
+            self.label_signal.emit(['testing', '部分通过'])
             self.print_signal.emit(
                 [f'/{name_save}{self.module_type}_{time.strftime("%Y%m%d%H%M%S")}', 'PASS', ''])
             # self.label.setStyleSheet(self.testState_qss['testing'])
             # self.label.setText('部分通过')
         elif not self.isDIPassTest:
+            if not self.isPassOdd:
+                self.errorNum += 1
+                self.errorInf += f'\n{self.errorNum})奇数指示灯全亮时有问题 '
+            if not self.isPassEven:
+                self.errorNum += 1
+                self.errorInf += f'\n{self.errorNum})偶数指示灯全亮时有问题 '
             name_save = '不合格'
             sheet.write(self.generalTest_row + all_row + 2, 4, '■ 不合格', fail_style)
             sheet.write(self.generalTest_row + all_row + 2, 6, f'不合格原因：{self.errorInf}', warning_style)
-            self.labe_signal.emit(['fail', '未通过'])
+            self.label_signal.emit(['fail', '未通过'])
             self.print_signal.emit(
                 [f'/{name_save}{self.module_type}_{time.strftime("%Y%m%d%H%M%S")}', 'FAIL', self.errorInf])
             # self.label.setStyleSheet(self.testState_qss['fail'])
@@ -2106,7 +2129,6 @@ class DIDOThread(QObject):
             self.errorInf += f'\n{self.errorNum})ERROE指示灯未亮 '
 
         # 填写通道状态
-        # self.DODataCheck[0] = True
         for i in range(self.m_Channels):
             if i < 16:
                 if self.DODataCheck[i]:
@@ -2130,7 +2152,7 @@ class DIDOThread(QObject):
         if self.isDOPassTest and self.testNum == 0:
             name_save = '合格'
             sheet.write(self.generalTest_row + all_row + 1, 4, '■ 合格', pass_style)
-            self.labe_signal.emit(['pass', '全部通过'])
+            self.label_signal.emit(['pass', '全部通过'])
             self.print_signal.emit([f'/{name_save}{self.module_type}_{time.strftime("%Y%m%d%H%M%S")}', 'PASS', ''])
             # self.label.setStyleSheet(self.testState_qss['pass'])
             # self.label.setText('通过')
@@ -2139,15 +2161,21 @@ class DIDOThread(QObject):
             sheet.write(self.generalTest_row + all_row + 1, 4, '■ 部分合格', pass_style)
             sheet.write(self.generalTest_row + all_row + 1, 6,
                         '------------------ 注意：有部分项目未测试！！！ ------------------', warning_style)
-            self.labe_signal.emit(['testing', '部分通过'])
+            self.label_signal.emit(['testing', '部分通过'])
             self.print_signal.emit([f'/{name_save}{self.module_type}_{time.strftime("%Y%m%d%H%M%S")}', 'PASS', ''])
             # self.label.setStyleSheet(self.testState_qss['testing'])
             # self.label.setText('部分通过')
         elif not self.isDOPassTest:
+            if not self.isPassOdd:
+                self.errorNum += 1
+                self.errorInf += f'\n{self.errorNum})奇数指示灯全亮时有问题 '
+            if not self.isPassEven:
+                self.errorNum += 1
+                self.errorInf += f'\n{self.errorNum})偶数指示灯全亮时有问题 '
             name_save = '不合格'
             sheet.write(self.generalTest_row + all_row + 2, 4, '■ 不合格', fail_style)
             sheet.write(self.generalTest_row + all_row + 2, 6, f'不合格原因：{self.errorInf}', fail_style)
-            self.labe_signal.emit(['fail', '未通过'])
+            self.label_signal.emit(['fail', '未通过'])
             self.print_signal.emit(
                 [f'/{name_save}{self.module_type}_{time.strftime("%Y%m%d%H%M%S")}', 'FAIL', self.errorInf])
             # self.label.setStyleSheet(self.testState_qss['fail'])
