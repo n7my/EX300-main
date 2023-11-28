@@ -698,6 +698,9 @@ class AOThread(QObject):
             warning_sign = False
             while True:
                 if (time.time()-t_wait)*1000 >= self.waiting_time:
+                    self.pauseOption()
+                    if not self.is_running:
+                        return False
                     self.result_signal.emit(f'规定时间内无法接收到稳定信号，请检查通道是否损坏！\n')
                     self.result_signal.emit(f'各通道实际接收数据：{rece_wait[0]}、{rece_wait[1]}、'
                                             f'{rece_wait[2]}、{rece_wait[3]}\n')
@@ -782,6 +785,9 @@ class AOThread(QObject):
                     usReceValue[j] = (usReceValue[j] - 65535) -1
                 else:
                     fPrecision = round(self.GetPrecision(usReceValue[j], m_valueTheory[i], m_range), 2)
+                self.pauseOption()
+                if not self.is_running:
+                    return False
                 self.result_signal.emit(f'\n接收到AO通道 {j + 1} 数据:{usReceValue[j]}\n\n')
                 # print(f'\n接收到AO通道 {j + 1} 数据:{usReceValue[j]}\n\n')
                 chPrecision[j] = fPrecision
@@ -886,6 +892,9 @@ class AOThread(QObject):
                 if not bool_transmit:
                     return False
             except:
+                self.pauseOption()
+                if not self.is_running:
+                    return False
                 self.messageBox_signal.emit(['错误提示', '继电器1切换错误，请停止检查设备！'])
                 # QMessageBox(QMessageBox.Critical, '错误提示', '继电器切换错误，请停止检查设备！').exec_()
                 return False
@@ -895,6 +904,9 @@ class AOThread(QObject):
                 if not bool_transmit:
                     return False
             except:
+                self.pauseOption()
+                if not self.is_running:
+                    return False
                 self.messageBox_signal.emit(['错误提示', '继电器2切换错误，请停止检查设备！'])
                 # QMessageBox(QMessageBox.Critical, '错误提示', '继电器切换错误，请停止检查设备！').exec_()
                 return False
@@ -975,6 +987,9 @@ class AOThread(QObject):
                     if not self.is_running:
                         return False
             except:
+                self.pauseOption()
+                if not self.is_running:
+                    return False
                 self.result_signal.emit('继电器1切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
                 # print('继电器1切换错误，请停止检查设备！')
                 return False
@@ -985,6 +1000,9 @@ class AOThread(QObject):
                     if not self.is_running:
                         return False
             except:
+                self.pauseOption()
+                if not self.is_running:
+                    return False
                 self.result_signal.emit('继电器2切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
                 # print('继电器2切换错误，请停止检查设备！')
                 return False
@@ -1219,11 +1237,17 @@ class AOThread(QObject):
 
             """向通道写入零值与量程值"""
             if not self.writeParaToChannel(i + 1, usZeroValue, usSpanValue):
+                self.pauseOption()
+                if not self.is_running:
+                    return False
                 if type == 'AOVoltage':
                     self.result_signal.emit(f'更新通道{i + 1}在"{self.vol_name_array[typeNum]}"量程的标定值失败！\n\n')
                 elif type == 'AOCurrent':
                     self.result_signal.emit(f'更新通道{i + 1}在"{self.cur_name_array[typeNum]}"量程的标定值失败！\n\n')
             else:
+                self.pauseOption()
+                if not self.is_running:
+                    return False
                 if type == 'AOVoltage':
                     self.result_signal.emit(
                         f'成功更新通道{i + 1}在"{self.vol_name_array[typeNum]}"量程的标定值！\n\n')
@@ -1368,8 +1392,14 @@ class AOThread(QObject):
         if not self.is_running:
             return False, 0
         if value > 50000:
+            self.pauseOption()
+            if not self.is_running:
+                return False, 0
             self.result_signal.emit(f'写入第一个数据点（{self.standardValue}）并等待信号稳定………' + self.HORIZONTAL_LINE)
         else:
+            self.pauseOption()
+            if not self.is_running:
+                return False, 0
             self.result_signal.emit(f'写入第二个数据点（{self.standardValue}）并等待信号稳定………' + self.HORIZONTAL_LINE)
 
             ##############改到这里#########
@@ -1398,24 +1428,40 @@ class AOThread(QObject):
 
             bool_caReceive, usTmpValue = self.receiveAIData(channelNum)
             if not bool_caReceive:
+                self.pauseOption()
+                if not self.is_running:
+                    return False, 0
                 self.result_signal.emit(f'{i + 1}.第{i + 1}次数据未接收到！排除该次数据！\n\n')
                 valReceive_num = valReceive_num - 1
                 continue
             if bool_caReceive == 'stopReceive':
                 return False,0
             if channelNum == 4:
+                self.pauseOption()
+                if not self.is_running:
+                    return False, 0
                 if (abs(usTmpValue[0]-self.standardValue)>100 or abs(usTmpValue[1]-self.standardValue)>100
                         or abs(usTmpValue[2]-self.standardValue)>100 or abs(usTmpValue[3]-self.standardValue)>100):
+                    self.pauseOption()
+                    if not self.is_running:
+                        return False, 0
                     self.result_signal.emit(f'{i + 1}.第{i + 1}次数据：{usTmpValue}，误差过大！排除该次数据！\n\n')
                     valReceive_num = valReceive_num - 1
                     continue
             if channelNum == 1:
+                self.pauseOption()
+                if not self.is_running:
+                    return False, 0
                 if (abs(usTmpValue[0]-self.standardValue)>100):
+                    self.pauseOption()
+                    if not self.is_running:
+                        return False, 0
                     self.result_signal.emit(f'{i + 1}.第{i + 1}次数据：{usTmpValue}，误差过大！排除该次数据！\n\n')
                     valReceive_num = valReceive_num - 1
                     continue
-            # print(f'usTmpValue={usTmpValue}')
-            # print(f'standardValue={self.standardValue}')
+            self.pauseOption()
+            if not self.is_running:
+                return False, 0
             self.result_signal.emit(f'{i + 1}.第{i + 1}次{inf}{usTmpValue}  \n\n')
             for j in range(channelNum):
                 usRecValue[j] = usRecValue[j] + usTmpValue[j]
@@ -1424,6 +1470,9 @@ class AOThread(QObject):
             if i == self.receive_num - 1:
                 self.result_signal.emit(inf_average + f'{usRecValue}\n\n')
         if valReceive_num == 0:
+            self.pauseOption()
+            if not self.is_running:
+                return False, 0
             self.result_signal.emit(f'!!!!!!!!{self.receive_num}次均未接受到正常数据，请检查接线和设备!!!!!!!!\n\n')
             return False, usRecValue
         return True, usRecValue

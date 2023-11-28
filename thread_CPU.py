@@ -525,7 +525,7 @@ class CPUThread(QObject):
                     elif i == 14:#RS-485
                         self.item_signal.emit([i, 1, 0, ''])
                         testStartTime = time.time()
-                        # 115200 57600 38400 19200 9600  4800
+                                    # 115200 57600 38400 19200 9600  4800
                         byte0_array = [0x00, 0x00, 0x00, 0x00, 0x80, 0xC0]
                         byte1_array = [0xC2, 0xE1, 0x96, 0x4B, 0x25, 0x12]
                         byte2_array = [0x01, 0x00, 0x00, 0x00, 0x00, 0x00]
@@ -652,7 +652,48 @@ class CPUThread(QObject):
                             if self.isCancelAllTest:
                                 break
                     elif i == 17:#MA0202
-                        pass
+                        testStartTime = time.time()
+                        self.item_signal.emit([i, 1, 0, ''])
+                        #波特率        115200 57600 38400 19200 9600  4800
+                        byte0_array = [0x00, 0x00, 0x00, 0x00, 0x80, 0xC0]
+                        byte1_array = [0xC2, 0xE1, 0x96, 0x4B, 0x25, 0x12]
+                        byte2_array = [0x01, 0x00, 0x00, 0x00, 0x00, 0x00]
+                        byte3_array = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+                        #读选项版类型
+                        r_type = [0xAC, hex(10), 0x00, 0x0F, 0x0E, 0xFF]
+                        #写MA0202
+                        w_MA0202 = [0xAC, hex(10), 0x00, 0x0F, 0x10, 0x00,
+                                          0x00, hex(1), 0x00, 0x00]
+                        # 读MA0202
+                        r_MA0202 = [0xAC, hex(6), 0x00, 0x0F, 0x0E, 0x00]
+                        try:
+                            # 写MAC
+                            self.CPU_configTest(transmitData=w_MAC, type='MAC')
+                            if not self.isCancelAllTest:
+                                # 读MAC
+                                self.CPU_configTest(transmitData=r_MAC, type='MAC')
+                                if not self.isCancelAllTest:
+                                    # 写SN
+                                    self.CPU_configTest(transmitData=w_SN, type='SN')
+                                    if not self.isCancelAllTest:
+                                        # 读SN
+                                        self.CPU_configTest(transmitData=r_SN, type='SN')
+                                        if not self.isCancelAllTest:
+                                            # 写PN
+                                            self.CPU_configTest(transmitData=w_PN, type='PN')
+                                            if not self.isCancelAllTest:
+                                                # 读PN
+                                                self.CPU_configTest(transmitData=r_PN, type='PN')
+                        except:
+                            self.showErrorInf()
+                            self.cancelAllTest()
+                        finally:
+                            if self.isPassConfig:
+                                self.changeTabItem(testStartTime, row=i, state=2, result=1)
+                            else:
+                                self.changeTabItem(testStartTime, row=i, state=2, result=2)
+                            if self.isCancelAllTest:
+                                break
 
             if self.isCancelAllTest:
                 self.result_signal("后续测试已全部取消，测试结束。")

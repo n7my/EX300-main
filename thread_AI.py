@@ -1021,6 +1021,9 @@ class AIThread(QObject):
                     if not self.is_running:
                         return False
             except:
+                self.pauseOption()
+                if not self.is_running:
+                    return False
                 self.messageBox_signal.emit(['错误提示', '继电器1切换错误，请停止检查设备！'])
                 # self.result_signal.emit('继电器1切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
                 return False
@@ -1031,6 +1034,9 @@ class AIThread(QObject):
                     if not self.is_running:
                         return False
             except:
+                self.pauseOption()
+                if not self.is_running:
+                    return False
                 self.messageBox_signal.emit(['错误提示', '继电器2切换错误，请停止检查设备！'])
                 # self.result_signal.emit('继电器2切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
                 return False
@@ -1146,6 +1152,9 @@ class AIThread(QObject):
             return False
         self.result_signal.emit(f'进入标定模式\n'+self.HORIZONTAL_LINE)
         if not self.setAIChInCalibrate():
+            self.pauseOption()
+            if not self.is_running:
+                return False
             self.result_signal.emit('进入标定模式失败，测试结束。' + self.HORIZONTAL_LINE)
             return False
 
@@ -1266,11 +1275,17 @@ class AIThread(QObject):
 
             """向通道写入零值与量程值"""
             if not self.writeParaToChannel(i+1, usZeroValue, usSpanValue):
+                self.pauseOption()
+                if not self.is_running:
+                    return False
                 if type == 'AIVoltage':
                     self.result_signal.emit(f'更新通道{i+1}在"{self.vol_name_array[typeNum]}"量程的标定值失败！\n\n')
                 elif type == 'AICurrent':
                     self.result_signal.emit(f'更新通道{i + 1}在"{self.cur_name_array[typeNum]}"量程的标定值失败！\n\n')
             else:
+                self.pauseOption()
+                if not self.is_running:
+                    return False
                 if type == 'AIVoltage':
                     self.result_signal.emit(f'成功更新通道{i + 1}在"{self.vol_name_array[typeNum]}"量程的标定值！\n\n')
                 elif type == 'AICurrent':
@@ -1361,8 +1376,14 @@ class AIThread(QObject):
         if not self.is_running:
             return False,0
         if value >0:
+            self.pauseOption()
+            if not self.is_running:
+                return False
             self.result_signal.emit(f'写入第一个数据点（{self.standardValue}）并等待信号稳定………' + self.HORIZONTAL_LINE)
         else:
+            self.pauseOption()
+            if not self.is_running:
+                return False
             self.result_signal.emit(f'写入第二个数据点（{self.standardValue}）并等待信号稳定………' + self.HORIZONTAL_LINE)
         if not self.normal_writeValuetoAO(value):
             return False
@@ -1391,24 +1412,34 @@ class AIThread(QObject):
 
             bool_caReceive, usTmpValue = self.calibrate_receiveAIData(channelNum)
             if not bool_caReceive:
+                self.pauseOption()
+                if not self.is_running:
+                    return False, 0
                 self.result_signal.emit(f'{i + 1}.第{i + 1}次数据未接收到！排除该次数据！\n\n')
                 valReceive_num = valReceive_num -1
                 continue
             if bool_caReceive == 'stopReceive':
                 return False,0
             if channelNum == 4:
+                self.pauseOption()
+                if not self.is_running:
+                    return False, 0
                 if (abs(usTmpValue[0]-self.standardValue)>200 or abs(usTmpValue[1]-self.standardValue)>200
                         or abs(usTmpValue[2]-self.standardValue)>200 or abs(usTmpValue[3]-self.standardValue)>200):
                     self.result_signal.emit(f'{i + 1}.第{i + 1}次数据：{usTmpValue}，误差过大！排除该次数据！\n\n')
                     valReceive_num = valReceive_num - 1
                     continue
             if channelNum == 1:
+                self.pauseOption()
+                if not self.is_running:
+                    return False, 0
                 if (abs(usTmpValue[0]-self.standardValue)>200):
                     self.result_signal.emit(f'{i + 1}.第{i + 1}次数据：{usTmpValue}，误差过大！排除该次数据！\n\n')
                     valReceive_num = valReceive_num - 1
                     continue
-            # # print(f'usTmpValue={usTmpValue}')
-            # # print(f'standardValue={self.standardValue}')
+            self.pauseOption()
+            if not self.is_running:
+                return False, 0
             self.result_signal.emit(f'{i + 1}.第{i + 1}次{inf}{usTmpValue}  \n\n')
             for j in range(channelNum):
                 usRecValue[j]=usRecValue[j]+usTmpValue[j]

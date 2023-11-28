@@ -160,7 +160,7 @@ class DIDOThread(QObject):
         # self.isAOTestCur = inf_AOlist[5][2]
         self.isTestCANRunErr = inf_DIDOlist[4][0]
         self.isTestRunErr = inf_DIDOlist[4][1]
-        # print(f'inf_AOlist[5] = {inf_AOlist[5]}')
+        # #print(f'inf_AOlist[5] = {inf_AOlist[5]}')
         self.errorNum = 0
         self.errorInf = ''
         self.pause_num = 1
@@ -177,10 +177,18 @@ class DIDOThread(QObject):
     def DIDOOption(self):
         isExcel = True
         if self.testFlage == 'DI':
-            self.testDI()
+            if not self.testDI():
+                self.result_signal.emit("测试停止,后续测试全部取消"+self.HORIZONTAL_LINE)
+                isExcel = False
         elif self.testFlage == 'DO':
-            self.testDO()
+            if not self.testDO():
+                self.result_signal.emit("测试停止,后续测试全部取消" + self.HORIZONTAL_LINE)
+                isExcel = False
 
+            
+        self.pauseOption()
+        if not self.is_running:
+            isExcel = False
         if isExcel:
             self.result_signal.emit('开始生成校准校验表…………' + self.HORIZONTAL_LINE)
             code_array = [self.module_pn, self.module_sn, self.module_rev]
@@ -206,7 +214,7 @@ class DIDOThread(QObject):
                     self.fillInDOData(self.isDOPassTest, book, sheet)
                     self.result_signal.emit('生成DO校准校验表成功' + self.HORIZONTAL_LINE)
         elif not isExcel:
-            self.result_signal.emit('测试停止，校准校验表生成失败…………' + self.HORIZONTAL_LINE)
+            self.result_signal.emit('校准校验表生成失败…………' + self.HORIZONTAL_LINE)
 
         self.allFinished_signal.emit()
         self.pass_signal.emit(True)
@@ -226,7 +234,7 @@ class DIDOThread(QObject):
             if not self.is_running:
                 return False
             self.result_signal.emit("--------------进入 LED TEST模式-------------\n\n")
-            print("--------------进入 LED TEST模式-------------")
+            #print("--------------进入 LED TEST模式-------------")
             # self.channelZero()
             self.m_transmitData[0] = 0x23
             self.m_transmitData[1] = 0xf6
@@ -242,7 +250,7 @@ class DIDOThread(QObject):
                 if not self.is_running:
                     return False
                 self.result_signal.emit("-----------进入 LED TEST 模式成功-----------\n")
-                print("-----------进入 LED TEST 模式成功-----------" + self.HORIZONTAL_LINE)
+                #print("-----------进入 LED TEST 模式成功-----------" + self.HORIZONTAL_LINE)
 
                 if self.isTestRunErr:
                     if not self.testRunErr(int(self.CANAddr_DI)):
@@ -268,7 +276,7 @@ class DIDOThread(QObject):
                     if not self.is_running:
                         return False
                     self.result_signal.emit("成功退出 LED TEST 模式。\n" + self.HORIZONTAL_LINE)
-                    print("成功退出 LED TEST 模式\n" + self.HORIZONTAL_LINE)
+                    #print("成功退出 LED TEST 模式\n" + self.HORIZONTAL_LINE)
                 else:
                     self.result_signal.emit("退出 LED TEST 模式失败！\n" + self.HORIZONTAL_LINE)
             else:
@@ -276,53 +284,80 @@ class DIDOThread(QObject):
                 if not self.is_running:
                     return False
                 self.result_signal.emit("-----------进入 LED TEST 模式失败-----------\n\n")
-                print("-----------进入 LED TEST 模式失败-----------\n\n")
+                #print("-----------进入 LED TEST 模式失败-----------\n\n")
                 self.item_signal.emit([1, 2, 2, '进入模式失败'])
                 self.item_signal.emit([2, 2, 2, '进入模式失败'])
 
         self.item_signal.emit([5, 1, 0, ''])
         self.DIDataCheck = [True for i in range(32)]
         for i in range(self.loop_num):
-            # if not self.isStop():
-            #     return
+            self.pauseOption()
+            if not self.is_running:
+                return False
             self.result_signal.emit(f"第{i+1}次循环"+self.HORIZONTAL_LINE)
             CAN_option.Can_DLL.VCI_ClearBuffer(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_option.CAN_INDEX)
             time.sleep(self.interval / 1000)  # s
+            self.pauseOption()
+            if not self.is_running:
+                return False
             # 通道全亮
-            self.testByIndex(32,'DI')
+            if not self.testByIndex(32,'DI'):
+                return False
             time.sleep(self.interval / 1000)
+            self.pauseOption()
+            if not self.is_running:
+                return False
             # 偶数通道全亮
-            self.testByIndex(34,'DI')
+            if not self.testByIndex(34,'DI'):
+                return False
             time.sleep(self.interval / 1000)
+            self.pauseOption()
+            if not self.is_running:
+                return False
             # 奇数通道全亮
-            self.testByIndex(35,'DI')
+            if not self.testByIndex(35,'DI'):
+                return False
             time.sleep(self.interval / 1000)
             for j in range(self.m_Channels):
-                # if not self.isStop():
-                #     return
+                self.pauseOption()
+                if not self.is_running:
+                    return False
                 self.testByIndex(j,'DI')
                 self.DI_channelData |= self.m_receiveData[0]
                 self.DI_channelData |= self.m_receiveData[1] << 8
                 self.DI_channelData |= self.m_receiveData[2] << 16
                 self.DI_channelData |= self.m_receiveData[3] << 24
                 time.sleep(self.interval / 1000)
-            self.testByIndex(33,'DI')
+            self.pauseOption()
+            if not self.is_running:
+                return False
+            #通道全灭
+            if not self.testByIndex(33,'DI'):
+                return False
         DI_endTime = time.time()
         DI_testTime = round((DI_endTime - DI_startTime),3)
         if self.isDIPassTest == False:
+            self.pauseOption()
+            if not self.is_running:
+                return False
             self.messageBox_signal.emit(['DI通道指示灯结果', f'DI通道指示灯未全部正常显示！'])
-
+            self.pauseOption()
+            if not self.is_running:
+                return False
             self.result_signal.emit(self.HORIZONTAL_LINE + 'DI通道指示灯测试未通过\n' + self.HORIZONTAL_LINE)
             self.item_signal.emit([5,2,2,f'{DI_testTime}'])
         elif self.isDIPassTest == True:
-            # if not self.isStop():
-            #
-            #     return
-            # reply = QMessageBox.about(None, 'DI通道指示灯结果', f'DI通道指示灯全部正常显示！')
+            self.pauseOption()
+            if not self.is_running:
+                return False
             self.messageBox_signal.emit(['DI通道指示灯结果', f'DI通道指示灯全部正常显示！'])
+            self.pauseOption()
+            if not self.is_running:
+                return False
             self.result_signal.emit(self.HORIZONTAL_LINE + 'DI通道指示灯测试全通过\n' + self.HORIZONTAL_LINE)
             self.item_signal.emit([5, 2, 1, f'{DI_testTime}'])
-        # self.endOfTest()
+        
+        return True
 
     def testDO(self):
         DO_startTime = time.time()
@@ -332,7 +367,7 @@ class DIDOThread(QObject):
             if not self.is_running:
                 return False
             self.result_signal.emit("--------------进入 LED TEST模式-------------\n\n")
-            print("--------------进入 LED TEST模式-------------")
+            #print("--------------进入 LED TEST模式-------------")
             # self.channelZero()
             self.m_transmitData[0] = 0x23
             self.m_transmitData[1] = 0xf6
@@ -348,7 +383,7 @@ class DIDOThread(QObject):
                 if not self.is_running:
                     return False
                 self.result_signal.emit("-----------进入 LED TEST 模式成功-----------\n")
-                print("-----------进入 LED TEST 模式成功-----------" + self.HORIZONTAL_LINE)
+                #print("-----------进入 LED TEST 模式成功-----------" + self.HORIZONTAL_LINE)
 
                 if self.isTestRunErr:
                     if not self.testRunErr(int(self.CANAddr_DO)):
@@ -373,7 +408,7 @@ class DIDOThread(QObject):
                     if not self.is_running:
                         return False
                     self.result_signal.emit("成功退出 LED TEST 模式。\n" + self.HORIZONTAL_LINE)
-                    print("成功退出 LED TEST 模式\n" + self.HORIZONTAL_LINE)
+                    #print("成功退出 LED TEST 模式\n" + self.HORIZONTAL_LINE)
                 else:
                     self.result_signal.emit("退出 LED TEST 模式失败！\n" + self.HORIZONTAL_LINE)
             else:
@@ -381,157 +416,115 @@ class DIDOThread(QObject):
                 if not self.is_running:
                     return False
                 self.result_signal.emit("-----------进入 LED TEST 模式失败-----------\n\n")
-                print("-----------进入 LED TEST 模式失败-----------\n\n")
+                #print("-----------进入 LED TEST 模式失败-----------\n\n")
                 self.item_signal.emit([1, 2, 2, '进入模式失败'])
                 self.item_signal.emit([2, 2, 2, '进入模式失败'])
 
         self.item_signal.emit([5, 1, 0, ''])
         self.DODataCheck = [True for i in range(32)]#预留了最多32个通道的测试结果
         for i in range(self.loop_num):
-            # if not self.isStop():
-            #     return
+            self.pauseOption()
+            if not self.is_running:
+                return False
             CAN_option.Can_DLL.VCI_ClearBuffer(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_option.CAN_INDEX)
             time.sleep(self.interval / 1000)
+            self.pauseOption()
+            if not self.is_running:
+                return False
             # 通道全亮
-            self.testByIndex(32,'DO')
+            if not self.testByIndex(32,'DO'):
+                return False
             time.sleep(self.interval / 1000)
+            self.pauseOption()
+            if not self.is_running:
+                return False
             # 偶数通道全亮
-            self.testByIndex(34,'DO')
+            if not self.testByIndex(34,'DO'):
+                return False
             time.sleep(self.interval / 1000)
+            self.pauseOption()
+            if not self.is_running:
+                return False
             # 奇数通道全亮
-            self.testByIndex(35,'DO')
+            if not self.testByIndex(35,'DO'):
+                return False
             time.sleep(self.interval / 1000)
             for j in range(self.m_Channels):
-                # if not self.isStop():
-                #     return
-                self.testByIndex(j,'DO')
+                self.pauseOption()
+                if not self.is_running:
+                    return False
+                if not self.testByIndex(j,'DO'):
+                    return False
                 self.DO_channelData |= self.m_receiveData[0]
                 self.DO_channelData |= self.m_receiveData[1] << 8
                 self.DO_channelData |= self.m_receiveData[2] << 16
                 self.DO_channelData |= self.m_receiveData[3] << 24
                 time.sleep(self.interval / 1000)
-            self.testByIndex(33,'DO')
+            self.pauseOption()
+            if not self.is_running:
+                return False
+            if not self.testByIndex(33,'DO'):
+                return False
         DO_endTime = time.time()
         DO_testTime = round((DO_endTime - DO_startTime), 3)
         if self.isDOPassTest == False:
-            # reply = QMessageBox.warning(None, 'DO通道指示灯结果', 'DO通道指示灯未全部正常显示！',
-            #                             QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+            self.pauseOption()
+            if not self.is_running:
+                return False
             self.messageBox_signal.emit(['DO通道指示灯结果', f'DO通道指示灯未全部正常显示！'])
+            self.pauseOption()
+            if not self.is_running:
+                return False
             self.result_signal.emit(self.HORIZONTAL_LINE + 'DO通道指示灯测试未通过\n' + self.HORIZONTAL_LINE)
             self.item_signal.emit([5, 2, 2, f'{DO_testTime}'])
         elif self.isDOPassTest == True:
-            # reply = QMessageBox.about(None, 'DO通道指示灯结果', 'DO通道指示灯全部正常显示！')
+            self.pauseOption()
+            if not self.is_running:
+                return False
             self.messageBox_signal.emit(['DO通道指示灯结果', f'DO通道指示灯全部正常显示！'])
+            self.pauseOption()
+            if not self.is_running:
+                return False
             self.result_signal.emit(self.HORIZONTAL_LINE + 'DO通道指示灯测试全通过\n' + self.HORIZONTAL_LINE)
             self.item_signal.emit([5, 2, 1, f'{DO_testTime}'])
 
-        # self.endOfTest()
-
-
-    # def calibrateByIndex(self, index):
-    #     # if not self.isStop():
-    #     #     return
-    #     self.sendTestDataToDO(index)
-    #     print(f'index={index}')
-    #     if index == 32:
-    #         self.result_signal.emit(
-    #             f'1.发送的数据：{hex(self.m_transmitData[0])}  {hex(self.m_transmitData[1])}  '
-    #             f'{hex(self.m_transmitData[2])}  '
-    #             f'{hex(self.m_transmitData[3])}\n\n')
-    #     elif index == 33:
-    #         self.result_signal.emit(
-    #             f'{self.m_Channels + 4}.发送的数据：{hex(self.m_transmitData[0])}  {hex(self.m_transmitData[1])}  '
-    #             f'{hex(self.m_transmitData[2])}  '
-    #             f'{hex(self.m_transmitData[3])}\n\n')
-    #     elif index == 34:
-    #         self.result_signal.emit(
-    #             f'2.发送的数据：{hex(self.m_transmitData[0])}  {hex(self.m_transmitData[1])}  '
-    #             f'{hex(self.m_transmitData[2])}  '
-    #             f'{hex(self.m_transmitData[3])}\n\n')
-    #     elif index == 35:
-    #         self.result_signal.emit(
-    #             f'3.发送的数据：{hex(self.m_transmitData[0])}  {hex(self.m_transmitData[1])}  '
-    #             f'{hex(self.m_transmitData[2])}  '
-    #             f'{hex(self.m_transmitData[3])}\n\n')
-    #     else:
-    #         self.result_signal.emit(
-    #             f'{index + 4}.发送的数据：{hex(self.m_transmitData[0])}  {hex(self.m_transmitData[1])}  '
-    #             f'{hex(self.m_transmitData[2])}  '
-    #             f'{hex(self.m_transmitData[3])}\n\n')
-    #
-    #     now_time = time.time()
-    #     while True:
-    #         # if not self.isStop():
-    #         #     return
-    #         if (time.time() - now_time) * 1000 > self.TIME_OUT:
-    #             self.result_signal.emit(
-    #                 f'  接收的数据：{hex(self.m_receiveData[0])}  {hex(self.m_receiveData[1])}  '
-    #                 f'{hex(self.m_receiveData[2])}  '
-    #                 f'{hex(self.m_receiveData[3])}  收发不一致！\n\n')
-    #             print(
-    #                 f'接收的数据：{hex(self.m_receiveData[0])}  {hex(self.m_receiveData[1])}  '
-    #                 f'{hex(self.m_receiveData[2])}  '
-    #                 f'{hex(self.m_receiveData[3])}  收发不一致！\n\n')
-    #             if index != 32 and index != 33:
-
-    #             print('收发不一致！\n\n')
-    #             self.isDIPassTest = False
-    #             # reply = QMessageBox.about(None, '警告', '检测到收发不一致！')
-    #             self.messageBox_signal.emit(['警告', '检测到收发不一致！'])
-    #             reply = self.result_queue.get()
-    #             if reply == QMessageBox.Yes:
-    #                 break
-    #             else:
-    #                  break
-    #         # 清理接收缓存区
-    #         self.clearList(self.m_receiveData)
-    #         bool_receive, self.m_can_obj = CAN_option.receiveCANbyID((0x180 + self.CANAddr_DI), self.TIME_OUT)
-    #         self.m_receiveData = self.m_can_obj.Data
-    #         if bool_receive == False:
-    #             self.result_signal.emit('\n  接收数据超时！\n\n')
-    #             print('接收数据超时！')
-    #             self.isDIPassTest = False
-    #             return
-    #         elif self.m_transmitData[0] == self.m_receiveData[0] and \
-    #                 self.m_transmitData[1] == self.m_receiveData[1] and \
-    #                 self.m_transmitData[2] == self.m_receiveData[2] and \
-    #                 self.m_transmitData[3] == self.m_receiveData[3]:
-    #             self.result_signal.emit(f'  接收的数据：{hex(self.m_receiveData[0])}  {hex(self.m_receiveData[1])}  '
-    #                          f'{hex(self.m_receiveData[2])}  {hex(self.m_receiveData[3])}  收发一致\n\n')
-    #             print(f'接收的数据：{hex(self.m_receiveData[0])}  {hex(self.m_receiveData[1])}  '
-    #                   f'{hex(self.m_receiveData[2])}  {hex(self.m_receiveData[3])}  收发一致\n\n')
-    #             return
+        return True
 
     def testByIndex(self, index,type:str):
         self.sendTestDataToDO(index)
-        print(f'index={index}')
+        #print(f'index={index}')
         if index == 32:
+            self.pauseOption()
+            if not self.is_running:
+                return False
             self.result_signal.emit(
                 f'{1}.发送的数据：{hex(self.m_transmitData[0])}  {hex(self.m_transmitData[1])}  {hex(self.m_transmitData[2]) }'
                 f'{hex(self.m_transmitData[3])}\n\n')
         elif index == 33:
+            self.pauseOption()
+            if not self.is_running:
+                return False
             self.result_signal.emit(
                 f'{self.m_Channels + 2}.发送的数据：{hex(self.m_transmitData[0])}  '
                 f'{hex(self.m_transmitData[1])}  {hex(self.m_transmitData[2])}  '
                 f'{hex(self.m_transmitData[3])}\n\n')
         else:
+            self.pauseOption()
+            if not self.is_running:
+                return False
             self.result_signal.emit(f'{index + 2}.发送的数据：{hex(self.m_transmitData[0])}  '
                          f'{hex(self.m_transmitData[1])}  {hex(self.m_transmitData[2])}  '
                          f'{hex(self.m_transmitData[3])}\n\n')
 
         now_time = time.time()
         while True:
-            # if not self.isStop():
-            #     return
             if (time.time() - now_time) * 1000 > self.TIME_OUT:
-
+                self.pauseOption()
+                if not self.is_running:
+                    return False
                 self.result_signal.emit(f'  接收的数据：{hex(self.m_receiveData[0])}  '
                              f'{hex(self.m_receiveData[1])}  {hex(self.m_receiveData[2])}  '
                              f'{hex(self.m_receiveData[3])}  收发不一致！\n\n')
-
-                print(f'接收的数据：{hex(self.m_receiveData[0])}  {hex(self.m_receiveData[1])}  '
-                      f'{hex(self.m_receiveData[2])}  '
-                      f'{hex(self.m_receiveData[3])}  收发不一致！\n\n')
 
                 if type == 'DO':
                     if index != 32 and index != 33 and index != 34 and index != 35:
@@ -550,7 +543,9 @@ class DIDOThread(QObject):
                         self.isPassOdd = False
                     self.isDIPassTest = False
 
-                # reply = QMessageBox.about(None, '警告', '检测到收发不一致！')
+                self.pauseOption()
+                if not self.is_running:
+                    return False
                 self.messageBox_signal.emit(['警告', '检测到收发不一致！'])
                 reply = self.result_queue.get()
                 if reply == QMessageBox.Yes:
@@ -562,24 +557,29 @@ class DIDOThread(QObject):
             bool_receive, self.m_can_obj = CAN_option.receiveCANbyID((0x180 + self.CANAddr_DI), self.TIME_OUT)
             self.m_receiveData = self.m_can_obj.Data
             if bool_receive == False:
+                self.pauseOption()
+                if not self.is_running:
+                    return False
                 self.result_signal.emit('\n  接收数据超时！\n\n')
-                print('接收数据超时！')
+                #print('接收数据超时！')
                 if type == 'DO':
                     self.isDOPassTest = False
                     self.DODataCheck[index] = False
                 if type == 'DI':
                     self.isDIPassTest = False
                     self.DIDataCheck[index] = False
-                return
+                break
             elif self.m_transmitData[0] == self.m_receiveData[0] and \
                     self.m_transmitData[1] == self.m_receiveData[1] and \
                     self.m_transmitData[2] == self.m_receiveData[2] and \
                     self.m_transmitData[3] == self.m_receiveData[3]:
+                self.pauseOption()
+                if not self.is_running:
+                    return False
                 self.result_signal.emit(f'  接收的数据：{hex(self.m_receiveData[0])}  {hex(self.m_receiveData[1])}  '
                              f'{hex(self.m_receiveData[2])}  {hex(self.m_receiveData[3])}  收发一致\n\n')
-                print(f'接收的数据：{hex(self.m_receiveData[0])}  {hex(self.m_receiveData[1])}  '
-                      f'{hex(self.m_receiveData[2])}  {hex(self.m_receiveData[3])}  收发一致\n\n')
-                return
+                break
+        return True
 
     def clearList(self, array):
         for i in range(len(array)):
@@ -661,7 +661,7 @@ class DIDOThread(QObject):
         if not self.is_running:
             return False
         self.result_signal.emit("1.进行 LED RUN 测试\n\n")
-        print("1.进行 LED RUN 测试\n\n")
+        #print("1.进行 LED RUN 测试\n\n")
         self.clearList(self.m_transmitData)
         self.m_transmitData[0] = 0x2f
         self.m_transmitData[1] = 0xf6
@@ -697,7 +697,7 @@ class DIDOThread(QObject):
             if not self.is_running:
                 return False
             self.result_signal.emit("LED RUN 测试通过\n关闭LED RUN\n" + self.HORIZONTAL_LINE)
-            print("LED RUN 测试通过\n关闭LED RUN\n" + self.HORIZONTAL_LINE)
+            #print("LED RUN 测试通过\n关闭LED RUN\n" + self.HORIZONTAL_LINE)
             self.clearList(self.m_transmitData)
             self.m_transmitData[0] = 0x2f
             self.m_transmitData[1] = 0xf6
@@ -729,7 +729,7 @@ class DIDOThread(QObject):
             if not self.is_running:
                 return False
             self.result_signal.emit("LED RUN 测试不通过\n" + self.HORIZONTAL_LINE)
-            print("LED RUN 测试不通过\n" + self.HORIZONTAL_LINE)
+            #print("LED RUN 测试不通过\n" + self.HORIZONTAL_LINE)
             self.isLEDRunOK = False
             # self.result_signal.emit(f'self.isLEDRunOK:{self.isLEDRunOK}')
         self.isLEDPass = self.isLEDPass & self.isLEDRunOK
@@ -739,7 +739,7 @@ class DIDOThread(QObject):
         if not self.is_running:
             return False
         self.result_signal.emit("2.进行 LED ERROR 测试\n\n")
-        print("2.进行 LED ERROR 测试\n\n")
+        #print("2.进行 LED ERROR 测试\n\n")
         self.pauseOption()
         if not self.is_running:
             return False
@@ -787,7 +787,7 @@ class DIDOThread(QObject):
             if not self.is_running:
                 return False
             self.result_signal.emit("LED ERROR 测试通过\n关闭LED ERROR\n" + self.HORIZONTAL_LINE)
-            print("LED ERROR 测试通过\n关闭LED ERROR\n" + self.HORIZONTAL_LINE)
+            #print("LED ERROR 测试通过\n关闭LED ERROR\n" + self.HORIZONTAL_LINE)
             self.clearList(self.m_transmitData)
             self.m_transmitData[0] = 0x2f
             self.m_transmitData[1] = 0xf6
@@ -808,7 +808,7 @@ class DIDOThread(QObject):
             if not self.is_running:
                 return False
             self.result_signal.emit("LED ERROR 测试不通过\n" + self.HORIZONTAL_LINE)
-            print("LED ERROR 测试不通过\n" + self.HORIZONTAL_LINE)
+            #print("LED ERROR 测试不通过\n" + self.HORIZONTAL_LINE)
             self.isLEDErrOK = False
         self.isLEDPass = self.isLEDPass & self.isLEDErrOK
 
@@ -842,7 +842,7 @@ class DIDOThread(QObject):
         if not self.is_running:
             return False
         # self.result_signal.emit("--------------进入 LED TEST模式-------------\n\n")
-        # print("--------------进入 LED TEST模式-------------")
+        # #print("--------------进入 LED TEST模式-------------")
         # if not self.channelZero():
         #     return False
         self.m_transmitData[0] = 0x23
@@ -853,19 +853,19 @@ class DIDOThread(QObject):
         self.m_transmitData[5] = 0x54
         self.m_transmitData[6] = 0x41
         self.m_transmitData[7] = 0x52
-        print(f'{self.module_2}地址:{0x600 + addr}')
+        #print(f'{self.module_2}地址:{0x600 + addr}')
         isLEDTest, whatEver = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData)
         if isLEDTest:
             self.pauseOption()
             if not self.is_running:
                 return False
             # self.result_signal.emit("-----------进入 LED TEST 模式成功-----------\n")
-            # print("-----------进入 LED TEST 模式成功-----------" + self.HORIZONTAL_LINE)
+            # #print("-----------进入 LED TEST 模式成功-----------" + self.HORIZONTAL_LINE)
             # self.pauseOption()
             if not self.is_running:
                 return False
             self.result_signal.emit("1.进行 LED CAN_RUN 测试\n\n")
-            print("1.进行 LED CAN_RUN 测试\n\n")
+            #print("1.进行 LED CAN_RUN 测试\n\n")
             self.clearList(self.m_transmitData)
             self.m_transmitData[0] = 0x2f
             self.m_transmitData[1] = 0xf6
@@ -892,7 +892,7 @@ class DIDOThread(QObject):
                 if not self.is_running:
                     return False
                 self.result_signal.emit("LED CAN_RUN 测试通过\n关闭LED CAN_RUN\n" + self.HORIZONTAL_LINE)
-                print("LED CAN_RUN 测试通过\n关闭LED CAN_RUN\n" + self.HORIZONTAL_LINE)
+                #print("LED CAN_RUN 测试通过\n关闭LED CAN_RUN\n" + self.HORIZONTAL_LINE)
                 self.clearList(self.m_transmitData)
                 self.m_transmitData[0] = 0x2f
                 self.m_transmitData[1] = 0xf6
@@ -913,7 +913,7 @@ class DIDOThread(QObject):
                 if not self.is_running:
                     return False
                 self.result_signal.emit("LED CAN_RUN 测试不通过\n" + self.HORIZONTAL_LINE)
-                print("LED CAN_RUN 测试不通过\n" + self.HORIZONTAL_LINE)
+                #print("LED CAN_RUN 测试不通过\n" + self.HORIZONTAL_LINE)
                 isLEDCANRunOK = False
 
             CANErrStart_time = time.time()
@@ -926,7 +926,7 @@ class DIDOThread(QObject):
             if not self.is_running:
                 return False
             self.result_signal.emit("2.进行 LED CAN_ERROR 测试\n\n")
-            print("2.进行 LED CAN_ERROR 测试\n\n")
+            #print("2.进行 LED CAN_ERROR 测试\n\n")
             self.clearList(self.m_transmitData)
             self.m_transmitData[0] = 0x2f
             self.m_transmitData[1] = 0xf6
@@ -953,7 +953,7 @@ class DIDOThread(QObject):
                 if not self.is_running:
                     return False
                 self.result_signal.emit("LED CAN_ERROR 测试通过\n关闭LED CAN_ERROR\n" + self.HORIZONTAL_LINE)
-                print("LED CAN_ERROR 测试通过\n关闭LED CAN_ERROR\n" + self.HORIZONTAL_LINE)
+                #print("LED CAN_ERROR 测试通过\n关闭LED CAN_ERROR\n" + self.HORIZONTAL_LINE)
                 self.clearList(self.m_transmitData)
                 self.m_transmitData[0] = 0x2f
                 self.m_transmitData[1] = 0xf6
@@ -974,13 +974,13 @@ class DIDOThread(QObject):
                 if not self.is_running:
                     return False
                 self.result_signal.emit("LED CAN_ERROR 测试不通过\n" + self.HORIZONTAL_LINE)
-                print("LED CAN_ERROR 测试不通过\n" + self.HORIZONTAL_LINE)
+                #print("LED CAN_ERROR 测试不通过\n" + self.HORIZONTAL_LINE)
                 isLEDCANErrOK = False
             self.pauseOption()
             if not self.is_running:
                 return False
             self.result_signal.emit("退出 LED TEST 模式\n" + self.HORIZONTAL_LINE)
-            print("退出 LED TEST 模式\n" + self.HORIZONTAL_LINE)
+            #print("退出 LED TEST 模式\n" + self.HORIZONTAL_LINE)
             self.clearList(self.m_transmitData)
             self.m_transmitData[0] = 0x23
             self.m_transmitData[1] = 0xf6
@@ -997,7 +997,7 @@ class DIDOThread(QObject):
             if not self.is_running:
                 return False
             self.result_signal.emit("-----------进入 LED TEST 模式失败-----------\n\n")
-            print("-----------进入 LED TEST 模式失败-----------\n\n")
+            #print("-----------进入 LED TEST 模式失败-----------\n\n")
             self.item_signal.emit([3, 2, 2, '进入模式失败'])
             self.item_signal.emit([4, 2, 2, '进入模式失败'])
 
@@ -1015,7 +1015,7 @@ class DIDOThread(QObject):
             # self.m_transmitData[5] = ((value >> 8) & 0xff)
             # self.m_transmitData[6] = 0x00
             # self.m_transmitData[7] = 0x00
-            # print(f'{self.module_1}地址:{0x600+self.CANAddr_AO}')
+            # #print(f'{self.module_1}地址:{0x600+self.CANAddr_AO}')
             bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + self.CANAddr_AO), self.m_transmitData)
             bool_all = bool_all & bool_transmit
             # self.isPause()
@@ -1028,9 +1028,9 @@ class DIDOThread(QObject):
         if not self.is_running:
             return False
         self.result_signal.emit(f'对所有通道值进行归零处理' + self.HORIZONTAL_LINE)
-        # print('1111111111111111')
+        # #print('1111111111111111')
         isZero = self.normal_writeValuetoAO(0)
-        # print('2222222222222222')
+        # #print('2222222222222222')
         if isZero == True:
             self.pauseOption()
             if not self.is_running:
@@ -1659,10 +1659,10 @@ class DIDOThread(QObject):
     #     elif module == 'DO':
     #         self.fillInDOData(station, book, sheet)
     #     # elif module == 'AI':
-    #     #     # print('打印AI检测结果')
+    #     #     # #print('打印AI检测结果')
     #     #     self.fillInAIData(station, book, sheet)
     #     # elif module == 'AO':
-    #     #     # print('打印AI检测结果')
+    #     #     # #print('打印AI检测结果')
     #     #     self.fillInAOData(station, book, sheet)
 
     def fillInDIData(self, station, book, sheet):
