@@ -285,6 +285,7 @@ class DIDOThread(QObject):
         for i in range(self.loop_num):
             # if not self.isStop():
             #     return
+            self.result_signal.emit(f"第{i+1}次循环"+self.HORIZONTAL_LINE)
             CAN_option.Can_DLL.VCI_ClearBuffer(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_option.CAN_INDEX)
             time.sleep(self.interval / 1000)  # s
             # 通道全亮

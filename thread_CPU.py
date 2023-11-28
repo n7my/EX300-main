@@ -128,8 +128,9 @@ class CPUThread(QObject):
         self.module_pn = inf_CPUlist[1][1]
         self.module_sn = inf_CPUlist[1][2]
         self.module_rev = inf_CPUlist[1][3]
-        self.in_Channels = int(inf_CPUlist[1][4])
-        self.out_Channels = int(inf_CPUlist[1][4])
+        self.module_MAC = inf_CPUlist[1][4]
+        self.in_Channels = int(inf_CPUlist[1][5])
+        self.out_Channels = int(inf_CPUlist[1][6])
         # self.inf_CANIPAdrr = [self.CANAddr1,self.CANAddr2,self.CANAddr3,self.CANAddr4,
         #                                   self.CANAddr5,self.IPAddr]
         # 获取CAN、IP地址
@@ -138,7 +139,7 @@ class CPUThread(QObject):
         self.CANAddr3 = inf_CPUlist[2][2]
         self.CANAddr4 = inf_CPUlist[2][3]
         self.CANAddr5 = inf_CPUlist[2][4]
-        self.IPAddr = inf_CPUlist[2][5]
+        # self.IPAddr = inf_CPUlist[2][5]
         # self.inf_serialPort = [self.serialPort_232, self.serialPort_485,
         #                       self.serialPort_typeC, self.saveDir]
         #获取串口信息
@@ -588,18 +589,63 @@ class CPUThread(QObject):
                     elif i == 16:#MAC/三码写入
                         testStartTime = time.time()
                         self.item_signal.emit([i, 1, 0, ''])
-                        w_transmitData = [0xAC, hex(10), 0x00, 0x0C, 0x10, 0x00,
-                                          0x00, 0x00, 0x00, 0x00]
-                        r_transmitData = [0xAC, hex(6), 0x00, 0x0C, 0x0E, 0x00]
+                        #写MAC
+                        w_MAC = [0xAC, hex(19), 0x00, 0x03, 0x10, 0x01,hex(12),
+                                  ord(self.module_MAC[0]), ord(self.module_MAC[1]),
+                                  ord(self.module_MAC[2]), ord(self.module_MAC[3]),
+                                  ord(self.module_MAC[4]), ord(self.module_MAC[5]),
+                                  ord(self.module_MAC[6]), ord(self.module_MAC[7]),
+                                  ord(self.module_MAC[8]), ord(self.module_MAC[9]),
+                                  ord(self.module_MAC[10]), ord(self.module_MAC[11])]
+                        #读MAC
+                        r_MAC = [0xAC, hex(6), 0x00, 0x03, 0x0E, 0x01]
 
+                        # 写SN
+                        w_SN = [0xAC, hex(19), 0x00, 0x03, 0x10, 0x02, hex(12),
+                                ord(self.module_sn[0]), ord(self.module_sn[1]),
+                                ord(self.module_sn[2]), ord(self.module_sn[3]),
+                                ord(self.module_sn[4]), ord(self.module_sn[5]),
+                                ord(self.module_sn[6]), ord(self.module_sn[7]),
+                                ord(self.module_sn[8]), ord(self.module_sn[9]),
+                                ord(self.module_sn[10]), ord(self.module_sn[11])]
+                        # 读SN
+                        r_SN = [0xAC, hex(6), 0x00, 0x03, 0x0E, 0x02]
+
+                        # 写PN
+                        w_PN = [0xAC, hex(21), 0x00, 0x03, 0x10, 0x03, hex(14),
+                                 ord(self.module_pn[0]), ord(self.module_pn[1]),
+                                 ord(self.module_pn[2]), ord(self.module_pn[3]),
+                                 ord(self.module_pn[4]), ord(self.module_pn[5]),
+                                 ord(self.module_pn[6]), ord(self.module_pn[7]),
+                                 ord(self.module_pn[8]), ord(self.module_pn[9]),
+                                 ord(self.module_pn[10]), ord(self.module_pn[11]),
+                                 ord(self.module_pn[12]), ord(self.module_pn[13])]
+                        # 读PN
+                        r_PN = [0xAC, hex(6), 0x00, 0x03, 0x0E, 0x03]
 
                         try:
-                            self.CPU_configTest(transmitData = w_transmitData)
+                            #写MAC
+                            self.CPU_configTest(transmitData=w_MAC, type='MAC')
+                            if not self.isCancelAllTest:
+                                # 读MAC
+                                self.CPU_configTest(transmitData=r_MAC, type='MAC')
+                                if not self.isCancelAllTest:
+                                    #写SN
+                                    self.CPU_configTest(transmitData=w_SN, type='SN')
+                                    if not self.isCancelAllTest:
+                                        # 读SN
+                                        self.CPU_configTest(transmitData=r_SN, type='SN')
+                                        if not self.isCancelAllTest:
+                                            # 写PN
+                                            self.CPU_configTest(transmitData=w_PN, type='PN')
+                                            if not self.isCancelAllTest:
+                                                # 读PN
+                                                self.CPU_configTest(transmitData=r_PN, type='PN')
                         except:
                             self.showErrorInf()
                             self.cancelAllTest()
                         finally:
-                            if self.isPassSRAM:
+                            if self.isPassConfig:
                                 self.changeTabItem(testStartTime, row=i, state=2, result=1)
                             else:
                                 self.changeTabItem(testStartTime, row=i, state=2, result=2)
@@ -1441,7 +1487,7 @@ class CPUThread(QObject):
         typeC_serial.close()
 
     #MAC地址和3码
-    def CPU_configTest(self, transmitData: list):
+    def CPU_configTest(self, transmitData: list, type:str):
         # 打开串口
         typeC_serial = serial.Serial(port=str(self.comboBox_23.currentText()), baudrate=1000000, timeout=1)
         loopStartTime = time.time()
@@ -1469,11 +1515,45 @@ class CPUThread(QObject):
                 elif trueData[6] == 0x01:  # 写/读失败
                     self.isPassConfig = False
                     break
-            elif dataLen == 11:  # 读
+            elif dataLen == 20 and type == 'MAC':  # 读MAC
                 if trueData[6] == 0x00:  # 读成功
-                    if trueData[7] == transmitData[6] and trueData[8] == transmitData[7]\
-                        and trueData[9] == transmitData[8] and trueData[10] == transmitData[9]:
-                        self.isPassConfig = True
+                    if trueData[7] == 12:
+                        for MACNum in range(12):
+                            if not (trueData[MACNum+8] == ord(self.module_MAC[MACNum])):
+                                self.isPassConfig = False
+                                break
+                            else:
+                                self.isPassConfig = True
+                    else:
+                        self.isPassConfig = False
+                    break
+                elif trueData[6] == 0x01:  # 读失败
+                    self.isPassConfig = False
+                    break
+            elif dataLen == 20 and type == 'SN':  # 读SN
+                if trueData[6] == 0x00:  # 读成功
+                    if trueData[7] == 12:
+                        for SNNum in range(12):
+                            if not (trueData[SNNum+8] == ord(self.module_pn[SNNum])):
+                                self.isPassConfig = False
+                                break
+                            else:
+                                self.isPassConfig = True
+                    else:
+                        self.isPassConfig = False
+                    break
+                elif trueData[6] == 0x01:  # 读失败
+                    self.isPassConfig = False
+                    break
+            elif dataLen == 22 and type == 'PN':  # 读PN
+                if trueData[6] == 0x00:  # 读成功
+                    if trueData[7] == 12:
+                        for PNNum in range(14):
+                            if not (trueData[PNNum+8] == ord(self.module_pn[PNNum])):
+                                self.isPassConfig = False
+                                break
+                            else:
+                                self.isPassConfig = True
                     else:
                         self.isPassConfig = False
                     break

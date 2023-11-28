@@ -2058,7 +2058,7 @@ class Ui_Form(object):
         self.checkBox_71.setText(_translate("Form", "修改参数"))
         self.pushButton_renewSerial.setText(_translate("Form", "更新串口"))
         self.label_61.setText(_translate("Form", "MAC:"))
-        self.lineEdit_33.setText(_translate("Form", "00-E0-C0-4C-32-03-8B"))
+        self.lineEdit_33.setText(_translate("Form", "00-E0-4C-32-03-8B"))
         self.groupBox_19.setTitle(_translate("Form", "检测"))
         self.checkBox_53.setText(_translate("Form", "4.FLASH"))
         # self.checkBox_69.setText(_translate("Form", "19.固件烧录"))

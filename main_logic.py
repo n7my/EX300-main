@@ -2317,9 +2317,10 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.module_pn = self.lineEdit_30.text()
             self.module_sn = self.lineEdit_31.text()
             self.module_rev = self.lineEdit_32.text()
+            self.module_MAC = self.lineEdit_33.text()
             # print(f'{self.module_type},{self.module_pn},{self.module_sn},{self.module_rev},{self.m_Channels}')
             self.inf_product = [self.module_type, self.module_pn, self.module_sn,
-                                self.module_rev, self.in_Channels,self.out_Channels]
+                                self.module_rev, self.module_MAC, self.in_Channels,self.out_Channels]
 
             #获取CAN与IP地址
             self.CANAddr1 = int(self.lineEdit_34.text())
@@ -2328,9 +2329,9 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.CANAddr4 = int(self.lineEdit_37.text())
             self.CANAddr5 = int(self.lineEdit_38.text())
 
-            self.IPAddr = '192.168.1.66'
+            # self.IPAddr = '192.168.1.66'
             self.inf_CANIPAdrr = [self.CANAddr1,self.CANAddr2,self.CANAddr3,self.CANAddr4,
-                                  self.CANAddr5,self.IPAddr]
+                                  self.CANAddr5]
             #获取串口信息
             self.serialPort_232 = int(self.comboBox_21.currentIndex())
             self.serialPort_485 = int(self.comboBox_22.currentIndex())
