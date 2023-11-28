@@ -379,59 +379,59 @@ class AIThread(QObject):
                     self.item_signal.emit([1, 2, 2, '进入模式失败'])
                     self.item_signal.emit([2, 2, 2, '进入模式失败'])
 
-        for d in range(500): #只在循环测试中使用
-            self.result_signal.emit(f"第{d+1}次循环"+self.HORIZONTAL_LINE)
-            self.testNum = 4
-            if self.isCalibrate:
-                bool_calibrate = self.calibrateAI()
-                if not bool_calibrate:
+        # for d in range(500): #只在循环测试中使用
+        #     self.result_signal.emit(f"第{d+1}次循环"+self.HORIZONTAL_LINE)#只在循环测试中使用
+        #     self.testNum = 4#只在循环测试中使用
+        if self.isCalibrate:
+            bool_calibrate = self.calibrateAI()
+            if not bool_calibrate:
+                self.pass_signal.emit(False)
+                #标定出错直接取消后续的测试和表格生成
+                self.isTest= False
+                self.isExcel=False
+        else:
+            bool_calibrate = False
+
+        if self.isTest:
+            # self.isAICurPass = True#只在循环测试中使用
+            # self.isAIVolPass = True#只在循环测试中使用
+            self.initPara_array()
+            if self.isAITestVol:
+                bool_testVol = self.testAI('AIVoltage')
+                if not bool_testVol:
+                    self.isExcel = False
                     self.pass_signal.emit(False)
-                    #标定出错直接取消后续的测试和表格生成
-                    self.isTest= False
-                    self.isExcel=False
-            else:
-                bool_calibrate = False
-
-            if self.isTest:
-                self.isAICurPass = True#只在循环测试中使用
-                self.isAIVolPass = True#只在循环测试中使用
-                self.initPara_array()
-                if self.isAITestVol:
-                    bool_testVol = self.testAI('AIVoltage')
-                    if not bool_testVol:
-                        self.isExcel = False
-                        self.pass_signal.emit(False)
-                else:
-                    bool_testVol = False
-
-                if self.isAITestCur:
-                    bool_testCur = self.testAI('AICurrent')
-                    if not bool_testCur:
-                        self.isExcel = False
-                        self.pass_signal.emit(False)
-                else:
-                    bool_testCur = False
             else:
                 bool_testVol = False
+
+            if self.isAITestCur:
+                bool_testCur = self.testAI('AICurrent')
+                if not bool_testCur:
+                    self.isExcel = False
+                    self.pass_signal.emit(False)
+            else:
                 bool_testCur = False
+        else:
+            bool_testVol = False
+            bool_testCur = False
 
-            if self.isExcel:
-                self.result_signal.emit('开始生成校准校验表…………' + self.HORIZONTAL_LINE)
-                code_array = [self.module_pn, self.module_sn, self.module_rev]
-                station_array = [self.isAIPassTest, self.isAITestVol, self.isAITestCur]
-                excel_bool, book, sheet, self.AI_row= otherOption.generateExcel(code_array,
+        if self.isExcel:
+            self.result_signal.emit('开始生成校准校验表…………' + self.HORIZONTAL_LINE)
+            code_array = [self.module_pn, self.module_sn, self.module_rev]
+            station_array = [self.isAIPassTest, self.isAITestVol, self.isAITestCur]
+            excel_bool, book, sheet, self.AI_row= otherOption.generateExcel(code_array,
 
-                                                                                station_array,self.AI_Channels, 'AI')
-                if not excel_bool:
-                    self.result_signal.emit('校准校验表生成出错！请检查代码！' + self.HORIZONTAL_LINE)
-                else:
-                    self.fillInAIData(self.isAIPassTest, book, sheet)
-                    self.result_signal.emit('生成校准校验表成功' + self.HORIZONTAL_LINE)
+                                                                            station_array,self.AI_Channels, 'AI')
+            if not excel_bool:
+                self.result_signal.emit('校准校验表生成出错！请检查代码！' + self.HORIZONTAL_LINE)
+            else:
+                self.fillInAIData(self.isAIPassTest, book, sheet)
+                self.result_signal.emit('生成校准校验表成功' + self.HORIZONTAL_LINE)
 
-                if not self.isAIVolPass or not self.isAICurPass:
-                    self.result_signal.emit(f'不通过原因：\n{self.errorInf}' + self.HORIZONTAL_LINE)
-            elif not self.isExcel:
-                self.result_signal.emit('测试停止，未生成校准校验表！' + self.HORIZONTAL_LINE)
+            if not self.isAIVolPass or not self.isAICurPass:
+                self.result_signal.emit(f'不通过原因：\n{self.errorInf}' + self.HORIZONTAL_LINE)
+        elif not self.isExcel:
+            self.result_signal.emit('测试停止，未生成校准校验表！' + self.HORIZONTAL_LINE)
 
         self.allFinished_signal.emit()
         self.pass_signal.emit(True)
