@@ -75,8 +75,8 @@ class CPUThread(QObject):
     # 接收的数据
     ubyte_array_receive = c_ubyte * 8
     m_receiveData = ubyte_array_receive(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
-    serial_transmitData =[]
-    serial_receiveData = []
+    # serial_transmitData =[]
+    # serial_receiveData = [0 for x in range(40)]
     # 主副线程弹窗结果
     result_queue = 0
 
@@ -155,8 +155,19 @@ class CPUThread(QObject):
         self.waiting_time = 3000
 
         self.isCancelAllTest = False
+        
+        self.isPassAll = True
+
+        #初始化表格状态
+        for i in range(len(self.self.CPU_isTest)):
+            if self.CPU_isTest[i]:
+                self.itemOperation(self.mTable, i, 3, 0, '')
+            else:
+                self.itemOperation(self.mTable, i, 0, 0, '')
+
+
     def CPUOption(self):
-        self.isExcel = True
+        # self.isExcel = True
         #测试是否成功标志
         # self.testSign = True
         try:
@@ -235,15 +246,22 @@ class CPUThread(QObject):
                         self.CPU_appearanceTest()
                         if self.isCancelAllTest:
                             break
+                        self.isPassAll &= self.isPassAppearance
                     elif i == 1:#型号检查
                         testStartTime = time.time()
                         self.item_signal.emit([i, 1, 0, ''])
                         try:
-                            self.CPU_typeTest(itemRow=i)
+                            #读点数:
+                            self.CPU_typeTest(serial_transmitData=[0xAC,hex(6),0x00,0x00,0x0E,0x00])
+                            if not self.isCancelAllTest:
+                                # 读类型:
+                                self.CPU_typeTest(serial_transmitData=[0xAC, hex(6), 0x00, 0x00, 0x0E, 0x01])
                         except:
                             self.showErrorInf()
                             self.cancelAllTest()
                         finally:
+                            self.isPassAll &= self.isPassTypeTest
+                            self.testNum = self.testNum - 1
                             if self.isPassTypeTest:
                                 self.changeTabItem(testStartTime, row=i, state=2, result=1)
                             else:
@@ -254,11 +272,13 @@ class CPUThread(QObject):
                         testStartTime = time.time()
                         self.item_signal.emit([i, 1, 0, ''])
                         try:
-                            self.CPU_SRAMTest(itemRow=i)
+                            self.CPU_SRAMTest(serial_transmitData = [0xAC, hex(5), 0x00, 0x01, 0x53])
                         except:
                             self.showErrorInf()
                             self.cancelAllTest()
                         finally:
+                            self.isPassAll &= self.isPassSRAM
+                            self.testNum = self.testNum - 1
                             if self.isPassSRAM:
                                 self.changeTabItem(testStartTime, row=i, state=2, result=1)
                             else:
@@ -269,11 +289,13 @@ class CPUThread(QObject):
                         testStartTime = time.time()
                         self.item_signal.emit([i, 1, 0, ''])
                         try:
-                            self.CPU_FLASHTest()
+                            self.CPU_FLASHTest(serial_transmitData = [0xAC, hex(5), 0x00, 0x02, 0x53])
                         except:
                             self.showErrorInf()
                             self.cancelAllTest()
                         finally:
+                            self.isPassAll &= self.isPassFLASH
+                            self.testNum = self.testNum - 1
                             if self.isPassFLASH:
                                 self.changeTabItem(testStartTime, row=i, state=2, result=1)
                             else:
@@ -287,7 +309,11 @@ class CPUThread(QObject):
                             self.messageBox_signal(["操作提示","请插入U盘，并观察U盘指示灯是否点亮？"])
                             reply = self.result_queue.get()
                             if reply == QMessageBox.Yes:
-                                self.CPU_FPGATest()
+                                transmitData0 = [0xAC, hex(6), 0x00, 0x04, 0x53, 0x00]
+                                transmitData1 = [0xAC, hex(6), 0x00, 0x04, 0x53, 0x01]
+                                transmitData2 = [0xAC, hex(6), 0x00, 0x04, 0x53, 0x02]
+                                transmitData_array = [transmitData0,transmitData1,transmitData2]
+                                self.CPU_FPGATest(serial_transmitData_array=transmitData_array)
                             elif reply == QMessageBox.No:
                                 self.messageBox_signal(['测试警告', '无法识别U盘，FPGA无法测试，是否进行后续测试？'])
                                 self.isPassFPGA = False
@@ -300,6 +326,8 @@ class CPUThread(QObject):
                             self.showErrorInf()
                             self.cancelAllTest()
                         finally:
+                            self.isPassAll &= self.isPassFPGA
+                            self.testNum = self.testNum - 1
                             if self.isPassFPGA:
                                 self.changeTabItem(testStartTime, row=i, state=2, result=1)
                             else:
@@ -313,15 +341,16 @@ class CPUThread(QObject):
                             self.messageBox_signal(["操作提示","请将拨杆拨至STOP位置。"])
                             reply = self.result_queue.get()
                             if reply == QMessageBox.Yes or QMessageBox.No:
-                                self.CPU_LeverTest(0)
+                                self.CPU_LeverTest(0,serial_transmitData = [0xAC, hex(6), 0x00, 0x05, 0x0E, 0x00])
                             if not self.isCancelAllTest:
                                 self.messageBox_signal(["操作提示", "请将拨杆拨至RUN位置。"])
                                 if reply == QMessageBox.Yes or QMessageBox.No:
-                                    self.CPU_LeverTest(1)
+                                    self.CPU_LeverTest(1,serial_transmitData = [0xAC, hex(6), 0x00, 0x05, 0x0E, 0x00])
                         except:
                             self.showErrorInf()
                             self.cancelAllTest()
                         finally:
+                            self.testNum = self.testNum - 1
                             if self.isPassLever:
                                 self.changeTabItem(testStartTime, row=i, state=2, result=1)
                             else:
@@ -346,6 +375,7 @@ class CPUThread(QObject):
                             self.showErrorInf()
                             self.cancelAllTest()
                         finally:
+                            self.testNum = self.testNum - 1
                             if self.isPassMFK:
                                 self.changeTabItem(testStartTime, row=i, state=2, result=1)
                             else:
@@ -361,6 +391,7 @@ class CPUThread(QObject):
                             self.showErrorInf('掉电保存测试')
                             self.cancelAllTest()
                         finally:
+                            self.testNum = self.testNum - 1
                             if self.isPassPowerOffSave:
                                 self.changeTabItem(testStartTime, row=i, state=2, result=1)
                             else:
@@ -380,6 +411,7 @@ class CPUThread(QObject):
                             self.showErrorInf('RTC测试')
                             self.cancelAllTest()
                         finally:
+                            self.testNum = self.testNum - 1
                             if self.isPassRTC:
                                 self.changeTabItem(testStartTime, row=i, state=2, result=1)
                             else:
@@ -416,6 +448,7 @@ class CPUThread(QObject):
                             self.showErrorInf('LED测试')
                             self.cancelAllTest()
                         finally:
+                            self.testNum = self.testNum - 1
                             # 退出灯测试模式
                             self.CPU_LEDTest(itemRow=i, transmitData=test_transmitData, LED_name='')
                             if self.isPassLED:
@@ -439,6 +472,7 @@ class CPUThread(QObject):
                             self.showErrorInf('本体IN测试')
                             self.cancelAllTest()
                         finally:
+                            self.testNum = self.testNum - 1
                             if self.isPassIn:
                                 self.changeTabItem(testStartTime, row=i, state=2, result=1)
                             else:
@@ -455,6 +489,7 @@ class CPUThread(QObject):
                             self.showErrorInf('本体OUT测试')
                             self.cancelAllTest()
                         finally:
+                            self.testNum = self.testNum - 1
                             if self.isPassOut:
                                 self.changeTabItem(testStartTime, row=i, state=2, result=1)
                             else:
@@ -484,6 +519,7 @@ class CPUThread(QObject):
                             self.showErrorInf('本体ETH测试')
                             self.cancelAllTest()
                         finally:
+                            self.testNum = self.testNum - 1
                             if self.isPassETH:
                                 self.changeTabItem(testStartTime, row=i, state=2, result=1)
                             else:
@@ -516,6 +552,7 @@ class CPUThread(QObject):
                             self.showErrorInf('本体232测试')
                             self.cancelAllTest()
                         finally:
+                            self.testNum = self.testNum - 1
                             if self.isPass232:
                                 self.changeTabItem(testStartTime, row=i, state=2, result=1)
                             else:
@@ -548,6 +585,7 @@ class CPUThread(QObject):
                             self.showErrorInf('本体485测试')
                             self.cancelAllTest()
                         finally:
+                            self.testNum = self.testNum - 1
                             if self.isPass485:
                                 self.changeTabItem(testStartTime, row=i, state=2, result=1)
                             else:
@@ -580,6 +618,7 @@ class CPUThread(QObject):
                             self.showErrorInf('本体右扩CAN测试')
                             self.cancelAllTest()
                         finally:
+                            self.testNum = self.testNum - 1
                             if self.isPassRightCAN:
                                 self.changeTabItem(testStartTime, row=i, state=2, result=1)
                             else:
@@ -645,6 +684,7 @@ class CPUThread(QObject):
                             self.showErrorInf()
                             self.cancelAllTest()
                         finally:
+                            self.testNum = self.testNum - 1
                             if self.isPassConfig:
                                 self.changeTabItem(testStartTime, row=i, state=2, result=1)
                             else:
@@ -688,6 +728,7 @@ class CPUThread(QObject):
                             self.showErrorInf()
                             self.cancelAllTest()
                         finally:
+                            self.testNum = self.testNum - 1
                             if self.isPassConfig:
                                 self.changeTabItem(testStartTime, row=i, state=2, result=1)
                             else:
@@ -704,13 +745,17 @@ class CPUThread(QObject):
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes or QMessageBox.No:
                 self.showErrorInf('测试')
-                self.allFinished_signal.emit()
-                self.pass_signal.emit(False)
+        finally:
+            self.messageBox_signal.emit(['操作提示', f'请将拨杆拨到STOP位置。\n'])
+            if self.isPassAll:
+                self.messageBox_signal.emit(['操作提示', f'产品合格,请烧录正式固件。\n'])
+            self.allFinished_signal.emit()
+            self.pass_signal.emit(False)
     #CPU外观检查
     def CPU_appearanceTest(self):
         appearanceStart_time = time.time()
         self.item_signal.emit([0, 1, 0, ''])
-        self.messageBox_signal.emit(['外观检测', '请检查：\n（1）外壳字体是否清晰?\n（2）型号是否正确？\n（3）外壳是否破损有污渍？'])
+        self.messageBox_signal.emit(['外观检测', '请检查：\n（1）外壳字体是否清晰?\n（2）型号是否正确？\n（3）外壳是否完好？'])
         reply = self.result_queue.get()
         if reply == QMessageBox.Yes:
             self.isPassAppearance = True
@@ -726,8 +771,7 @@ class CPUThread(QObject):
         self.testNum = self.testNum - 1
 
     #CPU型号检查
-    def CPU_typeTest(self,itemRow):
-        serial_transmitData = [0xAC,hex(6),0x00,0x00,0x0E,0x00]
+    def CPU_typeTest(self,serial_transmitData:list):
         #打开串口
         typeC_serial = serial.Serial(port=str(self.comboBox_23.currentText()), baudrate=1000000, timeout=1)
         loopStartTime = time.time()
@@ -739,7 +783,7 @@ class CPUThread(QObject):
             typeC_serial.write(bytes(serial_transmitData))
             # 等待0.5s后接收数据
             time.sleep(0.5)
-            serial_receiveData = []
+            serial_receiveData = [0 for x in range(40)]
             # 接收数组数据
             serial_receiveData = typeC_serial.read(40)
             trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
@@ -751,7 +795,7 @@ class CPUThread(QObject):
             elif dataLen == 8:
                 if trueData[6] == 0x00:#接收成功:
                     if trueData[5] == 0x00:#点数
-                        if trueData[7] == 0x40:
+                        if trueData[7] == hex(40):
                             self.isPassTypeTest = True
                             break
                         else:
@@ -778,8 +822,8 @@ class CPUThread(QObject):
         typeC_serial.close()
 
     #SRAM测试
-    def CPU_SRAMTest(self):
-        serial_transmitData = [0xAC, hex(5), 0x00, 0x01, 0x53]
+    def CPU_SRAMTest(self,serial_transmitData:list):
+
         # 打开串口
         typeC_serial = serial.Serial(port=str(self.comboBox_23.currentText()), baudrate=1000000, timeout=1)
         loopStartTime = time.time()
@@ -791,7 +835,7 @@ class CPUThread(QObject):
             typeC_serial.write(bytes(serial_transmitData))
             # 等待0.5s后接收数据
             time.sleep(0.5)
-            serial_receiveData = []
+            serial_receiveData = [0 for x in range(40)]
             # 接收数组数据
             serial_receiveData = typeC_serial.read(40)
             trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
@@ -820,8 +864,7 @@ class CPUThread(QObject):
         typeC_serial.close()
 
     #FLASH测试
-    def CPU_FLASHTest(self):
-        serial_transmitData = [0xAC, hex(5), 0x00, 0x02, 0x53]
+    def CPU_FLASHTest(self,serial_transmitData:list): 
         # 打开串口
         typeC_serial = serial.Serial(port=str(self.comboBox_23.currentText()), baudrate=1000000, timeout=1)
         loopStartTime = time.time()
@@ -834,7 +877,7 @@ class CPUThread(QObject):
             typeC_serial.write(bytes(serial_transmitData))
             # 等待0.5s后接收数据
             time.sleep(0.5)
-            serial_receiveData = []
+            serial_receiveData = [0 for x in range(40)]
             # 接收数组数据
             serial_receiveData = typeC_serial.read(40)
             trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
@@ -864,13 +907,7 @@ class CPUThread(QObject):
         typeC_serial.close()
 
     # FPGA测试
-    def CPU_FPGATest(self):
-        serial_transmitData0 = [0xAC, hex(6), 0x00, 0x04, 0x53, 0x00]
-        serial_transmitData1 = [0xAC, hex(6), 0x00, 0x04, 0x53, 0x01]
-        serial_transmitData2 = [0xAC, hex(6), 0x00, 0x04, 0x53, 0x02]
-        serial_transmitData_array = [serial_transmitData0,
-                                     serial_transmitData1,
-                                     serial_transmitData2]
+    def CPU_FPGATest(self,serial_transmitData_array:list):
         # 打开串口
         typeC_serial = serial.Serial(port=str(self.comboBox_23.currentText()), baudrate=1000000, timeout=1)
         loopStartTime = time.time()
@@ -883,7 +920,7 @@ class CPUThread(QObject):
                 typeC_serial.write(bytes(serial_transmitData))
                 # 等待0.5s后接收数据
                 time.sleep(0.5)
-                serial_receiveData = []
+                serial_receiveData = [0 for x in range(40)]
                 # 接收数组数据
                 serial_receiveData = typeC_serial.read(40)
                 trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
@@ -914,8 +951,8 @@ class CPUThread(QObject):
         typeC_serial.close()
 
     # 拨杆测试
-    def CPU_LeverTest(self,state:int):
-        serial_transmitData = [0xAC, hex(6), 0x00, 0x05, 0x0E, 0x00]
+    def CPU_LeverTest(self,state:int,serial_transmitData:list):
+
         # 打开串口
         typeC_serial = serial.Serial(port=str(self.comboBox_23.currentText()), baudrate=1000000, timeout=1)
         loopStartTime = time.time()
@@ -927,7 +964,7 @@ class CPUThread(QObject):
             typeC_serial.write(bytes(serial_transmitData))
             # 等待0.5s后接收数据
             time.sleep(0.5)
-            serial_receiveData = []
+            serial_receiveData = [0 for x in range(40)]
             # 接收数组数据
             serial_receiveData = typeC_serial.read(40)
             trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
@@ -972,7 +1009,7 @@ class CPUThread(QObject):
             typeC_serial.write(bytes(serial_transmitData))
             # 等待0.5s后接收数据
             time.sleep(0.5)
-            serial_receiveData = []
+            serial_receiveData = [0 for x in range(40)]
             # 接收数组数据
             serial_receiveData = typeC_serial.read(40)
             trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
@@ -1026,7 +1063,7 @@ class CPUThread(QObject):
             typeC_serial.write(bytes(serial_transmitData))
             # 等待0.5s后接收数据
             time.sleep(0.5)
-            serial_receiveData = []
+            serial_receiveData = [0 for x in range(40)]
             # 接收数组数据
             serial_receiveData = typeC_serial.read(40)
             trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
@@ -1091,7 +1128,7 @@ class CPUThread(QObject):
                 typeC_serial.write(bytes(serial_transmitData))
                 # 等待0.5s后接收数据
                 time.sleep(0.5)
-                serial_receiveData = []
+                serial_receiveData = [0 for x in range(40)]
                 # 接收数组数据
                 serial_receiveData = typeC_serial.read(40)
                 trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
@@ -1134,7 +1171,7 @@ class CPUThread(QObject):
             typeC_serial.write(bytes(transmitData))
             # 等待0.5s后接收数据
             time.sleep(0.5)
-            serial_receiveData = []
+            serial_receiveData = [0 for x in range(40)]
             # 接收数组数据
             serial_receiveData = typeC_serial.read(40)
             trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
@@ -1198,7 +1235,7 @@ class CPUThread(QObject):
             typeC_serial.write(bytes(transmitData))
             # 等待0.5s后接收数据
             time.sleep(0.5)
-            serial_receiveData = []
+            serial_receiveData = [0 for x in range(40)]
             # 接收数组数据
             serial_receiveData = typeC_serial.read(40)
             trueData,dataLen,isSendAgain = self.dataJudgement(serial_receiveData)
@@ -1247,7 +1284,7 @@ class CPUThread(QObject):
             typeC_serial.write(bytes(transmitData))
             # 等待0.5s后接收数据
             time.sleep(0.5)
-            serial_receiveData = []
+            serial_receiveData = [0 for x in range(40)]
             # 接收数组数据
             serial_receiveData = typeC_serial.read(40)
             trueData,dataLen,isSendAgain = self.dataJudgement(serial_receiveData)
@@ -1301,7 +1338,7 @@ class CPUThread(QObject):
             typeC_serial.write(bytes(transmitData))
             # 等待0.5s后接收数据
             time.sleep(0.5)
-            serial_receiveData = []
+            serial_receiveData = [0 for x in range(40)]
             # 接收数组数据
             serial_receiveData = typeC_serial.read(40)
             trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
@@ -1368,7 +1405,7 @@ class CPUThread(QObject):
             typeC_serial.write(bytes(transmitData))
             # 等待0.5s后接收数据
             time.sleep(0.5)
-            serial_receiveData = []
+            serial_receiveData = [0 for x in range(40)]
             # 接收数组数据
             serial_receiveData = typeC_serial.read(40)
             trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
@@ -1420,7 +1457,7 @@ class CPUThread(QObject):
             typeC_serial.write(bytes(transmitData))
             # 等待0.5s后接收数据
             time.sleep(0.5)
-            serial_receiveData = []
+            serial_receiveData = [0 for x in range(40)]
             # 接收数组数据
             serial_receiveData = typeC_serial.read(40)
             trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
@@ -1472,7 +1509,7 @@ class CPUThread(QObject):
             typeC_serial.write(bytes(transmitData))
             # 等待0.5s后接收数据
             time.sleep(0.5)
-            serial_receiveData = []
+            serial_receiveData = [0 for x in range(40)]
             # 接收数组数据
             serial_receiveData = typeC_serial.read(40)
             trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
@@ -1540,7 +1577,7 @@ class CPUThread(QObject):
             typeC_serial.write(bytes(transmitData))
             # 等待0.5s后接收数据
             time.sleep(0.5)
-            serial_receiveData = []
+            serial_receiveData = [0 for x in range(40)]
             # 接收数组数据
             serial_receiveData = typeC_serial.read(40)
             trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
