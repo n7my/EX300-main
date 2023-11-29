@@ -149,21 +149,24 @@ class CPUThread(QObject):
         self.saveDir = inf_CPUlist[3][3]
 
         # 获取CPU检测信息
-        self.CPU_isTest = inf_CPUlist[4]
+        self.CPU_isTest = inf_CPUlist[4][0]
+        self.isExcel = inf_CPUlist[4][1]
 
         #信号等待时间(ms)
-        self.waiting_time = 3000
+        self.waiting_time = 2000
 
         self.isCancelAllTest = False
         
         self.isPassAll = True
 
-        #初始化表格状态
-        for i in range(len(self.self.CPU_isTest)):
-            if self.CPU_isTest[i]:
-                self.itemOperation(self.mTable, i, 3, 0, '')
-            else:
-                self.itemOperation(self.mTable, i, 0, 0, '')
+        # #初始化表格状态
+        # for i in range(len(self.CPU_isTest)):
+        #     self.result_signal.emit(f"self.CPU_isTest[{i}]:{self.CPU_isTest[i]}\n")
+        #     print(f"self.CPU_isTest[{i}]:{self.CPU_isTest[i]}\n")
+        #     if self.CPU_isTest[i]:
+        #         self.item_signal.emit([i, 3, 0, ''])
+        #     else:
+        #         self.item_signal.emit([i, 0, 0, ''])
 
 
     def CPUOption(self):
@@ -172,71 +175,71 @@ class CPUThread(QObject):
         # self.testSign = True
         try:
             ############################################################总线初始化############################################################
-            try:
-                time_online = time.time()
-                while True:
-                    QApplication.processEvents()
-                    if (time.time() - time_online) * 1000 > self.waiting_time:
-                        self.pauseOption()
-                        if not self.is_running:
-                            # 后续测试全部取消
-                            self.cancelAllTest()
-                            # self.isTest = False
-                            # self.CPU_isTest = [False for x in range(self.testNum)]
-                            # self.testSign = False
-                            break
-                        self.result_signal.emit(f'错误：总线初始化超时！' + self.HORIZONTAL_LINE)
-                        self.messageBox_signal.emit(['错误提示', '总线初始化超时！请检查CAN分析仪或各设备是否正确连接！'])
-                        # 后续测试全部取消
-                        self.cancelAllTest()
-                        # self.isTest = False
-                        # self.CPU_isTest = [False for x in range(self.testNum)]
-                        # self.testSign = False
-                        break
-                    CANAddr_array = [self.CANAddr1,self.CANAddr2,self.CANAddr3,self.CANAddr4,self.CANAddr5]
-                    module_array = [self.module_1, self.module_2, self.module_3, self.module_4, self.module_5]
-                    bool_online, eID = otherOption.isModulesOnline(CANAddr_array,module_array, self.waiting_time)
-                    if bool_online:
-                        self.pauseOption()
-                        if not self.is_running:
-                            # 后续测试全部取消
-                            self.cancelAllTest()
-                            # self.isTest = False
-                            # self.CPU_isTest = [False for x in range(self.testNum)]
-                            # self.testSign = False
-                            break
-                        self.result_signal.emit(f'总线初始化成功！' + self.HORIZONTAL_LINE)
-                        break
-                    else:
-                        self.pauseOption()
-                        if not self.is_running:
-                            # 后续测试全部取消
-                            self.cancelAllTest()
-                            # self.isTest = False
-                            # self.CPU_isTest = [False for x in range(self.testNum)]
-                            # self.testSign = False
-                            break
-                        if eID != 0:
-                            self.result_signal.emit(f'错误：未发现{module_array[eID-1]}' + self.HORIZONTAL_LINE)
-                        self.result_signal.emit(f'错误：总线初始化失败！再次尝试初始化。' + self.HORIZONTAL_LINE)
-
-                self.result_signal.emit('模块在线检测结束！' + self.HORIZONTAL_LINE)
-
-            except:
-                self.pauseOption()
-                if not self.is_running:
-                    # 后续测试全部取消
-                    self.cancelAllTest()
-                    # self.isTest = False
-                    # self.CPU_isTest = [False for x in range(self.testNum)]
-                    # self.testSign = False
-                self.messageBox_signal.emit(['错误提示', '总线初始化异常，请检查设备！'])
-                # 后续测试全部取消
-                self.cancelAllTest()
-                # self.isTest = False
-                # self.CPU_isTest = [False for x in range(self.testNum)]
-                # self.testSign = False
-                self.result_signal.emit('模块在线检测结束！' + self.HORIZONTAL_LINE)
+            # try:
+            #     time_online = time.time()
+            #     while True:
+            #         QApplication.processEvents()
+            #         if (time.time() - time_online) * 1000 > self.waiting_time:
+            #             self.pauseOption()
+            #             if not self.is_running:
+            #                 # 后续测试全部取消
+            #                 self.cancelAllTest()
+            #                 # self.isTest = False
+            #                 # self.CPU_isTest = [False for x in range(self.testNum)]
+            #                 # self.testSign = False
+            #                 break
+            #             self.result_signal.emit(f'错误：总线初始化超时！' + self.HORIZONTAL_LINE)
+            #             self.messageBox_signal.emit(['错误提示', '总线初始化超时！请检查CAN分析仪或各设备是否正确连接！'])
+            #             # 后续测试全部取消
+            #             self.cancelAllTest()
+            #             # self.isTest = False
+            #             # self.CPU_isTest = [False for x in range(self.testNum)]
+            #             # self.testSign = False
+            #             break
+            #         CANAddr_array = [self.CANAddr1,self.CANAddr2,self.CANAddr3,self.CANAddr4,self.CANAddr5]
+            #         module_array = [self.module_1, self.module_2, self.module_3, self.module_4, self.module_5]
+            #         bool_online, eID = otherOption.isModulesOnline(CANAddr_array,module_array, self.waiting_time)
+            #         if bool_online:
+            #             self.pauseOption()
+            #             if not self.is_running:
+            #                 # 后续测试全部取消
+            #                 self.cancelAllTest()
+            #                 # self.isTest = False
+            #                 # self.CPU_isTest = [False for x in range(self.testNum)]
+            #                 # self.testSign = False
+            #                 break
+            #             self.result_signal.emit(f'总线初始化成功！' + self.HORIZONTAL_LINE)
+            #             break
+            #         else:
+            #             self.pauseOption()
+            #             if not self.is_running:
+            #                 # 后续测试全部取消
+            #                 self.cancelAllTest()
+            #                 # self.isTest = False
+            #                 # self.CPU_isTest = [False for x in range(self.testNum)]
+            #                 # self.testSign = False
+            #                 break
+            #             if eID != 0:
+            #                 self.result_signal.emit(f'错误：未发现{module_array[eID-1]}' + self.HORIZONTAL_LINE)
+            #             self.result_signal.emit(f'错误：总线初始化失败！再次尝试初始化。' + self.HORIZONTAL_LINE)
+            #
+            #     self.result_signal.emit('模块在线检测结束！' + self.HORIZONTAL_LINE)
+            #
+            # except:
+            #     self.pauseOption()
+            #     if not self.is_running:
+            #         # 后续测试全部取消
+            #         self.cancelAllTest()
+            #         # self.isTest = False
+            #         # self.CPU_isTest = [False for x in range(self.testNum)]
+            #         # self.testSign = False
+            #     self.messageBox_signal.emit(['错误提示', '总线初始化异常，请检查设备！'])
+            #     # 后续测试全部取消
+            #     self.cancelAllTest()
+            #     # self.isTest = False
+            #     # self.CPU_isTest = [False for x in range(self.testNum)]
+            #     # self.testSign = False
+            #     self.result_signal.emit('模块在线检测结束！' + self.HORIZONTAL_LINE)
             ############################################################检测项目############################################################
             for i in range(len(self.CPU_isTest)):
                 if self.isCancelAllTest:
@@ -252,19 +255,25 @@ class CPUThread(QObject):
                         self.item_signal.emit([i, 1, 0, ''])
                         try:
                             #读点数:
-                            self.CPU_typeTest(serial_transmitData=[0xAC,hex(6),0x00,0x00,0x0E,0x00])
+                            serial_transmitData = [0xAC, 6, 0x00, 0x00, 0x0E, 0x00]
+                            self.CPU_typeTest(serial_transmitData=[0xAC,6,0x00,0x00,0x0E,0x00,
+                                                                   self.getCheckNum(serial_transmitData)])
                             if not self.isCancelAllTest:
                                 # 读类型:
-                                self.CPU_typeTest(serial_transmitData=[0xAC, hex(6), 0x00, 0x00, 0x0E, 0x01])
+                                serial_transmitData = [0xAC, 6, 0x00, 0x00, 0x0E, 0x01]
+                                self.CPU_typeTest(serial_transmitData=[0xAC, 6, 0x00, 0x00, 0x0E, 0x01,
+                                                                       self.getCheckNum(serial_transmitData)])
                         except:
-                            self.showErrorInf()
+                            self.showErrorInf('型号检查')
                             self.cancelAllTest()
                         finally:
                             self.isPassAll &= self.isPassTypeTest
                             self.testNum = self.testNum - 1
                             if self.isPassTypeTest:
+                                self.result_signal.emit("型号检查通过"+self.HORIZONTAL_LINE)
                                 self.changeTabItem(testStartTime, row=i, state=2, result=1)
                             else:
+                                self.result_signal.emit("型号检查不通过"+self.HORIZONTAL_LINE)
                                 self.changeTabItem(testStartTime, row=i, state=2, result=2)
                             if self.isCancelAllTest:
                                 break
@@ -272,16 +281,20 @@ class CPUThread(QObject):
                         testStartTime = time.time()
                         self.item_signal.emit([i, 1, 0, ''])
                         try:
-                            self.CPU_SRAMTest(serial_transmitData = [0xAC, hex(5), 0x00, 0x01, 0x53])
+                            serial_transmitData = [0xAC, 5, 0x00, 0x01, 0x53]
+                            self.CPU_SRAMTest(serial_transmitData=[0xAC, 5, 0x00, 0x01, 0x53,
+                                                                 self.getCheckNum(serial_transmitData)])
                         except:
-                            self.showErrorInf()
+                            self.showErrorInf('SRAM')
                             self.cancelAllTest()
                         finally:
                             self.isPassAll &= self.isPassSRAM
                             self.testNum = self.testNum - 1
                             if self.isPassSRAM:
+                                self.result_signal.emit("SRAM测试通过"+self.HORIZONTAL_LINE)
                                 self.changeTabItem(testStartTime, row=i, state=2, result=1)
                             else:
+                                self.result_signal.emit("SRAM测试不通过"+self.HORIZONTAL_LINE)
                                 self.changeTabItem(testStartTime, row=i, state=2, result=2)
                             if self.isCancelAllTest:
                                 break
@@ -289,16 +302,19 @@ class CPUThread(QObject):
                         testStartTime = time.time()
                         self.item_signal.emit([i, 1, 0, ''])
                         try:
-                            self.CPU_FLASHTest(serial_transmitData = [0xAC, hex(5), 0x00, 0x02, 0x53])
+                            self.CPU_FLASHTest(serial_transmitData = [0xAC, 5, 0x00, 0x02, 0x53,
+                                                                      self.getCheckNum([0xAC, 5, 0x00, 0x02, 0x53])])
                         except:
-                            self.showErrorInf()
+                            self.showErrorInf('FLASH')
                             self.cancelAllTest()
                         finally:
                             self.isPassAll &= self.isPassFLASH
                             self.testNum = self.testNum - 1
                             if self.isPassFLASH:
+                                self.result_signal.emit("FLASH测试通过" + self.HORIZONTAL_LINE)
                                 self.changeTabItem(testStartTime, row=i, state=2, result=1)
                             else:
+                                self.result_signal.emit("FLASH测试不通过" + self.HORIZONTAL_LINE)
                                 self.changeTabItem(testStartTime, row=i, state=2, result=2)
                             if self.isCancelAllTest:
                                 break
@@ -306,16 +322,19 @@ class CPUThread(QObject):
                         testStartTime = time.time()
                         self.item_signal.emit([i, 1, 0, ''])
                         try:
-                            self.messageBox_signal(["操作提示","请插入U盘，并观察U盘指示灯是否点亮？"])
+                            self.messageBox_signal.emit(["操作提示","请插入U盘，并观察U盘指示灯是否点亮？"])
                             reply = self.result_queue.get()
                             if reply == QMessageBox.Yes:
-                                transmitData0 = [0xAC, hex(6), 0x00, 0x04, 0x53, 0x00]
-                                transmitData1 = [0xAC, hex(6), 0x00, 0x04, 0x53, 0x01]
-                                transmitData2 = [0xAC, hex(6), 0x00, 0x04, 0x53, 0x02]
+                                transmitData0 = [0xAC, 6, 0x00, 0x04, 0x53, 0x00,
+                                                 self.getCheckNum([0xAC, 6, 0x00, 0x04, 0x53, 0x00])]
+                                transmitData1 = [0xAC, 6, 0x00, 0x04, 0x53, 0x01,
+                                                 self.getCheckNum([0xAC, 6, 0x00, 0x04, 0x53, 0x01])]
+                                transmitData2 = [0xAC, 6, 0x00, 0x04, 0x53, 0x02,
+                                                 self.getCheckNum([0xAC, 6, 0x00, 0x04, 0x53, 0x02])]
                                 transmitData_array = [transmitData0,transmitData1,transmitData2]
                                 self.CPU_FPGATest(serial_transmitData_array=transmitData_array)
                             elif reply == QMessageBox.No:
-                                self.messageBox_signal(['测试警告', '无法识别U盘，FPGA无法测试，是否进行后续测试？'])
+                                self.messageBox_signal.emit(['测试警告', '无法识别U盘，FPGA无法测试，是否进行后续测试？'])
                                 self.isPassFPGA = False
                                 reply = self.result_queue.get()
                                 if reply == QMessageBox.Yes:
@@ -323,14 +342,16 @@ class CPUThread(QObject):
                                 elif reply == QMessageBox.No:
                                     self.cancelAllTest()
                         except:
-                            self.showErrorInf()
+                            self.showErrorInf('FPGA')
                             self.cancelAllTest()
                         finally:
                             self.isPassAll &= self.isPassFPGA
                             self.testNum = self.testNum - 1
                             if self.isPassFPGA:
+                                self.result_signal.emit("FPGA测试通过" + self.HORIZONTAL_LINE)
                                 self.changeTabItem(testStartTime, row=i, state=2, result=1)
                             else:
+                                self.result_signal.emit("FPGA测试不通过" + self.HORIZONTAL_LINE)
                                 self.changeTabItem(testStartTime, row=i, state=2, result=2)
                             if self.isCancelAllTest:
                                 break
@@ -338,22 +359,28 @@ class CPUThread(QObject):
                         testStartTime = time.time()
                         self.item_signal.emit([i, 1, 0, ''])
                         try:
-                            self.messageBox_signal(["操作提示","请将拨杆拨至STOP位置。"])
+                            self.messageBox_signal.emit(["操作提示","请将拨杆拨至STOP位置。"])
                             reply = self.result_queue.get()
                             if reply == QMessageBox.Yes or QMessageBox.No:
-                                self.CPU_LeverTest(0,serial_transmitData = [0xAC, hex(6), 0x00, 0x05, 0x0E, 0x00])
+                                self.CPU_LeverTest(0,serial_transmitData = [0xAC, 6, 0x00, 0x05, 0x0E, 0x00,
+                                                                self.getCheckNum([0xAC, 6, 0x00, 0x05, 0x0E, 0x00])])
                             if not self.isCancelAllTest:
-                                self.messageBox_signal(["操作提示", "请将拨杆拨至RUN位置。"])
+                                self.messageBox_signal.emit(["操作提示", "请将拨杆拨至RUN位置。"])
+                                reply = self.result_queue.get()
                                 if reply == QMessageBox.Yes or QMessageBox.No:
-                                    self.CPU_LeverTest(1,serial_transmitData = [0xAC, hex(6), 0x00, 0x05, 0x0E, 0x00])
+                                    self.CPU_LeverTest(1,serial_transmitData = [0xAC, 6, 0x00, 0x05, 0x0E, 0x00,
+                                                                self.getCheckNum([0xAC, 6, 0x00, 0x05, 0x0E, 0x00])])
                         except:
-                            self.showErrorInf()
+                            self.showErrorInf('拨杆测试')
                             self.cancelAllTest()
                         finally:
+                            self.isPassAll &= self.isPassLever
                             self.testNum = self.testNum - 1
                             if self.isPassLever:
+                                self.result_signal.emit("拨杆测试通过" + self.HORIZONTAL_LINE)
                                 self.changeTabItem(testStartTime, row=i, state=2, result=1)
                             else:
+                                self.result_signal.emit("拨杆测试不通过" + self.HORIZONTAL_LINE)
                                 self.changeTabItem(testStartTime, row=i, state=2, result=2)
                             if self.isCancelAllTest:
                                 break
@@ -361,24 +388,29 @@ class CPUThread(QObject):
                         testStartTime = time.time()
                         self.item_signal.emit([i, 1, 0, ''])
                         try:
-                            self.CPU_MFKTest(0)
+                            self.CPU_MFKTest(0,serial_transmitData = [0xAC, 6, 0x00, 0x06, 0x0E, 0x00,
+                                                                  self.getCheckNum([0xAC, 6, 0x00, 0x06, 0x0E, 0x00])])
                             if not self.isCancelAllTest:
-                                self.messageBox_signal(["操作提示", "请长按MKF按钮不要松开。"])
+                                self.messageBox_signal.emit(["操作提示", "请长按MKF按钮不要松开。"])
                                 reply = self.result_queue.get()
                                 if reply == QMessageBox.Yes or QMessageBox.No:
-                                    self.CPU_MFKTest(1)
-                                self.messageBox_signal(["操作提示", "请松开MKF按钮。"])
+                                    self.CPU_MFKTest(1,serial_transmitData = [0xAC, 6, 0x00, 0x06, 0x0E, 0x00,
+                                                                  self.getCheckNum([0xAC, 6, 0x00, 0x06, 0x0E, 0x00])])
+                                self.messageBox_signal.emit(["操作提示", "请松开MKF按钮。"])
                                 reply = self.result_queue.get()
                                 if reply == QMessageBox.Yes or QMessageBox.No:
                                     pass
                         except:
-                            self.showErrorInf()
+                            self.showErrorInf('MFK按钮')
                             self.cancelAllTest()
                         finally:
+                            self.isPassAll &= self.isPassMFK
                             self.testNum = self.testNum - 1
                             if self.isPassMFK:
+                                self.result_signal.emit("MFK测试通过" + self.HORIZONTAL_LINE)
                                 self.changeTabItem(testStartTime, row=i, state=2, result=1)
                             else:
+                                self.result_signal.emit("MFK测试不通过" + self.HORIZONTAL_LINE)
                                 self.changeTabItem(testStartTime, row=i, state=2, result=2)
                             if self.isCancelAllTest:
                                 break
@@ -736,8 +768,8 @@ class CPUThread(QObject):
                             if self.isCancelAllTest:
                                 break
 
-            if self.isCancelAllTest:
-                self.result_signal("后续测试已全部取消，测试结束。")
+            if self.isCancelAllTest:#对应前面的for循环
+                self.result_signal.emit("后续测试已全部取消，测试结束。")
 
         except:
             self.messageBox_signal.emit(['错误提示', f'测试出现问题，请检查测试程序和测试设备！\n'
@@ -746,9 +778,35 @@ class CPUThread(QObject):
             if reply == QMessageBox.Yes or QMessageBox.No:
                 self.showErrorInf('测试')
         finally:
+            # if self.isExcel:
+            #
+            #     self.result_signal.emit('开始生成校准校验表…………' + self.HORIZONTAL_LINE)
+            #     code_array = [self.module_pn, self.module_sn, self.module_rev,self.module_MAC]
+            #     station_array = [self.isAOPassTest, self.isAOTestVol, self.isAOTestCur]
+            #
+            #     excel_bool, book, sheet, self.CPU_row = otherOption.generateExcel(code_array,
+            #                                                                      station_array, 0, 'CPU')
+            #     if not excel_bool:
+            #         self.result_signal.emit('校准校验表生成出错！请检查代码！' + self.HORIZONTAL_LINE)
+            #     else:
+            #         self.fillInAOData(self.isAOPassTest, book, sheet)
+            #         self.result_signal.emit('生成校准校验表成功' + self.HORIZONTAL_LINE)
+            #
+            #     if not self.isAOVolPass or not self.isAOCurPass:
+            #         self.result_signal.emit(f'不通过原因：\n{self.errorInf}' + self.HORIZONTAL_LINE)
+            #
+            # elif not self.isExcel:
+            #     self.result_signal.emit('测试停止，未生成校准校验表！' + self.HORIZONTAL_LINE)
+
             self.messageBox_signal.emit(['操作提示', f'请将拨杆拨到STOP位置。\n'])
-            if self.isPassAll:
-                self.messageBox_signal.emit(['操作提示', f'产品合格,请烧录正式固件。\n'])
+            reply = self.result_queue.get()
+            if reply == QMessageBox.Yes or reply == QMessageBox.No:
+                if self.isPassAll and self.testNum ==0 :
+                    self.messageBox_signal.emit(['操作提示', f'产品全部测试合格,请烧录正式固件。\n'])
+                elif self.isPassAll and self.testNum !=0 :
+                    self.messageBox_signal.emit(['操作提示', f'产品部分测试合格。\n'])
+                elif not self.isPassAll:
+                    self.messageBox_signal.emit(['操作提示', f'产品存在部分测试不合格，请检查！\n'])
             self.allFinished_signal.emit()
             self.pass_signal.emit(False)
     #CPU外观检查
@@ -772,8 +830,11 @@ class CPUThread(QObject):
 
     #CPU型号检查
     def CPU_typeTest(self,serial_transmitData:list):
-        #打开串口
-        typeC_serial = serial.Serial(port=str(self.comboBox_23.currentText()), baudrate=1000000, timeout=1)
+        try:
+            #打开串口
+            typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
+        except serial.SerialException as e:
+            self.messageBox_signal.emit(['错误警告',f'Failed to open serial port: {e}'])
         loopStartTime = time.time()
         while True:
             if (time.time() - loopStartTime)*1000>self.waiting_time:
@@ -782,30 +843,38 @@ class CPUThread(QObject):
             # 发送数据
             typeC_serial.write(bytes(serial_transmitData))
             # 等待0.5s后接收数据
-            time.sleep(0.5)
+            time.sleep(1)
             serial_receiveData = [0 for x in range(40)]
             # 接收数组数据
-            serial_receiveData = typeC_serial.read(40)
+            data = typeC_serial.read(40)
+            serial_receiveData = [hex(i) for i in data]
+            for i in range(len(serial_receiveData)):
+                serial_receiveData[i] = int(serial_receiveData[i],16)
             trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
             if isSendAgain:
+                self.result_signal.emit('未接收到正确数据，再次接收！\n')
                 continue
             if dataLen == 3:  # 指令出错
                 self.orderError(trueData[2])
                 break
             elif dataLen == 8:
-                if trueData[6] == 0x00:#接收成功:
-                    if trueData[5] == 0x00:#点数
-                        if trueData[7] == hex(40):
+                if trueData[6] == int(0x00):#接收成功:
+                    if trueData[5] == int(0x00):#点数
+                        if trueData[7] == 40:
+                            self.result_signal.emit("点数正确\n")
                             self.isPassTypeTest = True
                             break
                         else:
+                            self.result_signal.emit("点数错误\n")
                             self.isPassTypeTest = False
                             break
-                    elif trueData[5] == 0x01:#类型
-                        if trueData[7] == 0x00:#NPN
+                    elif trueData[5] == int(0x01):#类型
+                        if trueData[7] == int(0x00):#NPN
+                            self.result_signal.emit("类型正确\n")
                             self.isPassTypeTest = True
                             break
                         else:
+                            self.result_signal.emit("类型错误\n")
                             self.isPassTypeTest = False
                             break
                 elif trueData[6] == 0x01:#接收失败
@@ -814,7 +883,7 @@ class CPUThread(QObject):
             else:
                 continue
         if not self.isPassTypeTest:
-            self.messageBox_signal(['测试警告', '设备型号测试不通过，后续测试中止！'])
+            self.messageBox_signal.emit(['测试警告', '设备型号测试不通过，后续测试中止！'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes or reply == QMessageBox.No:
                 self.cancelAllTest()
@@ -824,8 +893,11 @@ class CPUThread(QObject):
     #SRAM测试
     def CPU_SRAMTest(self,serial_transmitData:list):
 
-        # 打开串口
-        typeC_serial = serial.Serial(port=str(self.comboBox_23.currentText()), baudrate=1000000, timeout=1)
+        try:
+            #打开串口
+            typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
+        except serial.SerialException as e:
+            self.messageBox_signal.emit(['错误警告',f'Failed to open serial port: {e}'])
         loopStartTime = time.time()
         while True:
             if (time.time() - loopStartTime) * 1000 > self.waiting_time:
@@ -834,27 +906,31 @@ class CPUThread(QObject):
             # 发送数据
             typeC_serial.write(bytes(serial_transmitData))
             # 等待0.5s后接收数据
-            time.sleep(0.5)
+            time.sleep(3)
             serial_receiveData = [0 for x in range(40)]
             # 接收数组数据
-            serial_receiveData = typeC_serial.read(40)
+            data = typeC_serial.read(40)
+            serial_receiveData = [hex(i) for i in data]
+            for i in range(len(serial_receiveData)):
+                serial_receiveData[i] = int(serial_receiveData[i],16)
             trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
             if isSendAgain:
+                self.result_signal.emit('未接收到正确数据，再次接收！\n')
                 continue
             if dataLen == 3:  # 指令出错
                 self.orderError(trueData[2])
                 break
             elif dataLen == 6:
-                if trueData[5] == 0x00:  # 接收成功
+                if trueData[5] == int(0x00):  # 接收成功
                     self.isPassSRAM = True
                     break
-                elif trueData[5] == 0x01:  # 接收失败
+                elif trueData[5] == int(0x01):  # 接收失败
                     self.isPassSRAM = False
                     break
             else:
                 continue
         if not self.isPassSRAM:
-            self.messageBox_signal(['测试警告', 'SRAM测试不通过，是否进行后续测试？'])
+            self.messageBox_signal.emit(['测试警告', 'SRAM测试不通过，是否进行后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
                 pass
@@ -865,38 +941,49 @@ class CPUThread(QObject):
 
     #FLASH测试
     def CPU_FLASHTest(self,serial_transmitData:list): 
-        # 打开串口
-        typeC_serial = serial.Serial(port=str(self.comboBox_23.currentText()), baudrate=1000000, timeout=1)
+        try:
+            #打开串口
+            typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
+        except serial.SerialException as e:
+            self.messageBox_signal.emit(['错误警告',f'Failed to open serial port: {e}'])
         loopStartTime = time.time()
 
         while True:
-            if (time.time() - loopStartTime) * 1000 > self.waiting_time:
+            if (time.time() - loopStartTime) * 1000 > 50*1000:
                 self.isPassFLASH = False
                 break
             # 发送数据
             typeC_serial.write(bytes(serial_transmitData))
             # 等待0.5s后接收数据
-            time.sleep(0.5)
+            for t in range(15):
+                if t ==0:
+                    self.result_signal.emit(f'等待设备自检查。\n')
+                self.result_signal.emit(f'剩余等待{15-t}秒……\n')
+                time.sleep(1)
             serial_receiveData = [0 for x in range(40)]
             # 接收数组数据
-            serial_receiveData = typeC_serial.read(40)
+            data = typeC_serial.read(40)
+            serial_receiveData = [hex(i) for i in data]
+            for i in range(len(serial_receiveData)):
+                serial_receiveData[i] = int(serial_receiveData[i],16)
             trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
             if isSendAgain:
+                self.result_signal.emit('未接收到正确数据，再次接收！\n')
                 continue
             if dataLen == 3:  # 指令出错
                 self.orderError(trueData[2])
                 break
             elif dataLen == 6:
-                if trueData[5] == 0x00:  # 接收成功
+                if trueData[5] == int(0x00):  # 接收成功
                     self.isPassFLASH = True
                     break
-                elif trueData[5] == 0x01:  # 接收失败
+                elif trueData[5] == int(0x01):  # 接收失败
                     self.isPassFLASH = False
                     break
             else:
                 continue
         if not self.isPassFLASH:
-            self.messageBox_signal(['测试警告', 'FLASH测试不通过，是否进行后续测试？'])
+            self.messageBox_signal.emit(['测试警告', 'FLASH测试不通过，是否进行后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
                 pass
@@ -908,8 +995,11 @@ class CPUThread(QObject):
 
     # FPGA测试
     def CPU_FPGATest(self,serial_transmitData_array:list):
-        # 打开串口
-        typeC_serial = serial.Serial(port=str(self.comboBox_23.currentText()), baudrate=1000000, timeout=1)
+        try:
+            #打开串口
+            typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
+        except serial.SerialException as e:
+            self.messageBox_signal.emit(['错误警告',f'Failed to open serial port: {e}'])
         loopStartTime = time.time()
         for serial_transmitData in serial_transmitData_array:
             while True:
@@ -919,10 +1009,13 @@ class CPUThread(QObject):
                 # 发送数据
                 typeC_serial.write(bytes(serial_transmitData))
                 # 等待0.5s后接收数据
-                time.sleep(0.5)
+                time.sleep(5)
                 serial_receiveData = [0 for x in range(40)]
                 # 接收数组数据
-                serial_receiveData = typeC_serial.read(40)
+                data = typeC_serial.read(40)
+            serial_receiveData = [hex(i) for i in data]
+            for i in range(len(serial_receiveData)):
+                serial_receiveData[i] = int(serial_receiveData[i],16)
                 trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
                 if isSendAgain:
                     continue
@@ -930,10 +1023,10 @@ class CPUThread(QObject):
                     self.orderError(trueData[2])
                     break
                 elif dataLen == 7:
-                    if trueData[6] == 0x00:  # 成功
+                    if trueData[6] == int(0x00):  # 成功
                         self.isPassFPGA = True
                         break
-                    elif trueData[6] == 0x01:  # 失败
+                    elif trueData[6] == int(0x01):  # 失败
                         self.isPassFPGA = False
                         break
                 else:
@@ -941,7 +1034,7 @@ class CPUThread(QObject):
             if not self.isPassFPGA:
                 break
         if not self.isPassFPGA:
-            self.messageBox_signal(['测试警告', 'FPGA测试不通过，是否进行后续测试？'])
+            self.messageBox_signal.emit(['测试警告', 'FPGA测试不通过，是否进行后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
                 pass
@@ -952,9 +1045,11 @@ class CPUThread(QObject):
 
     # 拨杆测试
     def CPU_LeverTest(self,state:int,serial_transmitData:list):
-
-        # 打开串口
-        typeC_serial = serial.Serial(port=str(self.comboBox_23.currentText()), baudrate=1000000, timeout=1)
+        try:
+            #打开串口
+            typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
+        except serial.SerialException as e:
+            self.messageBox_signal.emit(['错误警告',f'Failed to open serial port: {e}'])
         loopStartTime = time.time()
         while True:
             if (time.time() - loopStartTime) * 1000 > self.waiting_time:
@@ -963,18 +1058,22 @@ class CPUThread(QObject):
             # 发送数据
             typeC_serial.write(bytes(serial_transmitData))
             # 等待0.5s后接收数据
-            time.sleep(0.5)
+            time.sleep(1)
             serial_receiveData = [0 for x in range(40)]
             # 接收数组数据
-            serial_receiveData = typeC_serial.read(40)
-            trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
+            data = typeC_serial.read(40)
+            serial_receiveData = [hex(i) for i in data]
+            for i in range(len(serial_receiveData)):
+                serial_receiveData[i] = int(serial_receiveData[i],16)
+            trueData,dataLen,isSendAgain = self.dataJudgement(serial_receiveData)
             if isSendAgain:
+                self.result_signal.emit('未接收到正确数据，再次接收！\n')
                 continue
             if dataLen == 3:  # 指令出错
                 self.orderError(trueData[2])
                 break
             elif dataLen == 8: #成功
-                if trueData[7] == hex(state):  # 测试通过
+                if trueData[7] == int(state):  # 测试通过
                     self.isPassLever = True
                     break
                 else:  # 测试不通过
@@ -986,7 +1085,7 @@ class CPUThread(QObject):
             else:
                 continue
         if not self.isPassLever:
-            self.messageBox_signal(['测试警告', '拨杆测试不通过，是否进行后续测试？'])
+            self.messageBox_signal.emit(['测试警告', '拨杆测试不通过，是否进行后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
                 pass
@@ -996,10 +1095,12 @@ class CPUThread(QObject):
         typeC_serial.close()
 
     # MFK测试
-    def CPU_MFKTest(self,state:int):
-        serial_transmitData = [0xAC, hex(6), 0x00, 0x06, 0x0E, 0x00]
-        # 打开串口
-        typeC_serial = serial.Serial(port=str(self.comboBox_23.currentText()), baudrate=1000000, timeout=1)
+    def CPU_MFKTest(self,state:int,serial_transmitData:list):
+        try:
+            #打开串口
+            typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
+        except serial.SerialException as e:
+            self.messageBox_signal.emit(['错误警告',f'Failed to open serial port: {e}'])
         loopStartTime = time.time()
         while True:
             if (time.time() - loopStartTime) * 1000 > self.waiting_time:
@@ -1008,22 +1109,26 @@ class CPUThread(QObject):
             # 发送数据
             typeC_serial.write(bytes(serial_transmitData))
             # 等待0.5s后接收数据
-            time.sleep(0.5)
+            time.sleep(1)
             serial_receiveData = [0 for x in range(40)]
             # 接收数组数据
-            serial_receiveData = typeC_serial.read(40)
+            data = typeC_serial.read(40)
+            serial_receiveData = [hex(i) for i in data]
+            for i in range(len(serial_receiveData)):
+                serial_receiveData[i] = int(serial_receiveData[i],16)
             trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
             if isSendAgain:
+                self.result_signal.emit('未接收到正确数据，再次接收！\n')
                 continue
             if dataLen == 3:  # 指令出错
                 self.orderError(trueData[2])
                 break
             elif dataLen == 8:#成功
-                if trueData[7] == hex(state):#测试通过
-                    self.isPassLever = True
+                if trueData[7] == int(state):#测试通过
+                    self.isPassMFK = True
                     break
                 else:#测试不通过
-                    self.isPassLever = False
+                    self.isPassMFK = False
                     break
             elif dataLen == 7:  # 失败
                 self.isPassMFK = False
@@ -1031,7 +1136,7 @@ class CPUThread(QObject):
             else:
                 continue
         if not self.isPassMFK:
-            self.messageBox_signal(['测试警告', 'MFK测试不通过，是否进行后续测试？'])
+            self.messageBox_signal.emit(['测试警告', 'MFK测试不通过，是否进行后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
                 pass
@@ -1052,8 +1157,11 @@ class CPUThread(QObject):
         elif wr == 'read':
             serial_transmitData = [0xAC, hex(6), 0x00, 0x07, 0x0E, 0x00]
 
-        # 打开串口
-        typeC_serial = serial.Serial(port=str(self.comboBox_23.currentText()), baudrate=1000000, timeout=1)
+        try:
+            #打开串口
+            typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
+        except serial.SerialException as e:
+            self.messageBox_signal.emit(['错误警告',f'Failed to open serial port: {e}'])
         loopStartTime = time.time()
         while True:
             if (time.time() - loopStartTime) * 1000 > self.waiting_time:
@@ -1062,12 +1170,16 @@ class CPUThread(QObject):
             # 发送数据
             typeC_serial.write(bytes(serial_transmitData))
             # 等待0.5s后接收数据
-            time.sleep(0.5)
+            time.sleep(1)
             serial_receiveData = [0 for x in range(40)]
             # 接收数组数据
-            serial_receiveData = typeC_serial.read(40)
+            data = typeC_serial.read(40)
+            serial_receiveData = [hex(i) for i in data]
+            for i in range(len(serial_receiveData)):
+                serial_receiveData[i] = int(serial_receiveData[i],16)
             trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
             if isSendAgain:
+                self.result_signal.emit('未接收到正确数据，再次接收！\n')
                 continue
             if dataLen == 3:  # 指令出错
                 self.orderError(trueData[2])
@@ -1100,7 +1212,7 @@ class CPUThread(QObject):
             else:
                 continue
         if not self.isPassRTC:
-            self.messageBox_signal(['测试警告', 'RTC测试不通过，是否进行后续测试？'])
+            self.messageBox_signal.emit(['测试警告', 'RTC测试不通过，是否进行后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
                 pass
@@ -1116,8 +1228,11 @@ class CPUThread(QObject):
         serial_transmitData2 = [0xAC, hex(6), 0x00, 0x08, 0x53, 0xFF]
         serial_transmitData_array = [serial_transmitData0,
                                      serial_transmitData1,serial_transmitData2]
-        # 打开串口
-        typeC_serial = serial.Serial(port=str(self.comboBox_23.currentText()), baudrate=1000000, timeout=1)
+        try:
+            #打开串口
+            typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
+        except serial.SerialException as e:
+            self.messageBox_signal.emit(['错误警告',f'Failed to open serial port: {e}'])
         loopStartTime = time.time()
         for serial_transmitData in serial_transmitData_array:
             while True:
@@ -1127,10 +1242,13 @@ class CPUThread(QObject):
                 # 发送数据
                 typeC_serial.write(bytes(serial_transmitData))
                 # 等待0.5s后接收数据
-                time.sleep(0.5)
+                time.sleep(1)
                 serial_receiveData = [0 for x in range(40)]
                 # 接收数组数据
-                serial_receiveData = typeC_serial.read(40)
+                data = typeC_serial.read(40)
+            serial_receiveData = [hex(i) for i in data]
+            for i in range(len(serial_receiveData)):
+                serial_receiveData[i] = int(serial_receiveData[i],16)
                 trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
                 if isSendAgain:
                     continue
@@ -1149,7 +1267,7 @@ class CPUThread(QObject):
             if not self.isPassPowerOffSave:
                 break
         if not self.isPassPowerOffSave:
-            self.messageBox_signal(['测试警告', '掉电保存测试不通过，是否进行后续测试？'])
+            self.messageBox_signal.emit(['测试警告', '掉电保存测试不通过，是否进行后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
                 pass
@@ -1160,8 +1278,11 @@ class CPUThread(QObject):
 
     # 各指示灯测试
     def CPU_LEDTest(self, itemRow:int, transmitData:list,LED_name:str):
-        # 打开串口
-        typeC_serial = serial.Serial(port=str(self.comboBox_23.currentText()), baudrate=1000000, timeout=1)
+        try:
+            #打开串口
+            typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
+        except serial.SerialException as e:
+            self.messageBox_signal.emit(['错误警告',f'Failed to open serial port: {e}'])
         loopStartTime = time.time()
         while True:
             if (time.time() - loopStartTime) * 1000 > self.waiting_time:
@@ -1170,12 +1291,16 @@ class CPUThread(QObject):
             # 发送数据
             typeC_serial.write(bytes(transmitData))
             # 等待0.5s后接收数据
-            time.sleep(0.5)
+            time.sleep(1)
             serial_receiveData = [0 for x in range(40)]
             # 接收数组数据
-            serial_receiveData = typeC_serial.read(40)
+            data = typeC_serial.read(40)
+            serial_receiveData = [hex(i) for i in data]
+            for i in range(len(serial_receiveData)):
+                serial_receiveData[i] = int(serial_receiveData[i],16)
             trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
             if isSendAgain:
+                self.result_signal.emit('未接收到正确数据，再次接收！\n')
                 continue
             if dataLen == 3:  # 指令出错
                 self.orderError(trueData[2])
@@ -1194,7 +1319,7 @@ class CPUThread(QObject):
                 break
             elif dataLen == 8: #读
                 if trueData[7] == 0x00:#灯熄灭
-                    self.messageBox_signal(['操作提示',f'{LED_name}是否熄灭？'])
+                    self.messageBox_signal.emit(['操作提示',f'{LED_name}是否熄灭？'])
                     reply = self.result_queue.get()
                     if reply == QMessageBox.Yes:
                         self.isPassLED = True
@@ -1202,7 +1327,7 @@ class CPUThread(QObject):
                         self.isPassLED = False
                     break
                 elif trueData[7] == 0x01:#灯点亮
-                    self.messageBox_signal(['操作提示',f'{LED_name}是否点亮？'])
+                    self.messageBox_signal.emit(['操作提示',f'{LED_name}是否点亮？'])
                     reply = self.result_queue.get()
                     if reply == QMessageBox.Yes:
                         self.isPassLED = True
@@ -1214,7 +1339,7 @@ class CPUThread(QObject):
             else:
                 continue
         if not self.isPassLED:
-            self.messageBox_signal(['测试警告', 'LED测试不通过，是否进行后续测试？'])
+            self.messageBox_signal.emit(['测试警告', 'LED测试不通过，是否进行后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
                 pass
@@ -1224,8 +1349,11 @@ class CPUThread(QObject):
         typeC_serial.close()
 
     def CPU_InTest(self, transmitData:list):
-        # 打开串口
-        typeC_serial = serial.Serial(port=str(self.comboBox_23.currentText()), baudrate=1000000, timeout=1)
+        try:
+            #打开串口
+            typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
+        except serial.SerialException as e:
+            self.messageBox_signal.emit(['错误警告',f'Failed to open serial port: {e}'])
         loopStartTime = time.time()
         while True:
             if (time.time() - loopStartTime) * 1000 > self.waiting_time:
@@ -1234,12 +1362,16 @@ class CPUThread(QObject):
             # 发送数据
             typeC_serial.write(bytes(transmitData))
             # 等待0.5s后接收数据
-            time.sleep(0.5)
+            time.sleep(1)
             serial_receiveData = [0 for x in range(40)]
             # 接收数组数据
-            serial_receiveData = typeC_serial.read(40)
+            data = typeC_serial.read(40)
+            serial_receiveData = [hex(i) for i in data]
+            for i in range(len(serial_receiveData)):
+                serial_receiveData[i] = int(serial_receiveData[i],16)
             trueData,dataLen,isSendAgain = self.dataJudgement(serial_receiveData)
             if isSendAgain:
+                self.result_signal.emit('未接收到正确数据，再次接收！\n')
                 continue
             if dataLen == 3:#指令出错
                 self.orderError(trueData[2])
@@ -1247,7 +1379,7 @@ class CPUThread(QObject):
             elif dataLen == 12:#读所有输入通道
                 if trueData[7] == 0x00:  # 读所有输入通道成功
                     if trueData[9] == 0xff and trueData[10] == 0xff and trueData[11] == 0xff:
-                        self.messageBox_signal(['操作提示','输入通道指示灯是否全部点亮？'])
+                        self.messageBox_signal.emit(['操作提示','输入通道指示灯是否全部点亮？'])
                         reply = self.result_queue.get()
                         if reply == QMessageBox.Yes:
                             self.isPassIn = True
@@ -1262,7 +1394,7 @@ class CPUThread(QObject):
                     break
 
         if not self.isPassIn:
-            self.messageBox_signal(['测试警告', 'LED测试不通过，是否进行后续测试？'])
+            self.messageBox_signal.emit(['测试警告', 'LED测试不通过，是否进行后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
                 pass
@@ -1273,8 +1405,11 @@ class CPUThread(QObject):
 
     #本体OUT测试
     def CPU_OutTest(self, transmitData:list):
-        # 打开串口
-        typeC_serial = serial.Serial(port=str(self.comboBox_23.currentText()), baudrate=1000000, timeout=1)
+        try:
+            #打开串口
+            typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
+        except serial.SerialException as e:
+            self.messageBox_signal.emit(['错误警告',f'Failed to open serial port: {e}'])
         loopStartTime = time.time()
         while True:
             if (time.time() - loopStartTime) * 1000 > self.waiting_time:
@@ -1283,12 +1418,16 @@ class CPUThread(QObject):
             # 发送数据
             typeC_serial.write(bytes(transmitData))
             # 等待0.5s后接收数据
-            time.sleep(0.5)
+            time.sleep(1)
             serial_receiveData = [0 for x in range(40)]
             # 接收数组数据
-            serial_receiveData = typeC_serial.read(40)
+            data = typeC_serial.read(40)
+            serial_receiveData = [hex(i) for i in data]
+            for i in range(len(serial_receiveData)):
+                serial_receiveData[i] = int(serial_receiveData[i],16)
             trueData,dataLen,isSendAgain = self.dataJudgement(serial_receiveData)
             if isSendAgain:
+                self.result_signal.emit('未接收到正确数据，再次接收！\n')
                 continue
             if dataLen == 3:#指令出错
                 self.orderError(trueData[2])
@@ -1298,11 +1437,11 @@ class CPUThread(QObject):
                     bool_receive, self.m_can_obj = CAN_option.receiveCANbyID((0x180 + self.CANAddr_DI), 2000)
                     self.m_receiveData = self.m_can_obj.Data
                     if bool_receive == False:
-                        self.messageBox_signal(['警告','ET1600接收数据超时，请检查ET1600接线！'])
+                        self.messageBox_signal.emit(['警告','ET1600接收数据超时，请检查ET1600接线！'])
                         self.isPassOut = False
                         break
                     elif self.m_receiveData[0] == 0xff and self.m_receiveData[1] == 0xff :
-                        self.messageBox_signal(['操作提示','ET1600的通道指示灯是否全部点亮？'])
+                        self.messageBox_signal.emit(['操作提示','ET1600的通道指示灯是否全部点亮？'])
                         reply = self.result_queue.get()
                         if reply == QMessageBox.Yes:
                             self.isPassOut = True
@@ -1316,7 +1455,7 @@ class CPUThread(QObject):
                 continue
 
         if not self.isPassOut:
-            self.messageBox_signal(['测试警告', '本体OUT测试不通过，是否进行后续测试？'])
+            self.messageBox_signal.emit(['测试警告', '本体OUT测试不通过，是否进行后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
                 pass
@@ -1327,8 +1466,11 @@ class CPUThread(QObject):
 
     # 本体ETH测试
     def CPU_ETHTest(self, transmitData: list,isPassSign:bool):
-        # 打开串口
-        typeC_serial = serial.Serial(port=str(self.comboBox_23.currentText()), baudrate=1000000, timeout=1)
+        try:
+            #打开串口
+            typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
+        except serial.SerialException as e:
+            self.messageBox_signal.emit(['错误警告',f'Failed to open serial port: {e}'])
         loopStartTime = time.time()
         while True:
             if (time.time() - loopStartTime) * 1000 > self.waiting_time:
@@ -1337,12 +1479,16 @@ class CPUThread(QObject):
             # 发送数据
             typeC_serial.write(bytes(transmitData))
             # 等待0.5s后接收数据
-            time.sleep(0.5)
+            time.sleep(1)
             serial_receiveData = [0 for x in range(40)]
             # 接收数组数据
-            serial_receiveData = typeC_serial.read(40)
+            data = typeC_serial.read(40)
+            serial_receiveData = [hex(i) for i in data]
+            for i in range(len(serial_receiveData)):
+                serial_receiveData[i] = int(serial_receiveData[i],16)
             trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
             if isSendAgain:
+                self.result_signal.emit('未接收到正确数据，再次接收！\n')
                 continue
             if dataLen == 3:  # 指令出错
                 self.orderError(trueData[2])
@@ -1374,7 +1520,7 @@ class CPUThread(QObject):
                 continue
 
         if not self.isPassETH_IP and self.isPassETH_UDP:
-            self.messageBox_signal(['测试警告', '本体ETH IP测试不通过，是否进行后续测试？'])
+            self.messageBox_signal.emit(['测试警告', '本体ETH IP测试不通过，是否进行后续测试？'])
             self.isPassETH = False
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
@@ -1383,7 +1529,7 @@ class CPUThread(QObject):
                 self.cancelAllTest()
         elif (not self.isPassETH_UDP and self.isPassETH_IP) or (not self.isPassETH_UDP and not self.isPassETH_IP):
             self.isPassETH = False
-            self.messageBox_signal(['测试警告', '本体ETH UDP测试不通过，是否进行后续测试？'])
+            self.messageBox_signal.emit(['测试警告', '本体ETH UDP测试不通过，是否进行后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
                 pass
@@ -1394,8 +1540,11 @@ class CPUThread(QObject):
 
     # 本体232测试
     def CPU_232Test(self, transmitData: list):
-        # 打开串口
-        typeC_serial = serial.Serial(port=str(self.comboBox_23.currentText()), baudrate=1000000, timeout=1)
+        try:
+            #打开串口
+            typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
+        except serial.SerialException as e:
+            self.messageBox_signal.emit(['错误警告',f'Failed to open serial port: {e}'])
         loopStartTime = time.time()
         while True:
             if (time.time() - loopStartTime) * 1000 > self.waiting_time:
@@ -1404,12 +1553,16 @@ class CPUThread(QObject):
             # 发送数据
             typeC_serial.write(bytes(transmitData))
             # 等待0.5s后接收数据
-            time.sleep(0.5)
+            time.sleep(1)
             serial_receiveData = [0 for x in range(40)]
             # 接收数组数据
-            serial_receiveData = typeC_serial.read(40)
+            data = typeC_serial.read(40)
+            serial_receiveData = [hex(i) for i in data]
+            for i in range(len(serial_receiveData)):
+                serial_receiveData[i] = int(serial_receiveData[i],16)
             trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
             if isSendAgain:
+                self.result_signal.emit('未接收到正确数据，再次接收！\n')
                 continue
             if dataLen == 3:  # 指令出错
                 self.orderError(trueData[2])
@@ -1435,7 +1588,7 @@ class CPUThread(QObject):
             else:
                 continue
         if not self.isPass232:
-            self.messageBox_signal(['测试警告', '本体232测试不通过，是否进行后续测试？'])
+            self.messageBox_signal.emit(['测试警告', '本体232测试不通过，是否进行后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
                 pass
@@ -1446,8 +1599,11 @@ class CPUThread(QObject):
 
     # 本体485测试
     def CPU_485Test(self, transmitData: list):
-        # 打开串口
-        typeC_serial = serial.Serial(port=str(self.comboBox_23.currentText()), baudrate=1000000, timeout=1)
+        try:
+            #打开串口
+            typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
+        except serial.SerialException as e:
+            self.messageBox_signal.emit(['错误警告',f'Failed to open serial port: {e}'])
         loopStartTime = time.time()
         while True:
             if (time.time() - loopStartTime) * 1000 > self.waiting_time:
@@ -1456,12 +1612,16 @@ class CPUThread(QObject):
             # 发送数据
             typeC_serial.write(bytes(transmitData))
             # 等待0.5s后接收数据
-            time.sleep(0.5)
+            time.sleep(1)
             serial_receiveData = [0 for x in range(40)]
             # 接收数组数据
-            serial_receiveData = typeC_serial.read(40)
+            data = typeC_serial.read(40)
+            serial_receiveData = [hex(i) for i in data]
+            for i in range(len(serial_receiveData)):
+                serial_receiveData[i] = int(serial_receiveData[i],16)
             trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
             if isSendAgain:
+                self.result_signal.emit('未接收到正确数据，再次接收！\n')
                 continue
             if dataLen == 3:  # 指令出错
                 self.orderError(trueData[2])
@@ -1487,7 +1647,7 @@ class CPUThread(QObject):
             else:
                 continue
         if not self.isPass485:
-            self.messageBox_signal(['测试警告', '本体485测试不通过，是否进行后续测试？'])
+            self.messageBox_signal.emit(['测试警告', '本体485测试不通过，是否进行后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
                 pass
@@ -1498,8 +1658,11 @@ class CPUThread(QObject):
 
     # 本体右扩CAN测试
     def CPU_rightCANTest(self, transmitData: list):
-        # 打开串口
-        typeC_serial = serial.Serial(port=str(self.comboBox_23.currentText()), baudrate=1000000, timeout=1)
+        try:
+            #打开串口
+            typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
+        except serial.SerialException as e:
+            self.messageBox_signal.emit(['错误警告',f'Failed to open serial port: {e}'])
         loopStartTime = time.time()
         while True:
             if (time.time() - loopStartTime) * 1000 > self.waiting_time:
@@ -1508,12 +1671,16 @@ class CPUThread(QObject):
             # 发送数据
             typeC_serial.write(bytes(transmitData))
             # 等待0.5s后接收数据
-            time.sleep(0.5)
+            time.sleep(1)
             serial_receiveData = [0 for x in range(40)]
             # 接收数组数据
-            serial_receiveData = typeC_serial.read(40)
+            data = typeC_serial.read(40)
+            serial_receiveData = [hex(i) for i in data]
+            for i in range(len(serial_receiveData)):
+                serial_receiveData[i] = int(serial_receiveData[i],16)
             trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
             if isSendAgain:
+                self.result_signal.emit('未接收到正确数据，再次接收！\n')
                 continue
             if dataLen == 3:  # 指令出错
                 self.orderError(trueData[2])
@@ -1521,28 +1688,28 @@ class CPUThread(QObject):
             elif dataLen == 7:  # 写
                 if trueData[6] == 0x00:  # 写成功
                     if transmitData[5] == 0x00 and transmitData[6] == 0x00:#复位灯亮
-                        self.messageBox_signal(['操作提示','右扩CAN的RESET灯是否点亮?'])
+                        self.messageBox_signal.emit(['操作提示','右扩CAN的RESET灯是否点亮?'])
                         reply = self.result_queue.get()
                         if reply == QMessageBox.Yes:
                             self.isPassRightCAN = True
                         elif reply == QMessageBox.No:
                             self.isPassRightCAN = False
                     elif transmitData[5] == 0x00 and transmitData[6] == 0x01:#复位灯灭
-                        self.messageBox_signal(['操作提示','右扩CAN的RESET灯是否熄灭?'])
+                        self.messageBox_signal.emit(['操作提示','右扩CAN的RESET灯是否熄灭?'])
                         reply = self.result_queue.get()
                         if reply == QMessageBox.Yes:
                             self.isPassRightCAN = True
                         elif reply == QMessageBox.No:
                             self.isPassRightCAN =False
                     elif transmitData[5] == 0x01 and transmitData[6] == 0x01:#使能灯亮
-                        self.messageBox_signal(['操作提示','右扩CAN的使能灯是否点亮?'])
+                        self.messageBox_signal.emit(['操作提示','右扩CAN的使能灯是否点亮?'])
                         reply = self.result_queue.get()
                         if reply == QMessageBox.Yes:
                             self.isPassRightCAN = True
                         elif reply == QMessageBox.No:
                             self.isPassRightCAN =False
                     elif transmitData[5] == 0x01 and transmitData[6] == 0x00:#使能灯灭
-                        self.messageBox_signal(['操作提示','右扩CAN的使能灯是否熄灭?'])
+                        self.messageBox_signal.emit(['操作提示','右扩CAN的使能灯是否熄灭?'])
                         reply = self.result_queue.get()
                         if reply == QMessageBox.Yes:
                             self.isPassRightCAN = True
@@ -1555,7 +1722,7 @@ class CPUThread(QObject):
             else:
                 continue
         if not self.isPassRightCAN:
-            self.messageBox_signal(['测试警告', '本体右扩CAN测试不通过，是否进行后续测试？'])
+            self.messageBox_signal.emit(['测试警告', '本体右扩CAN测试不通过，是否进行后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
                 pass
@@ -1566,8 +1733,11 @@ class CPUThread(QObject):
 
     #MAC地址和3码
     def CPU_configTest(self, transmitData: list, type:str):
-        # 打开串口
-        typeC_serial = serial.Serial(port=str(self.comboBox_23.currentText()), baudrate=1000000, timeout=1)
+        try:
+            #打开串口
+            typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
+        except serial.SerialException as e:
+            self.messageBox_signal.emit(['错误警告',f'Failed to open serial port: {e}'])
         loopStartTime = time.time()
         while True:
             if (time.time() - loopStartTime) * 1000 > self.waiting_time:
@@ -1576,12 +1746,16 @@ class CPUThread(QObject):
             # 发送数据
             typeC_serial.write(bytes(transmitData))
             # 等待0.5s后接收数据
-            time.sleep(0.5)
+            time.sleep(1)
             serial_receiveData = [0 for x in range(40)]
             # 接收数组数据
-            serial_receiveData = typeC_serial.read(40)
+            data = typeC_serial.read(40)
+            serial_receiveData = [hex(i) for i in data]
+            for i in range(len(serial_receiveData)):
+                serial_receiveData[i] = int(serial_receiveData[i],16)
             trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
             if isSendAgain:
+                self.result_signal.emit('未接收到正确数据，再次接收！\n')
                 continue
             if dataLen == 3:  # 指令出错
                 self.orderError(trueData[2])
@@ -1641,7 +1815,7 @@ class CPUThread(QObject):
             else:
                 continue
         if not self.isPassConfig:
-            self.messageBox_signal(['测试警告', '本体Config测试不通过，是否进行后续测试？'])
+            self.messageBox_signal.emit(['测试警告', '本体Config测试不通过，是否进行后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
                 pass
@@ -1657,13 +1831,17 @@ class CPUThread(QObject):
         dataLen = 0
         # 数据头位置
         startNum = 0
+        hex_serial_receiveData = [hex(i) for i in serial_receiveData]
+        print(f'serial_receiveData：{hex_serial_receiveData}')
         # 确定数据头
         for i in range(len(serial_receiveData)):
-            if serial_receiveData[i] == 0xCA:
+            if serial_receiveData[i] == int(0xCA):
+                self.result_signal.emit(f'找到startNum:{startNum}\n')
                 startNum = i
                 isSendAgain = False
                 break
-            if i == len(serial_receiveData) - 1 and serial_receiveData[i] != 0xCA:
+            if i == len(serial_receiveData) - 1 and serial_receiveData[i] != int(0xCA):
+                self.result_signal.emit(f'未找到startNum\n')
                 isSendAgain = True
                 return trueData,dataLen,isSendAgain
         dataLen = int(serial_receiveData[startNum + 1])
@@ -1672,10 +1850,22 @@ class CPUThread(QObject):
         dataSum = 0
         for i in range(dataLen):
             dataSum += serial_receiveData[startNum + i]
-        ckeckSum = -int(dataSum)
+        ckeckSum = self.getCheckNum(serial_receiveData[startNum:startNum+dataLen])
+        # print(f"serial_receiveData[startNum:startNum+dataLen]:{serial_receiveData[startNum:startNum+dataLen]}")
         if ckeckSum == int(serial_receiveData[startNum + dataLen]):
+            self.result_signal.emit("接收的数据正确。\n")
             trueData = serial_receiveData[startNum:startNum + dataLen]
+        hex_trueData = [hex(i) for i in trueData]
+        self.result_signal.emit(f'receiveData:{hex_trueData}\n')
         return trueData,dataLen,isSendAgain
+
+    #获取校验位
+    def getCheckNum(self,data:list):
+        sum = 0
+        for d in data:
+            sum += d
+        checkNum = (~sum) & 0xff
+        return checkNum
 
     def orderError(self,errCode):
         errorCode = {0x80: '消息长度错误', 0x81: '设备错误', 0x82: '测试类型错误',
@@ -1727,7 +1917,7 @@ class CPUThread(QObject):
         self.label_signal.emit(['fail', '测试停止'])
 
     def showErrorInf(self,Inf):
-        self.showInf(f"{Inf}程序出现问题")
+        self.result_signal.emit(f"{Inf}程序出现问题\n")
         # 捕获异常并输出详细的错误信息
-        self.showInf(f"ErrorInf:\n{traceback.format_exc()}")
-
+        self.result_signal.emit(f"ErrorInf:\n{traceback.format_exc()}\n")
+        self.messageBox_signal.emit(['错误警告',(f"ErrorInf:\n{traceback.format_exc()}\n")])

@@ -225,16 +225,16 @@ class Ui_Control(QMainWindow,Ui_Form):
                                    self.lineEdit_37, self.lineEdit_38]
         self.CPU_lineEditName_array = ["CPU_IP", "工装1", "工装2", "工装3", "工装4", "工装5"]
         self.CPU_checkBox_array = [self.checkBox_50, self.checkBox_51, self.checkBox_52, self.checkBox_53,
-                                   self.checkBox_54, self.checkBox_55, self.checkBox_56, self.checkBox_57,
+                                    self.checkBox_55, self.checkBox_56, self.checkBox_57,
                                    self.checkBox_58, self.checkBox_59, self.checkBox_60, self.checkBox_61,
                                    self.checkBox_62, self.checkBox_63, self.checkBox_64, self.checkBox_65,
-                                   self.checkBox_66, self.checkBox_67, self.checkBox_68,
+                                   self.checkBox_66,self.checkBox_54, self.checkBox_67, self.checkBox_68,
                                    self.checkBox_71,self.checkBox_73]
-        self.CPU_checkBoxName_array = ["外观检测", "型号检查", "SRAM", "FLASH", "MAC/三码写入", "FPGA", "拨杆测试",
+        self.CPU_checkBoxName_array = ["外观检测", "型号检查", "SRAM", "FLASH", "FPGA", "拨杆测试",
                                        "MFK按键",
                                        "掉电保存", "RTC测试", "各指示灯", "本体IN", "本体OUT", "以太网", "RS-232C",
                                        "RS-485",
-                                       "右扩CAN", "MA0202", "测试报告", "修改参数","全选"]
+                                       "右扩CAN", "MAC/三码写入",  "MA0202", "测试报告", "修改参数","全选"]
 
         self.setWindowFlags(Qt.FramelessWindowHint)  # 无边框窗口
         self.label_6.mousePressEvent = self.label_mousePressEvent
@@ -244,7 +244,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.label_41.setAlignment(QtCore.Qt.AlignLeft|Qt.AlignVCenter)
         #屏蔽pushbutton_9
         self.pushButton_9.setVisible(False)
-
+        self.getSerialInf(0)
         # 读页面配置
         # self.loadConfig()必须放在类似comboBox.currentIndexChanged.connect(self.saveConfig)的代码之前
         # 某则一修改参数就会触发saveConfig，导致还没修改的参数被默认参数覆盖。
@@ -276,7 +276,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         #                         }
         #                     """)
 
-        # self.getSerialInf()
+
 
 
         for tW in [self.tableWidget_AI, self.tableWidget_AO, self.tableWidget_DIDO,self.tableWidget_CPU]:
@@ -754,7 +754,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.pushButton_13.clicked.connect(self.option_pushButton13)
 
         #更新串口
-        self.pushButton_renewSerial.clicked.connect(self.getSerialInf)
+        self.pushButton_renewSerial.clicked.connect(lambda:self.getSerialInf(1))
         global isMainRunning
         isMainRunning = True
 
@@ -1337,11 +1337,15 @@ class Ui_Control(QMainWindow,Ui_Form):
     def startTest(self):
         try:
             # 启动CAN分析仪
-            can_thread=threading.Thread(target = canInit_thread)
-            can_thread.start()
-            event_canInit.wait()
-            list_canInit = q.get()
-            # # print('list_canInit:',list_canInit)
+            # can_thread=threading.Thread(target = canInit_thread)
+            # can_thread.start()
+            # event_canInit.wait()
+            # list_canInit = q.get()
+            # if not list_canInit[0]:
+            #     self.showMessageBox(list_canInit[1])
+            #     self.CANFail()
+            #     return False
+            list_canInit=CAN_init()
             if not list_canInit[0]:
                 self.showMessageBox(list_canInit[1])
                 self.CANFail()
@@ -1830,10 +1834,10 @@ class Ui_Control(QMainWindow,Ui_Form):
 
     def testAllorNot(self):
         CPU_test_array = [self.checkBox_50, self.checkBox_51, self.checkBox_52, self.checkBox_53,
-                               self.checkBox_54, self.checkBox_55, self.checkBox_56, self.checkBox_57,
+                                self.checkBox_55, self.checkBox_56, self.checkBox_57,
                                self.checkBox_58, self.checkBox_59, self.checkBox_60, self.checkBox_61,
                                self.checkBox_62, self.checkBox_63, self.checkBox_64, self.checkBox_65,
-                               self.checkBox_66, self.checkBox_67
+                               self.checkBox_66,self.checkBox_54, self.checkBox_67
                                ]
         if self.checkBox_73.isChecked():
             self.checkBox_73.setText("取消全选")
@@ -2303,10 +2307,9 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.module_3 = '工装3（QN0016）'
             self.module_4 = '工装4（AE0400）'
             self.module_5 = '工装5（AQ0004）'
-            self.testNum = 21  # ["外观检测", "型号检查", "SRAM", "FLASH", "FPGA", "拨杆测试", "MFK按键",
-                                  # "RTC测试", "掉电保存", "各指示灯", "本体IN", "本体OUT", "以太网",
-                                    # "RS-232C", "RS-485",
-                                  # "右扩CAN", "MA0202", "测试报告", "固件烧录", "MAC/三码写入"]
+            self.testNum = 18  # ["外观检测", "型号检查", "SRAM", "FLASH", "FPGA", "拨杆测试", "MFK按键",
+                                  #  "掉电保存", "RTC测试","各指示灯", "本体IN", "本体OUT", "以太网",
+                                    # "RS-232C", "RS-485","右扩CAN", "MAC/三码写入", "MA0202"]
 
             self.inf_param = [mTable, self.module_1, self.module_2, self.module_3,
                               self.module_4,self.module_5,self.testNum]
@@ -2333,9 +2336,9 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.inf_CANIPAdrr = [self.CANAddr1,self.CANAddr2,self.CANAddr3,self.CANAddr4,
                                   self.CANAddr5]
             #获取串口信息
-            self.serialPort_232 = int(self.comboBox_21.currentIndex())
-            self.serialPort_485 = int(self.comboBox_22.currentIndex())
-            self.serialPort_typeC = int(self.comboBox_23.currentIndex())
+            self.serialPort_232 = self.comboBox_21.currentText()
+            self.serialPort_485 = self.comboBox_22.currentText()
+            self.serialPort_typeC = self.comboBox_23.currentText()
             self.saveDir = self.label_41.text()  # 保存路径
             # # print(f'{self.module_type},{self.module_pn},{self.module_sn},{self.module_rev},{self.CANAddr_AI}')
             self.inf_serialPort = [self.serialPort_232, self.serialPort_485,
@@ -2343,17 +2346,19 @@ class Ui_Control(QMainWindow,Ui_Form):
             #获取检测信息
 
             self.CPU_test_array = [self.checkBox_50, self.checkBox_51, self.checkBox_52,self.checkBox_53,
-                                   self.checkBox_54, self.checkBox_55, self.checkBox_56, self.checkBox_57,
+                                    self.checkBox_55, self.checkBox_56, self.checkBox_57,
                                    self.checkBox_58, self.checkBox_59, self.checkBox_60, self.checkBox_61,
                                    self.checkBox_62, self.checkBox_63, self.checkBox_64, self.checkBox_65,
-                                   self.checkBox_66, self.checkBox_67
+                                   self.checkBox_66, self.checkBox_54, self.checkBox_67
                                    ]
-            self.CPU_testName_array = [ "外观检测", "型号检查", "SRAM", "FLASH", "MAC/三码写入", "FPGA",
+            self.CPU_testName_array = [ "外观检测", "型号检查", "SRAM", "FLASH", "FPGA",
                                         "拨杆测试","MFK按键","掉电保存", "RTC测试", "各指示灯", "本体IN", "本体OUT",
-                                        "以太网","RS-232C","RS-485","右扩CAN", "MA0202"]
+                                        "以太网","RS-232C","RS-485","右扩CAN", "MAC/三码写入", "MA0202"]
             self.inf_CPU_test = [False for x in range(len(self.CPU_test_array))]
             for i in range(len(self.CPU_test_array)):
                 self.inf_CPU_test[i] = self.CPU_test_array[i].isChecked()
+                # print(f' self.CPU_test_array[{i}].isChecked():{ self.CPU_test_array[i].isChecked()}')
+            self.inf_test = [self.inf_CPU_test,self.checkBox_68.isChecked()]
             # :param
             # mTable: 进行操作的表格
             # :param
@@ -2371,7 +2376,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                 else:
                     self.itemOperation(mTable, i, 0, 0, '')
             self.inf_CPUlist = [self.inf_param,self.inf_product, self.inf_CANIPAdrr,
-                                self.inf_serialPort, self.inf_CPU_test]
+                                self.inf_serialPort, self.inf_test]
         if self.tabIndex == 0 or self.tabIndex == 1 or self.tabIndex == 2:
             #三码转换
             self.asciiCode_pn = (strToASCII(self.lineEdit_PN.text()))
@@ -2467,7 +2472,7 @@ class Ui_Control(QMainWindow,Ui_Form):
 #            return
         return True
 
-    def getSerialInf(self):
+    def getSerialInf(self, num:int):
         self.textBrowser_5.clear()
         #清空串口选项
         for i in range(self.comboBox_21.count()):
@@ -2485,9 +2490,10 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.comboBox_21.setItemText(i, ports[i].device)
             self.comboBox_22.setItemText(i, ports[i].device)
             self.comboBox_23.setItemText(i, ports[i].device)
-            if i ==0:
-                self.showInf(f'可用串口：\n')
-            self.showInf(f'({i + 1}){ports[i].description}\n')
+            if num != 0:
+                if i ==0:
+                    self.showInf(f'可用串口：\n')
+                self.showInf(f'({i + 1}){ports[i].description}\n')
             # self.showInf(f'({i+1}){ports[i].device}, {ports[i].name}, {ports[i].description}\n')
 
         self.comboBox_21.removeItem(len(ports))

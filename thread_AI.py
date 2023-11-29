@@ -1677,7 +1677,7 @@ class AIThread(QObject):
                                 return False
                             self.result_signal.emit(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为"'
                                                     f'{self.vol_name_array[typeNum]}"。\n\n')
-                            # print(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为{self.vol_name_array[typeNum]}。\n\n')
+                            return False
                 else:
                     self.pauseOption()
                     if not self.is_running:
