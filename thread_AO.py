@@ -1465,11 +1465,15 @@ class AOThread(QObject):
             self.result_signal.emit(f'{i + 1}.第{i + 1}次{inf}{usTmpValue}  \n\n')
             for j in range(channelNum):
                 usRecValue[j] = usRecValue[j] + usTmpValue[j]
-                if i == self.receive_num - 1:
-                    usRecValue[j] = int(usRecValue[j] / valReceive_num)
-            if i == self.receive_num - 1:
-                self.result_signal.emit(inf_average + f'{usRecValue}\n\n')
-        if valReceive_num == 0:
+            #     if i == self.receive_num - 1:
+            #         usRecValue[j] = int(usRecValue[j] / valReceive_num)
+            # if i == self.receive_num - 1:
+            #     self.result_signal.emit(inf_average + f'{usRecValue}\n\n')
+        if valReceive_num > 0:
+            for j in range(channelNum):
+                usRecValue[j] = int(usRecValue[j] / valReceive_num)
+            self.result_signal.emit(inf_average + f'{usRecValue}\n\n')
+        elif valReceive_num == 0:
             self.pauseOption()
             if not self.is_running:
                 return False, 0
