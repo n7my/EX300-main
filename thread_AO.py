@@ -581,7 +581,7 @@ class AOThread(QObject):
                     if not self.vol_cur_test(type,m_name,m_valueTheory, m_arrayVal, m_range,typeNum):
                         self.isAOVolPass = False
                 except Exception as e:
-                    self.showInf(f"testVolError:{e}+{self.HORIZONTAL_LINE}")
+                    self.result_signal.emit(f"testVolError:{e}+{self.HORIZONTAL_LINE}")
                     # 捕获异常并输出详细的错误信息
                     traceback.print_exc()
 
@@ -625,7 +625,7 @@ class AOThread(QObject):
                     if not self.vol_cur_test(type,m_name, m_valueTheory, m_arrayVal, m_range, typeNum):
                         self.isAOCurPass = False
                 except Exception as e:
-                    self.showInf(f"testCurError:{e}+{self.HORIZONTAL_LINE}")
+                    self.result_signal.emit(f"testCurError:{e}+{self.HORIZONTAL_LINE}")
                     # 捕获异常并输出详细的错误信息
                     traceback.print_exc()
 

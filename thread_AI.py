@@ -289,14 +289,16 @@ class AIThread(QObject):
                         self.isCalibrate = False
                         self.isExcel = False
                         break
-                    if eID == 0:
-                        self.result_signal.emit(f'错误：未发现{self.module_1}' + self.HORIZONTAL_LINE)
-                    elif eID == 1:
-                        self.result_signal.emit(f'错误：未发现{self.module_2}' + self.HORIZONTAL_LINE)
-                    elif eID == 3:
-                        self.result_signal.emit(f'错误：未发现继电器1' + self.HORIZONTAL_LINE)
-                    elif eID == 7:
-                        self.result_signal.emit(f'错误：未发现继电器2' + self.HORIZONTAL_LINE)
+                    if eID != 0:
+                        self.result_signal.emit(f'错误：未发现{module_array[eID - 1]}' + self.HORIZONTAL_LINE)
+                    # if eID == 0:
+                    #     self.result_signal.emit(f'错误：未发现{self.module_1}' + self.HORIZONTAL_LINE)
+                    # elif eID == 1:
+                    #     self.result_signal.emit(f'错误：未发现{self.module_2}' + self.HORIZONTAL_LINE)
+                    # elif eID == 3:
+                    #     self.result_signal.emit(f'错误：未发现继电器1' + self.HORIZONTAL_LINE)
+                    # elif eID == 7:
+                    #     self.result_signal.emit(f'错误：未发现继电器2' + self.HORIZONTAL_LINE)
                     self.result_signal.emit(f'错误：总线初始化失败！再次尝试初始化。' + self.HORIZONTAL_LINE)
 
             self.result_signal.emit('模块在线检测结束！' + self.HORIZONTAL_LINE)
@@ -310,6 +312,8 @@ class AIThread(QObject):
                 self.isExcel = False
 
             QMessageBox(QMessageBox.Critical, '错误提示', '总线初始化异常，请检查设备').exec_()
+            # 捕获异常并输出详细的错误信息
+            traceback.print_exc()
             # 后续测试全部取消
             self.isTest = False
             self.isCalibrate = False
@@ -333,7 +337,7 @@ class AIThread(QObject):
                 self.m_transmitData[5] = 0x54
                 self.m_transmitData[6] = 0x41
                 self.m_transmitData[7] = 0x52
-                isLEDTest, whatEver = CAN_option.transmitCAN((0x600 + int(self.CANAddr_AI)), self.m_transmitData)
+                isLEDTest, whatEver = CAN_option.transmitCAN((0x600 + int(self.CANAddr_AI)), self.m_transmitData,1)
                 if isLEDTest:
                     self.pauseOption()
                     if not self.is_running:
@@ -360,7 +364,7 @@ class AIThread(QObject):
                     self.m_transmitData[6] = 0x49
                     self.m_transmitData[7] = 0x54
                     bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + self.CANAddr_AI),
-                                                                           self.m_transmitData)
+                                                                           self.m_transmitData,1)
                     if bool_transmit:
                         self.pauseOption()
                         if not self.is_running:
@@ -472,13 +476,13 @@ class AIThread(QObject):
             self.testNum = self.testNum - 1
             self.m_transmitData = [0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
 
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay, self.m_transmitData)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay, self.m_transmitData,1)
             if not bool_transmit:
                 self.result_signal.emit('继电器1切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
                 # print('继电器1切换错误，请停止检查设备！')
                 return False
 
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay + 1, self.m_transmitData)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay + 1, self.m_transmitData,1)
             if not bool_transmit:
                 self.result_signal.emit('继电器2切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
                 # print('继电器2切换错误，请停止检查设备！')
@@ -489,7 +493,7 @@ class AIThread(QObject):
                 return False
             self.m_transmitData = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
 
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay, self.m_transmitData)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay, self.m_transmitData,1)
             if not bool_transmit:
                 self.pauseOption()
                 if not self.is_running:
@@ -498,7 +502,8 @@ class AIThread(QObject):
                 # print('继电器1切换错误，请停止检查设备！')
                 return False
 
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay + 1, self.m_transmitData)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay + 1,
+                                                                   self.m_transmitData,1)
             if not bool_transmit:
                 self.pauseOption()
                 if not self.is_running:
@@ -520,7 +525,8 @@ class AIThread(QObject):
             self.testNum = self.testNum - 1
             self.m_transmitData = [0x06, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
 
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay, self.m_transmitData)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay,
+                                                                   self.m_transmitData,1)
             if not bool_transmit:
                 self.pauseOption()
                 if not self.is_running:
@@ -529,7 +535,8 @@ class AIThread(QObject):
                 # print('继电器1切换错误，请停止检查设备！')
                 return False
 
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay + 1, self.m_transmitData)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay + 1,
+                                                                   self.m_transmitData,1)
             if not bool_transmit:
                 self.pauseOption()
                 if not self.is_running:
@@ -543,7 +550,7 @@ class AIThread(QObject):
                 return False
 
             self.m_transmitData = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay, self.m_transmitData)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay, self.m_transmitData,1)
             if not bool_transmit:
                 self.pauseOption()
                 if not self.is_running:
@@ -552,7 +559,8 @@ class AIThread(QObject):
                 # print('继电器切换错误，请停止检查设备！')
                 return False
 
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay + 1, self.m_transmitData)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay + 1,
+                                                                   self.m_transmitData,1)
             if not bool_transmit:
                 self.pauseOption()
                 if not self.is_running:
@@ -896,7 +904,7 @@ class AIThread(QObject):
         while True:
             if (time.time() - time1)*1000 > self.waiting_time:
                 return False,0
-            bool_receive,self.m_can_obj = CAN_option.receiveCANbyID(can_id, self.waiting_time)
+            bool_receive,self.m_can_obj = CAN_option.receiveCANbyID(can_id, self.waiting_time,1)
             # QApplication.processEvents()
             if bool_receive == 'stopReceive':
                 return 'stopReceive', recv
@@ -925,7 +933,8 @@ class AIThread(QObject):
             # self.testNum = self.testNum - 1
             self.m_transmitData = [0x01,0x01,0x00,0x00,0x00,0x00,0x00,0x00]
             try:
-                bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay, self.m_transmitData)
+                bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay,
+                                                                       self.m_transmitData,1)
                 if not bool_transmit:
                     return False
             except:
@@ -934,7 +943,8 @@ class AIThread(QObject):
                 return False
 
             try:
-                bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay+1, self.m_transmitData)
+                bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay+1,
+                                                                       self.m_transmitData,1)
                 if not bool_transmit:
                     return False
             except:
@@ -975,7 +985,7 @@ class AIThread(QObject):
             # self.itemOperation(mTable, 5, 2, 1, f'{calibrateTest_time}')
             self.m_transmitData = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
             # time.sleep(0.5)
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay, self.m_transmitData)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay, self.m_transmitData,1)
             if not bool_transmit:
                 self.pauseOption()
                 if not self.is_running:
@@ -986,7 +996,7 @@ class AIThread(QObject):
                 # self.isStop()
                 return False
 
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay+1, self.m_transmitData)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay+1, self.m_transmitData,1)
             if not bool_transmit:
                 self.pauseOption()
                 if not self.is_running:
@@ -1015,7 +1025,8 @@ class AIThread(QObject):
             # self.testNum = self.testNum - 1
             self.m_transmitData = [0x06, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
             try:
-                bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay, self.m_transmitData)
+                bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay,
+                                                                       self.m_transmitData,1)
                 if not bool_transmit:
                     self.pauseOption()
                     if not self.is_running:
@@ -1028,7 +1039,8 @@ class AIThread(QObject):
                 # self.result_signal.emit('继电器1切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
                 return False
             try:
-                bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay + 1, self.m_transmitData)
+                bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay + 1,
+                                                                       self.m_transmitData,1)
                 if not bool_transmit:
                     self.pauseOption()
                     if not self.is_running:
@@ -1071,7 +1083,7 @@ class AIThread(QObject):
             # time.sleep(1)
             self.m_transmitData = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
 
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay, self.m_transmitData)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay, self.m_transmitData,1)
             if not bool_transmit:
                 self.pauseOption()
                 if not self.is_running:
@@ -1080,7 +1092,7 @@ class AIThread(QObject):
                 # print('继电器1切换错误，请停止检查设备！')
                 return False
 
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay+1, self.m_transmitData)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay+1, self.m_transmitData,1)
             if not bool_transmit:
                 self.pauseOption()
                 if not self.is_running:
@@ -1336,7 +1348,7 @@ class AIThread(QObject):
         self.m_transmitData[4] = (usZero & 0xff)
         self.m_transmitData[5] = ((usZero >> 8) & 0xff)
         self.m_transmitData[6] = ((usZero >> 16) & 0xff)
-        bool_transmit_low, self.m_can_obj = CAN_option.transmitCAN(can_id, self.m_transmitData)
+        bool_transmit_low, self.m_can_obj = CAN_option.transmitCAN(can_id, self.m_transmitData,1)
 
         time.sleep(0.1)
 
@@ -1345,7 +1357,7 @@ class AIThread(QObject):
         self.m_transmitData[4] = (usSpan & 0xff)
         self.m_transmitData[5] = ((usSpan >> 8) & 0xff)
         self.m_transmitData[6] = ((usSpan >> 16) & 0xff)
-        bool_transmit_high, self.m_can_obj = CAN_option.transmitCAN(can_id, self.m_transmitData)
+        bool_transmit_high, self.m_can_obj = CAN_option.transmitCAN(can_id, self.m_transmitData,1)
         return bool_transmit_low&bool_transmit_high
 
     def AI_receive_WriteToAO(self,value,type,channelNum,typeNum):
@@ -1475,7 +1487,7 @@ class AIThread(QObject):
             self.m_transmitData[5] = 0x00
             self.m_transmitData[6] = 0x00
             self.m_transmitData[7] = 0x00
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(can_id, self.m_transmitData)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(can_id, self.m_transmitData,1)
             # self.isPause()
             # if not self.isStop():
             #     return
@@ -1483,7 +1495,7 @@ class AIThread(QObject):
                 # self.isPause()
                 # if not self.isStop():
                 #                  return
-                bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(0x580 + self.CANAddr_AI, self.waiting_time)
+                bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(0x580 + self.CANAddr_AI, self.waiting_time,1)
                 # QApplication.processEvents()
                 if bool_receive:
                     break
@@ -1507,7 +1519,7 @@ class AIThread(QObject):
         self.m_transmitData[6] = 0x4c
         self.m_transmitData[7] = 0x49
 
-        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + self.CANAddr_AI), self.m_transmitData)
+        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + self.CANAddr_AI), self.m_transmitData,1)
         bool_all = bool_all & bool_transmit
 
         self.m_transmitData[0] = 0x23
@@ -1519,7 +1531,7 @@ class AIThread(QObject):
         self.m_transmitData[6] = 0x41
         self.m_transmitData[7] = 0x52
 
-        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + self.CANAddr_AI), self.m_transmitData)
+        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + self.CANAddr_AI), self.m_transmitData,1)
         bool_all = bool_all & bool_transmit
 
         return bool_all
@@ -1554,9 +1566,9 @@ class AIThread(QObject):
                 # if not self.isStop():
                 #                  return
                 # QApplication.processEvents()
-                if CAN_option.transmitCAN(0x600 + self.CANAddr_AO, self.m_transmitData)[0]:
+                if CAN_option.transmitCAN(0x600 + self.CANAddr_AO, self.m_transmitData,1)[0]:
                     bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(0x580 + self.CANAddr_AO,
-                                                                             self.waiting_time)
+                                                                             self.waiting_time,1)
                     if bool_receive:
                         # # print(f'm_can_obj.Data[4]:{self.m_can_obj.Data[4]}')
                         # # print(f'm_can_obj.Data[5]:{self.m_can_obj.Data[5]}')
@@ -1595,9 +1607,9 @@ class AIThread(QObject):
                 # if not self.isStop():
                 #                  return
                 # QApplication.processEvents()
-                if CAN_option.transmitCAN(0x600 + self.CANAddr_AO, self.m_transmitData)[0]:
+                if CAN_option.transmitCAN(0x600 + self.CANAddr_AO, self.m_transmitData,1)[0]:
                     bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(0x580 + self.CANAddr_AO,
-                                                                             self.waiting_time)
+                                                                             self.waiting_time,1)
                     if bool_receive:
                         # # print(f'm_can_obj.Data[4]:{self.m_can_obj.Data[4]}')
                         # # print(f'm_can_obj.Data[5]:{self.m_can_obj.Data[5]}')
@@ -1660,9 +1672,9 @@ class AIThread(QObject):
             self.m_transmitData[5] = self.vol_AIRangeArray[2*typeNum + 1]
             while True:
                 # QApplication.processEvents()
-                if CAN_option.transmitCAN(0x600 + self.CANAddr_AI, self.m_transmitData)[0]:
+                if CAN_option.transmitCAN(0x600 + self.CANAddr_AI, self.m_transmitData,1)[0]:
                     bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(0x580 + self.CANAddr_AI,
-                                                                             self.waiting_time)
+                                                                             self.waiting_time,1)
                     if bool_receive:
                         # # print(f'm_can_obj.Data[4]:{self.m_can_obj.Data[4]}')
                         # # print(f'm_can_obj.Data[5]:{self.m_can_obj.Data[5]}')
@@ -1701,9 +1713,9 @@ class AIThread(QObject):
                 # if not self.isStop():
                 #                  return
                 QApplication.processEvents()
-                if CAN_option.transmitCAN(0x600 + self.CANAddr_AI, self.m_transmitData)[0]:
+                if CAN_option.transmitCAN(0x600 + self.CANAddr_AI, self.m_transmitData,1)[0]:
                     bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(0x580 + self.CANAddr_AI,
-                                                                             self.waiting_time)
+                                                                             self.waiting_time,1)
                     if bool_receive:
                         # # print(f'm_can_obj.Data[4]:{self.m_can_obj.Data[4]}')
                         # # print(f'm_can_obj.Data[5]:{self.m_can_obj.Data[5]}')
@@ -1746,7 +1758,7 @@ class AIThread(QObject):
         bool_all = True
         self.m_transmitData = [0x23, 0x3f, 0x64, 0x00, 0x45, 0x58, 0x49, 0x54]
 
-        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + self.CANAddr_AI), self.m_transmitData)
+        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + self.CANAddr_AI), self.m_transmitData,1)
         bool_all = bool_all & bool_transmit
 
         return bool_all
@@ -1756,7 +1768,7 @@ class AIThread(QObject):
         for i in range(self.m_Channels):
             self.m_transmitData = [0x2b,0x11,0x64,i+1,(value & 0xff),((value >> 8) & 0xff),0x00,0x00]
 
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600+self.CANAddr_AO), self.m_transmitData)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600+self.CANAddr_AO), self.m_transmitData,1)
             bool_all = bool_all & bool_transmit
 
         return bool_all
@@ -1814,7 +1826,7 @@ class AIThread(QObject):
         self.m_transmitData[2] = 0x5f
         self.m_transmitData[3] = 0x01
         self.m_transmitData[4] = 0x01
-        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr),self.m_transmitData)
+        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr),self.m_transmitData,1)
         runEnd_time = time.time()
         runTest_time = round(runEnd_time - runStart_time,2)
         time.sleep(0.5)
@@ -1850,7 +1862,7 @@ class AIThread(QObject):
             self.m_transmitData[2] = 0x5f
             self.m_transmitData[3] = 0x01
             self.m_transmitData[4] = 0x00
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
             time.sleep(1)
             self.isLEDRunOK = True
             # self.result_signal.emit(f'self.isLEDRunOK:{self.isLEDRunOK}')
@@ -1903,7 +1915,7 @@ class AIThread(QObject):
         self.m_transmitData[3] = 0x02
         self.m_transmitData[4] = 0x01
 
-        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData)
+        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
         errorEnd_time = time.time()
         errorTest_time = round(errorEnd_time-errorStart_time,2)
         time.sleep(0.5)
@@ -1940,7 +1952,7 @@ class AIThread(QObject):
             self.m_transmitData[2] = 0x5f
             self.m_transmitData[3] = 0x02
             self.m_transmitData[4] = 0x00
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
             time.sleep(1)
             self.isLEDErrOK = True
         elif reply == QMessageBox.No:
@@ -1997,7 +2009,7 @@ class AIThread(QObject):
         self.m_transmitData[2] = 0x5f
         self.m_transmitData[3] = 0x03
         self.m_transmitData[4] = 0x01
-        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData)
+        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
         CANRunEnd_time = time.time()
         CANRunTest_time = round(CANRunEnd_time - CANRunStart_time,2)
         time.sleep(0.5)
@@ -2024,7 +2036,7 @@ class AIThread(QObject):
             self.m_transmitData[2] = 0x5f
             self.m_transmitData[3] = 0x03
             self.m_transmitData[4] = 0x00
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
             time.sleep(1)
             self.isLEDCANRunOK = True
         elif reply == QMessageBox.No:
@@ -2059,7 +2071,7 @@ class AIThread(QObject):
         self.m_transmitData[2] = 0x5f
         self.m_transmitData[3] = 0x04
         self.m_transmitData[4] = 0x01
-        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData)
+        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
         CANErrEnd_time = time.time()
         CANErrTest_time = round(CANErrEnd_time - CANErrStart_time,2)
         time.sleep(0.5)
@@ -2086,7 +2098,7 @@ class AIThread(QObject):
             self.m_transmitData[2] = 0x5f
             self.m_transmitData[3] = 0x04
             self.m_transmitData[4] = 0x00
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
             time.sleep(1)
             self.isLEDCANErrOK = True
         elif reply == QMessageBox.No:
@@ -2435,7 +2447,7 @@ class AIThread(QObject):
         # # print(f'self.isAIPassTest:{self.isAIPassTest}')
         self.isAIPassTest = (((((self.isAIPassTest & self.isLEDRunOK) & self.isLEDErrOK)
                                & self.CAN_runLED) & self.CAN_errorLED) & self.appearance)
-        # self.showInf(f'self.isLEDRunOK:{self.isLEDRunOK}')
+        # self.result_signal.emit(f'self.isLEDRunOK:{self.isLEDRunOK}')
         # # print(f'self.isAIPassTest:{self.isAIPassTest}')
         # # print(f'self.isLEDRunOK:{self.isLEDRunOK}')
         # # print(f'self.isLEDErrOK:{self.isLEDErrOK}')
@@ -2443,7 +2455,7 @@ class AIThread(QObject):
         # # print(f'self.CAN_errorLED:{self.CAN_errorLED}')
         # # print(f'self.appearance:{self.appearance}')
         # # print(f'self.testNum:{self.testNum}')
-        # self.showInf(f'self.testNum:{self.testNum}')
+        # self.result_signal.emit(f'self.testNum:{self.testNum}')
         name_save = ''
         if self.isAIPassTest and self.testNum == 0:
             name_save = '合格'

@@ -738,6 +738,85 @@ class CPUThread(QObject):
                                         transmitData_config[6] = 0x00
                                         transmitData_config[7] = self.getCheckNum(transmitData_config[:7])
                                         self.CPU_rightCANTest(transmitData=transmitData_config)
+                                        if not self.isCancelAllTest:
+                                            try:
+                                                # 连接CAN设备CANalyst-II，并初始化两个CAN通道
+                                                self.CAN_init(0)
+                                            except Exception as e:
+                                                self.result_signal.emit(
+                                                    f'CAN_init error:{e}\nCAN设备通道{0}启动失败，后续测试全部取消。\n')
+                                                self.messageBox_signal.emit(['警告',
+                                                                             f'CAN_init error:{e}\nCAN设备通道{1}启动失败，'
+                                                                             f'后续测试全部取消。\n'])
+                                                reply = self.result_queue.get()
+                                                if reply == QMessageBox.Yes:
+                                                    self.cancelAllTest()
+                                                else:
+                                                    self.cancelAllTest()
+                                                break
+                                            for loopNum in range(50):
+                                                rightCAN_transmitData = [(x+loopNum*10) for x in range(8)]
+                                                isBool, whatEver = CAN_option.transmitCAN(0x701,rightCAN_transmitData,0)
+                                                if isBool:
+                                                    self.pauseOption()
+                                                    if not self.is_running:
+                                                        self.cancelAllTest()
+                                                        break
+                                                    self.result_signal.emit(f'第{loopNum+1}次右扩CAN数据发送成功。\n'
+                                                                            f'发送的数据为：{rightCAN_transmitData}\n')
+                                                    recTime = time.time()
+                                                    while True:
+                                                        if (time.time() - recTime)*1000 > 2000:
+                                                            break
+                                                        m_can_obj = self.getCANObj(receiveID= 0x601)
+                                                        bool_receive, m_can_obj = CAN_option.receiveCANbyID(0x601,
+                                                                                                    self.waiting_time,0)
+                                                        if bool_receive:
+                                                            break
+                                                    # QApplication.processEvents()
+                                                    if bool_receive == 'stopReceive':
+                                                        self.cancelAllTest()
+                                                        self.isPassRightCAN = False
+                                                        break
+                                                    if bool_receive:
+                                                        byte_data = bytes(m_can_obj.Data)
+                                                        decimal_data = [int.from_bytes(byte_data[i:i+1], byteorder='big')
+                                                                        for i in range(len(byte_data))]  # 将字节数组类型参数转换成十进制数组
+                                                        # self.result_signal.emit(f'decimal_data:{decimal_data}')
+                                                        if len(decimal_data) == 0:
+                                                            self.isPassRightCAN &= False
+                                                            break
+                                                        for ii in range(len(rightCAN_transmitData)):
+                                                            if int(rightCAN_transmitData[ii]) != int(decimal_data[ii]):
+                                                                self.result_signal.emit(f'右扩CAN数据接收失败。\n'
+                                                                                f'接收的数据为：{decimal_data}\n\n')
+                                                                self.isPassRightCAN &= False
+                                                                break
+                                                    else:
+                                                        self.result_signal.emit(f'右扩CAN数据接收失败。\n\n')
+                                                        self.isPassRightCAN &= False
+                                                        break
+
+                                                    self.result_signal.emit(f'右扩CAN数据接收成功。\n'
+                                                                            f'接收的数据为：{rightCAN_transmitData}\n')
+                                                    self.isPassRightCAN &= True
+                                                    continue
+
+                                                else:
+                                                    self.result_signal.emit('右扩CAN数据发送失败。\n')
+                                                    self.isPassRightCAN = False
+                                                    break
+                                            if not self.isPassRightCAN:
+                                                self.messageBox_signal.emit(
+                                                    ['测试警告', '右扩CAN测试不通过，是否进行后续测试？'])
+                                                reply = self.result_queue.get()
+                                                if reply == QMessageBox.Yes:
+                                                    pass
+                                                else:
+                                                    self.cancelAllTest()
+                                            break
+                                        else:
+                                            break
                                     else:
                                         break
                                 else:
@@ -748,6 +827,7 @@ class CPUThread(QObject):
                             self.showErrorInf('本体右扩CAN测试')
                             self.cancelAllTest()
                         finally:
+                            self.isPassAll &= self.isPassRightCAN
                             self.testNum = self.testNum - 1
                             if self.isPassRightCAN:
                                 self.changeTabItem(testStartTime, row=i, state=2, result=1)
@@ -854,6 +934,7 @@ class CPUThread(QObject):
 
             if self.isCancelAllTest:#对应前面的for循环
                 self.result_signal.emit("后续测试已全部取消，测试结束。")
+                self.isPassAll= False
 
             if self.isPassAll and self.testNum == 0:
                 self.messageBox_signal.emit(['操作提示', f'产品全部测试项合格,请烧录正式固件。\n'])
@@ -1555,7 +1636,7 @@ class CPUThread(QObject):
                 break
             elif dataLen == 8:#读所有输出通道
                 if trueData[7] == 0x00:  # 读所有输出通道成功
-                    bool_receive, self.m_can_obj = CAN_option.receiveCANbyID((0x180 + self.CANAddr_DI), 2000)
+                    bool_receive, self.m_can_obj = CAN_option.receiveCANbyID((0x180 + self.CANAddr_DI), 2000,0)
                     self.m_receiveData = self.m_can_obj.Data
                     if bool_receive == False:
                         self.messageBox_signal.emit(['警告','ET1600接收数据超时，请检查ET1600接线！'])
@@ -1873,6 +1954,7 @@ class CPUThread(QObject):
 
     # 本体右扩CAN测试
     def CPU_rightCANTest(self, transmitData: list):
+        isThisPass = True
         try:
             #打开串口
             typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
@@ -1882,7 +1964,8 @@ class CPUThread(QObject):
         loopStartTime = time.time()
         while True:
             if (time.time() - loopStartTime) * 1000 > self.waiting_time:
-                self.isPassRightCAN = False
+                self.isPassRightCAN &= False
+                isThisPass = False
                 break
             # 发送数据
             typeC_serial.write(bytes(transmitData))
@@ -1900,44 +1983,55 @@ class CPUThread(QObject):
                 continue
             if dataLen == 3:  # 指令出错
                 self.orderError(trueData[2])
+                self.isPassRightCAN &= False
+                isThisPass = False
                 break
             elif dataLen == 7:  # 写
                 if trueData[6] == 0x00:  # 写成功
-                    if transmitData[5] == 0x00 and transmitData[6] == 0x00:#复位灯亮
-                        self.messageBox_signal.emit(['操作提示','右扩CAN的RESET灯是否点亮?'])
-                        reply = self.result_queue.get()
-                        if reply == QMessageBox.Yes:
-                            self.isPassRightCAN = True
-                        else:
-                            self.isPassRightCAN = False
-                    elif transmitData[5] == 0x00 and transmitData[6] == 0x01:#复位灯灭
+                    if transmitData[5] == 0x00 and transmitData[6] == 0x00:#复位灯熄灭
                         self.messageBox_signal.emit(['操作提示','右扩CAN的RESET灯是否熄灭?'])
                         reply = self.result_queue.get()
                         if reply == QMessageBox.Yes:
-                            self.isPassRightCAN = True
+                            self.isPassRightCAN &= True
+                            isThisPass = True
                         else:
-                            self.isPassRightCAN =False
-                    elif transmitData[5] == 0x01 and transmitData[6] == 0x01:#使能灯亮
-                        self.messageBox_signal.emit(['操作提示','右扩CAN的使能灯是否点亮?'])
+                            self.isPassRightCAN &= False
+                            isThisPass = False
+                    elif transmitData[5] == 0x00 and transmitData[6] == 0x01:#复位灯亮
+                        self.messageBox_signal.emit(['操作提示','右扩CAN的RESET灯是否点亮?'])
                         reply = self.result_queue.get()
                         if reply == QMessageBox.Yes:
-                            self.isPassRightCAN = True
+                            self.isPassRightCAN &= True
+                            isThisPass = True
                         else:
-                            self.isPassRightCAN =False
-                    elif transmitData[5] == 0x01 and transmitData[6] == 0x00:#使能灯灭
+                            self.isPassRightCAN &=False
+                            isThisPass = False
+                    elif transmitData[5] == 0x01 and transmitData[6] == 0x01:#使能灯灭
                         self.messageBox_signal.emit(['操作提示','右扩CAN的使能灯是否熄灭?'])
                         reply = self.result_queue.get()
                         if reply == QMessageBox.Yes:
-                            self.isPassRightCAN = True
+                            self.isPassRightCAN &= True
+                            isThisPass = True
                         else:
-                            self.isPassRightCAN =False
+                            self.isPassRightCAN &=False
+                            isThisPass = False
+                    elif transmitData[5] == 0x01 and transmitData[6] == 0x00:#使能灯亮
+                        self.messageBox_signal.emit(['操作提示','右扩CAN的使能灯是否点亮?'])
+                        reply = self.result_queue.get()
+                        if reply == QMessageBox.Yes:
+                            self.isPassRightCAN &= True
+                            isThisPass = True
+                        else:
+                            self.isPassRightCAN &=False
+                            isThisPass = False
                     break
                 elif trueData[6] == 0x01:  # 写失败
-                    self.isPassRightCAN = False
+                    self.isPassRightCAN &= False
+                    isThisPass = False
                     break
             else:
                 continue
-        if not self.isPassRightCAN:
+        if not isThisPass:
             self.messageBox_signal.emit(['测试警告', '本体右扩CAN测试不通过，是否进行后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
@@ -2183,3 +2277,56 @@ class CPUThread(QObject):
         # 捕获异常并输出详细的错误信息
         self.result_signal.emit(f"ErrorInf:\n{traceback.format_exc()}\n")
         self.messageBox_signal.emit(['错误警告',(f"ErrorInf:\n{traceback.format_exc()}\n")])
+
+    #CAN设备初始化
+    def CAN_init(self,CAN_channel:int):
+        CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
+        time.sleep(0.1)
+        QApplication.processEvents()
+
+        #通道0
+        if not CAN_option.connect(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_channel):
+            # self.showMessageBox(['CAN设备存在问题', 'CAN设备开启失败，请检查CAN设备！'])
+            # self.CANFail()
+            return [False, ['CAN设备存在问题', f'CAN设备通道{CAN_channel}开启失败，请检查CAN设备！']]
+
+        if not CAN_option.init(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_channel, init_config):
+            # self.showMessageBox(['CAN设备存在问题', 'CAN通道初始化失败，请检查CAN设备！'])
+            # self.CANFail()
+            return [False, ['CAN设备存在问题', f'CAN通道{CAN_channel}初始化失败，请检查CAN设备！']]
+
+        if not CAN_option.start(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_channel):
+            # self.showMessageBox(['CAN设备存在问题','CAN通道打开失败，请检查CAN设备！'])
+            # self.CANFail()
+            return [False, ['CAN设备存在问题', f'CAN通道{CAN_channel}打开失败，请检查CAN设备！']]
+        return [True, ['', '']]
+
+        return [True, ['', '']]
+    def getCANObj(self,receiveID):
+        # 接收帧ID
+        RECEIVE_ID = receiveID
+
+        # 时间标识
+        TIME_STAMP = 0
+
+        # 是否使用时间标识
+        TIME_FLAG = 0
+
+        # 接收帧类型
+        RECEIVE_SEND_TYPE = 1
+
+        # 是否是远程帧
+        REMOTE_FLAG = 0
+
+        # 是否是扩展帧
+        EXTERN_FLAG = 0
+        DATALEN = 8
+        ubyte_array_8 = c_ubyte * 8
+        DATA = ubyte_array_8(0, 0, 0, 0, 0, 0, 0, 0)
+        ubyte_array_3 = c_ubyte * 3
+        RESERVED_3 = ubyte_array_3(0, 0, 0)
+        m_can_obj = CAN_option.VCI_CAN_OBJ(RECEIVE_ID, TIME_STAMP,
+                                           TIME_FLAG, RECEIVE_SEND_TYPE,
+                                           REMOTE_FLAG, EXTERN_FLAG,
+                                           DATALEN, DATA, RESERVED_3)
+        return m_can_obj

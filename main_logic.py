@@ -1345,7 +1345,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             #     self.showMessageBox(list_canInit[1])
             #     self.CANFail()
             #     return False
-            list_canInit=CAN_init()
+            list_canInit=CAN_init(1)
             if not list_canInit[0]:
                 self.showMessageBox(list_canInit[1])
                 self.CANFail()
@@ -2443,7 +2443,7 @@ class Ui_Control(QMainWindow,Ui_Form):
 
     def check_heartbeat(self, can_addr, inf, max_waiting):
         if inf == '继电器':
-            bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(0x700 + can_addr , max_waiting)
+            bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(0x700 + can_addr , max_waiting,0)
             # print(self.m_can_obj.Data)
             if bool_receive == False:
                 self.showInf(f'错误：未发现{inf}' + self.HORIZONTAL_LINE)
@@ -2457,7 +2457,7 @@ class Ui_Control(QMainWindow,Ui_Form):
 
         else:
             can_id = 0x700 + can_addr
-            bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(can_id, max_waiting)
+            bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(can_id, max_waiting,0)
             # print(self.m_can_obj.Data)
             if bool_receive == False:
                 self.showInf(f'错误：未发现{inf}' + self.HORIZONTAL_LINE)
@@ -4901,25 +4901,25 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.subRunFlag = True
 
 
-def CAN_init():
+def CAN_init(CAN_channel:int):
     CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
     time.sleep(0.1)
     QApplication.processEvents()
 
-    if not CAN_option.connect(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_option.CAN_INDEX):
+    if not CAN_option.connect(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_channel):
         # self.showMessageBox(['CAN设备存在问题', 'CAN设备开启失败，请检查CAN设备！'])
         # self.CANFail()
-        return [False,['CAN设备存在问题', 'CAN设备开启失败，请检查CAN设备！']]
+        return [False,['CAN设备存在问题', f'CAN通道{CAN_channel}开启失败，请检查CAN设备！']]
 
-    if not CAN_option.init(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_option.CAN_INDEX, init_config):
+    if not CAN_option.init(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_channel, init_config):
         # self.showMessageBox(['CAN设备存在问题', 'CAN通道初始化失败，请检查CAN设备！'])
         # self.CANFail()
-        return [False,['CAN设备存在问题', 'CAN通道初始化失败，请检查CAN设备！']]
+        return [False,['CAN设备存在问题', f'CAN通道{CAN_channel}初始化失败，请检查CAN设备！']]
 
-    if not CAN_option.start(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_option.CAN_INDEX):
+    if not CAN_option.start(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_channel):
         # self.showMessageBox(['CAN设备存在问题','CAN通道打开失败，请检查CAN设备！'])
         # self.CANFail()
-        return [False,['CAN设备存在问题','CAN通道打开失败，请检查CAN设备！']]
+        return [False,['CAN设备存在问题',f'CAN通道{CAN_channel}打开失败，请检查CAN设备！']]
     return [True,['','']]
 
 
@@ -4929,7 +4929,7 @@ def mainThreadRunning():
         return False
     return True
 def canInit_thread():
-    q.put(CAN_init())
+    q.put(CAN_init(1))
     event_canInit.set()
 
 def strToASCII(str):
@@ -4967,7 +4967,7 @@ def write3codeToPLC(addr,code_list):
             transmit_inf = [0x23, 0xf8, 0x5f,  0x00+(i+1), 0x00+code_pn[i*4+0], 0x00+code_pn[i*4+1],
                             0x00+code_pn[i*4+2], 0x00+code_pn[i*4+3]]
             # transmit_inf = [0x23, 0xf7, 0x5f, 0x01, 0x53, 0x31, 0x32, 0x32]
-            bool_pn, rece_pn = CAN_option.transmitCAN(0x602, transmit_inf)
+            bool_pn, rece_pn = CAN_option.transmitCAN(0x602, transmit_inf,0)
             if not bool_pn:
                 return False
     if num2 != 0:
@@ -4988,7 +4988,7 @@ def write3codeToPLC(addr,code_list):
         transmit_inf[1] = 0xf8
         transmit_inf[2] = 0x5f
         transmit_inf[3] = num1+1
-        bool_pn,rece_pn = CAN_option.transmitCAN(0x602,transmit_inf)
+        bool_pn,rece_pn = CAN_option.transmitCAN(0x602,transmit_inf,0)
         if not bool_pn:
             return False
 
@@ -5003,7 +5003,7 @@ def write3codeToPLC(addr,code_list):
             transmit_inf = [0x23, 0xf7, 0x5f, 0x00+(i+1), 0x00 + code_sn[i * 4 + 0], 0x00+code_sn[i * 4 + 1],
                             0x00 + code_sn[i * 4 + 2], 0x00 + code_sn[i * 4 + 3]]
             # transmit_inf = [0x23, 0xf7, 0x5f, 0x01, 0x53, 0x31,0x32,0x32]
-            bool_sn, rece_sn = CAN_option.transmitCAN(0x602, transmit_inf)
+            bool_sn, rece_sn = CAN_option.transmitCAN(0x602, transmit_inf,0)
             if not bool_sn:
                 return False
     if num2 != 0:
@@ -5024,7 +5024,7 @@ def write3codeToPLC(addr,code_list):
         transmit_inf[1] = 0xf7
         transmit_inf[2] = 0x5f
         transmit_inf[3] = 0x00 + (num1 + 1)
-        bool_sn, rece_sn = CAN_option.transmitCAN(0x602, transmit_inf)
+        bool_sn, rece_sn = CAN_option.transmitCAN(0x602, transmit_inf,0)
         if not bool_sn:
             return False
     # print('code_sn = ', code_sn)
@@ -5038,7 +5038,7 @@ def write3codeToPLC(addr,code_list):
             transmit_inf = ubyte_transmit(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
             transmit_inf = [0x23, 0xf9, 0x5f, 0x00 + (i+1), 0x00 + code_rev[i * 4 + 0], 0x00 + code_rev[i * 4 + 1],
                             0x00 + code_rev[i * 4 + 2], 0x00 + code_rev[i * 4 + 3]]
-            bool_rev, rece_rev = CAN_option.transmitCAN(0x600 + addr, transmit_inf)
+            bool_rev, rece_rev = CAN_option.transmitCAN(0x600 + addr, transmit_inf,0)
             if not bool_rev:
                 return False
     if num2 != 0:
@@ -5059,7 +5059,7 @@ def write3codeToPLC(addr,code_list):
         transmit_inf[1] = 0xf9
         transmit_inf[2] = 0x5f
         transmit_inf[3] = 0x00 + (num1 + 1)
-        bool_rev, rece_rev = CAN_option.transmitCAN(0x600 + addr, transmit_inf)
+        bool_rev, rece_rev = CAN_option.transmitCAN(0x600 + addr, transmit_inf,0)
         if not bool_rev:
             return False
 
@@ -5077,12 +5077,12 @@ def get3codeFromPLC(addr):
         transmit_inf[1] = 0xf8
         transmit_inf[2] = 0x5f
         transmit_inf[3] = 0x00 + i + 1
-        bool_pn, transmit_pn = CAN_option.transmitCAN(0x602, transmit_inf)
+        bool_pn, transmit_pn = CAN_option.transmitCAN(0x602, transmit_inf,0)
         if not bool_pn:
             return False
 
         while True:
-            bool_pn, m_can_obj = CAN_option.receiveCANbyID(0x582, 2)
+            bool_pn, m_can_obj = CAN_option.receiveCANbyID(0x582, 2,0)
             if bool_pn:
                 break
             if bool_pn == 'stopReceive':
@@ -5114,12 +5114,12 @@ def get3codeFromPLC(addr):
         transmit_inf[1] = 0xf7
         transmit_inf[2] = 0x5f
         transmit_inf[3] = 0x00 + i + 1
-        bool_sn, transmit_sn = CAN_option.transmitCAN(0x602, transmit_inf)
+        bool_sn, transmit_sn = CAN_option.transmitCAN(0x602, transmit_inf,0)
         if not bool_sn:
             return False
 
         while True:
-            bool_sn, m_can_obj = CAN_option.receiveCANbyID(0x582, 2)
+            bool_sn, m_can_obj = CAN_option.receiveCANbyID(0x582, 2,0)
             if bool_sn:
                 break
             if bool_sn == 'stopReceive':
@@ -5151,12 +5151,12 @@ def get3codeFromPLC(addr):
         transmit_inf[1] = 0xf9
         transmit_inf[2] = 0x5f
         transmit_inf[3] = 0x00 + i + 1
-        bool_rev, transmit_rev = CAN_option.transmitCAN(0x602, transmit_inf)
+        bool_rev, transmit_rev = CAN_option.transmitCAN(0x602, transmit_inf,0)
         if not bool_rev:
             return False
 
         while True:
-            bool_rev, m_can_obj = CAN_option.receiveCANbyID(0x582, 2)
+            bool_rev, m_can_obj = CAN_option.receiveCANbyID(0x582, 2,0)
             if bool_rev:
                 break
             if bool_rev == 'stopReceive':
