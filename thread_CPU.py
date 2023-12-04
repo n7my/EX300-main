@@ -902,7 +902,7 @@ class CPUThread(QObject):
                                                 # 读PN
                                                 self.CPU_configTest(transmitData=r_PN, type='PN')
                         except:
-                            self.showErrorInf()
+                            self.showErrorInf('三码与MAC地址写入测试')
                             self.cancelAllTest()
                         finally:
                             self.testNum = self.testNum - 1
@@ -913,6 +913,7 @@ class CPUThread(QObject):
                             if self.isCancelAllTest:
                                 break
                     elif i == 17:#MA0202
+                        opType = ''
                         testStartTime = time.time()
                         self.item_signal.emit([i, 1, 0, ''])
                         self.result_signal.emit(f'----------------选项板测试----------------')
@@ -921,22 +922,111 @@ class CPUThread(QObject):
                         byte1_array = [0xC2, 0xE1, 0x96, 0x4B, 0x25, 0x12]
                         byte2_array = [0x01, 0x00, 0x00, 0x00, 0x00, 0x00]
                         byte3_array = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+                        baudRate = [115200, 57600, 38400, 19200, 9600, 4800]
                         #读选项版类型
-                        r_exType = [0xAC, 6, 0x00, 0x0F, 0x0E, 0xFF,
-                                    self.getCheckNum([0xAC, 6, 0x00, 0x0F, 0x0E, 0xFF])]
-                        #写MA0202
-                        w_MA0202 = [0xAC, 10, 0x00, 0x0F, 0x10, 0x00,
-                                          0x00, hex(1), 0x00, 0x00]
-                        # 读MA0202
-                        r_MA0202 = [0xAC, hex(6), 0x00, 0x0F, 0x0E, 0x00]
+                        r_exType = [0xAC, 7, 0x00, 0x0F, 0x0E, 0xFF,0x00,
+                                    self.getCheckNum([0xAC, 7, 0x00, 0x0F, 0x0E, 0xFF,0x00])]
+
                         try:
-                            self.CPU_optionPanel(transmitData=r_exType)
+                            opType = self.CPU_optionPanel(transmitData=r_exType)
+                            if opType == 'MA0202':
+                                # 写MA0202
+                                w_MA0202 = [0xAC, 11, 0x00, 0x0F, 0x10, 0x00,
+                                            0x00, 0x00, 0x01, 0x00,0x00,
+                                            0x00]
+                                # 读MA0202
+                                r_MA0202 = [0xAC, 6, 0x00, 0x0F, 0x0E, 0x00]
+
+                                        #   0-10V     0-20mA
+                                AI_range=[0x2A,0x00,0x34,0x00]
+                                        #   0-10V
+                                AO_range=[0xE8,0x03]
+                                #写AI量程0-10v
+                                w_MA0202[6] = 0x00
+                                w_MA0202[7] = 0x00
+                                w_MA0202[8] = 0x01
+                                w_MA0202[9] = 0x2A
+                                w_MA0202[10] = 0x00
+                                w_MA0202[11] = self.getCheckNum(w_MA0202[:11])
+                                self.CPU_optionPanel(transmitData=w_MA0202)
+
+
+                            elif opType == '422':
+                                pass
+                            elif opType == '485':
+                                w_485 = [0xAC, 11, 0x00, 0x0F, 0x10, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                         0x00]
+                                # 读MA0202
+                                r_485 = [0xAC, 7, 0x00, 0x0F, 0x0E, 0x02, 0x00,
+                                         0x2D]
+                                for br in range(6):
+                                    self.result_signal.emit(f'----------设置波特率为{baudRate[br]}----------\n')
+                                    w_485[7] = byte0_array[br]
+                                    w_485[8] = byte1_array[br]
+                                    w_485[9] = byte2_array[br]
+                                    w_485[10] = byte3_array[br]
+                                    w_485[11] = self.getCheckNum(w_485[:11])
+                                    self.CPU_optionPanel(transmitData=w_485,
+                                                         baudRate=[byte0_array[br], byte1_array[br],
+                                                                   byte2_array[br], byte3_array[br]])
+                                    if not self.isCancelAllTest:
+                                        self.CPU_optionPanel(transmitData=r_485,
+                                                             baudRate=[byte0_array[br], byte1_array[br],
+                                                                       byte2_array[br], byte3_array[br]])
+                                        if not self.isCancelAllTest:
+                                            data = [i for i in range(200)]
+                                            if self.transmitBy232or485(type='485', baudRate=baudRate[br],
+                                                                       transmitData=data):
+                                                self.isPassOp &= True
+                                            else:
+                                                self.isPassOp &= False
+                                            if self.isCancelAllTest:
+                                                break
+                                        else:
+                                            break
+                                    else:
+                                        break
+                            elif opType == '232':
+                                w_232 = [0xAC, 11, 0x00, 0x0F, 0x10, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                         0x00]
+                                # 读MA0202
+                                r_232 = [0xAC, 7, 0x00, 0x0F, 0x0E, 0x03, 0x00,
+                                         0x2C]
+                                for br in range(6):
+                                    self.result_signal.emit(f'----------设置波特率为{baudRate[br]}----------\n')
+                                    w_232[7] = byte0_array[br]
+                                    w_232[8] = byte1_array[br]
+                                    w_232[9] = byte2_array[br]
+                                    w_232[10] = byte3_array[br]
+                                    w_232[11] = self.getCheckNum(w_232[:11])
+                                    self.CPU_optionPanel(transmitData=w_232,
+                                                         baudRate=[byte0_array[br],byte1_array[br],
+                                                                   byte2_array[br],byte3_array[br]])
+                                    if not self.isCancelAllTest:
+                                        self.CPU_optionPanel(transmitData=r_232,
+                                                             baudRate=[byte0_array[br], byte1_array[br],
+                                                                       byte2_array[br], byte3_array[br]])
+                                        if not self.isCancelAllTest:
+                                            data = [i for i in range(200)]
+                                            if self.transmitBy232or485(type='232', baudRate=baudRate[br],
+                                                                       transmitData=data):
+                                                self.isPassOp &= True
+                                            else:
+                                                self.isPassOp &= False
+                                            if self.isCancelAllTest:
+                                                break
+                                        else:
+                                            break
+                                    else:
+                                        break
+                            else:
+                                self.isPassOp &= False
                         except:
-                            self.showErrorInf()
+                            self.showErrorInf('选项板测试')
                             self.cancelAllTest()
                         finally:
                             self.testNum = self.testNum - 1
-                            if self.isPassConfig:
+                            if self.isPassOp:
                                 self.changeTabItem(testStartTime, row=i, state=2, result=1)
                             else:
                                 self.changeTabItem(testStartTime, row=i, state=2, result=2)
@@ -1881,7 +1971,6 @@ class CPUThread(QObject):
         loopStartTime = time.time()
         while True:
             if (time.time() - loopStartTime) * 1000 > self.waiting_time:
-                self.isPass232 &= False
                 isReceiveTrueData = False
                 break
             # 发送数据
@@ -1889,11 +1978,11 @@ class CPUThread(QObject):
             hex_transmitData = [hex(ht) for ht in transmitData]
             self.result_signal.emit(f'发送的数据：{hex_transmitData}')
             # 等待0.5s后接收数据
-            time.sleep(0.5)
+            time.sleep(1)
             serial_receiveData = [0 for x in range(len(transmitData))]
             # 接收数组数据
             data = typeC_serial.read(len(transmitData))
-            if len(data)==0:
+            if len(data) == 0:
                 self.messageBox_signal.emit(['操作警告','未接收到信号，请检查232（485）接线是否断开。'])
                 reply = self.result_queue.get()
                 if reply == QMessageBox.Yes:
@@ -2185,49 +2274,171 @@ class CPUThread(QObject):
         typeC_serial.close()
 
     #选项板测试
-    def CPU_optionPanel(self,transmitData,type:str):
+    def CPU_optionPanel(self,transmitData:list,baudRate:list=[0x00,0x00,0x00,0x00]):
         isThisPass = True
+        opType = ''
         try:
-            # 打开串口
-            typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
-        except serial.SerialException as e:
-            self.messageBox_signal.emit(
-                ['错误警告', f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'
-                             f'Failed to open serial port: {e}'])
-        loopStartTime = time.time()
-        while True:
-            if (time.time() - loopStartTime) * 1000 > self.waiting_time:
-                self.isPass485 &= False
-                isThisPass = False
-                break
-            # 发送数据
-            typeC_serial.write(bytes(transmitData))
-            # 等待0.5s后接收数据
-            time.sleep(1)
-            serial_receiveData = [0 for x in range(40)]
-            # 接收数组数据
-            data = typeC_serial.read(40)
-            serial_receiveData = [hex(i) for i in data]
-            for i in range(len(serial_receiveData)):
-                serial_receiveData[i] = int(serial_receiveData[i], 16)
-            trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
-            if isSendAgain:
-                self.result_signal.emit('未接收到正确数据，再次接收！\n')
-                self.isPassOp &= False
-                isThisPass = False
-                continue
-            if dataLen == 3:  # 指令出错
-                self.orderError(trueData[2])
-                self.isPassOp &= False
-                isThisPass = False
-                break
-            elif dataLen == 7:
-                self.result_signal.emit('读取选项板类型失败！\n')
-                self.isPassOp &= False
-                isThisPass = False
-                break
-            elif dataLen == 8 and type == 'r_opType':
-                pass
+            try:
+                # 打开串口
+                typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
+            except serial.SerialException as e:
+                self.messageBox_signal.emit(
+                    ['错误警告', f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'
+                                 f'Failed to open serial port: {e}'])
+            loopStartTime = time.time()
+            while True:
+                if (time.time() - loopStartTime) * 1000 > self.waiting_time:
+                    self.isPassOp &= False
+                    isThisPass = False
+                    break
+                # 发送数据
+                typeC_serial.write(bytes(transmitData))
+                # 等待0.5s后接收数据
+                time.sleep(0.5)
+                serial_receiveData = [0 for x in range(40)]
+                # 接收数组数据
+                data = typeC_serial.read(40)
+                serial_receiveData = [hex(i) for i in data]
+                for i in range(len(serial_receiveData)):
+                    serial_receiveData[i] = int(serial_receiveData[i], 16)
+                trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
+                if isSendAgain:
+                    self.result_signal.emit('未接收到正确数据，再次接收！\n')
+                    self.isPassOp &= False
+                    isThisPass = False
+                    continue
+                if dataLen == 3:  # 指令出错
+                    self.orderError(trueData[2])
+                    self.isPassOp &= False
+                    isThisPass = False
+                    break
+                elif trueData[5] == 0x00:#模拟量
+                    if trueData[4] == 0x10:#写模拟量
+                        if trueData[7] ==0x00 or trueData[7] ==0x01:#量程/码值
+
+                    elif trueData[4] == 0x0E:#读模拟量
+                        pass
+                elif trueData[5] == 0x02:#485
+                    if trueData[4] == 0x10:#485写
+                        if trueData[7] == 0x00:#485写成功
+                            self.isPassOp &= True
+                            isThisPass = True
+                        elif trueData[7] == 0x01:#485写失败
+                            self.isPassOp &= False
+                            isThisPass = False
+                        break
+                    elif trueData[4] == 0x0E:#485读
+                        if trueData[7] == 0x00:#485读成功
+                            if trueData[8] == baudRate[0] and trueData[9] == baudRate[1]\
+                                and trueData[10] == baudRate[2] and trueData[11] == baudRate[3]:
+                                self.isPassOp &= True
+                                isThisPass = True
+                            else:
+                                self.isPassOp &= False
+                                isThisPass = False
+                        elif trueData[7] == 0x00:#485读失败
+                            self.isPassOp &= False
+                            isThisPass = False
+                        break
+                elif trueData[5] == 0x03:#232
+                    if trueData[4] == 0x10:#232写
+                        if trueData[7] == 0x00:#232写成功
+                            self.isPassOp &= True
+                            isThisPass = True
+                        elif trueData[7] == 0x01:#232写失败
+                            self.isPassOp &= False
+                            isThisPass = False
+                        break
+                    elif trueData[4] == 0x0E:#232读
+                        if trueData[7] == 0x00:#232读成功
+                            if trueData[8] == baudRate[0] and trueData[9] == baudRate[1]\
+                                and trueData[10] == baudRate[2] and trueData[11] == baudRate[3]:
+                                self.isPassOp &= True
+                                isThisPass = True
+                            else:
+                                self.isPassOp &= False
+                                isThisPass = False
+                        elif trueData[7] == 0x00:#232读失败
+                            self.isPassOp &= False
+                            isThisPass = False
+                        break
+
+                elif trueData[5] == 0xFF:#读选项板型号
+                    if trueData[7] == 0x00:
+                        if trueData[8] == 0x00:
+                            self.messageBox_signal.emit(['操作提示',
+                                                         f'选项板型号是否为MA0202？\n'])
+                            reply = self.result_queue.get()
+                            if reply == QMessageBox.Yes:
+                                self.isPassOp &= True
+                                isThisPass = True
+                                opType = 'MA0202'
+                            else:
+                                self.isPassOp &= False
+                                isThisPass = False
+                            break
+                        elif trueData[8] == 0x01:
+                            self.messageBox_signal.emit(['操作提示',
+                                                         f'选项板型号是否为RS-422？\n'])
+                            reply = self.result_queue.get()
+                            if reply == QMessageBox.Yes:
+                                self.isPassOp &= True
+                                isThisPass = True
+                                opType = '422'
+                            else:
+                                self.isPassOp &= False
+                                isThisPass = False
+                            break
+                        elif trueData[8] == 0x02:
+                            self.messageBox_signal.emit(['操作提示',
+                                                         f'选项板型号是否为RS-485？\n'])
+                            reply = self.result_queue.get()
+                            if reply == QMessageBox.Yes:
+                                self.isPassOp &= True
+                                isThisPass = True
+                                opType = '485'
+                            else:
+                                self.isPassOp &= False
+                                isThisPass = False
+                            break
+                        elif trueData[8] == 0x03:
+                            self.messageBox_signal.emit(['操作提示',
+                                                         f'选项板型号是否为RS-232？\n'])
+                            reply = self.result_queue.get()
+                            if reply == QMessageBox.Yes:
+                                self.isPassOp &= True
+                                isThisPass = True
+                                opType = '232'
+                            else:
+                                self.isPassOp &= False
+                                isThisPass = False
+                            break
+                        else:
+                            self.result_signal.emit('读取选项板类型失败！\n')
+                            self.isPassOp &= False
+                            isThisPass = False
+                        break
+
+                    elif trueData[7] == 0x01:
+                        self.result_signal.emit('读取选项板类型失败！\n')
+                        self.isPassOp &= False
+                        isThisPass = False
+                        break
+        except:
+            self.result_signal.emit(f"选项板错误信息:\n{traceback.format_exc()}\n")
+            self.isPassOp &= False
+            isThisPass = False
+        finally:
+            if not isThisPass:
+                self.messageBox_signal.emit(['测试警告', '本体232测试不通过，是否进行后续测试？'])
+                reply = self.result_queue.get()
+                if reply == QMessageBox.Yes:
+                    pass
+                else:
+                    self.cancelAllTest()
+            # 关闭串口
+            typeC_serial.close()
+            return opType
 
         #判断接收的数据是否正确
     def dataJudgement(self,serial_receiveData:list):
