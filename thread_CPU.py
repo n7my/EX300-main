@@ -505,26 +505,37 @@ class CPUThread(QObject):
                         self.item_signal.emit([i, 1, 0, ''])
                         self.result_signal.emit(f'----------------各指示灯测试----------------')
                         try:
-                            w_transmitData = [0xAC, hex(7), 0x00, 0x09, 0x10, 0x00, 0x01]
-                            r_transmitData = [0xAC, hex(6), 0x00, 0x09, 0x0E, 0x00]
-                            test_transmitData = [0xAC, hex(5), 0x00, 0x09, 0x53]
-                            normal_transmitData = [0xAC, hex(5), 0x00, 0x09, 0x50]
+                            w_transmitData = [0xAC, 7, 0x00, 0x09, 0x10, 0x00, 0x01,
+                                              self.getCheckNum([0xAC, 7, 0x00, 0x09, 0x10, 0x00, 0x01])]
+                            r_transmitData = [0xAC, 6, 0x00, 0x09, 0x0E, 0x00,
+                                              self.getCheckNum([0xAC, 6, 0x00, 0x09, 0x0E, 0x00])]
+                            inTest_transmitData = [0xAC, 6, 0x00, 0x09, 0x10, 0x53,0xe1]
+                                                   # self.getCheckNum([0xAC, 6, 0x00, 0x09, 0x10, 0x53])]
+                            outTest_transmitData = [0xAC, 6, 0x00, 0x09, 0x10, 0x50,0xe4]
+                                                    # self.getCheckNum([0xAC, 6, 0x00, 0x09, 0x10, 0x50])]
                             name_LED = ['RUN灯','ERROR灯','BAT_LOW灯','PRG灯','232灯','485灯','HOST灯','所有灯']
                             #进入灯测试模式
-                            self.CPU_LEDTest(itemRow=i, transmitData=test_transmitData,LED_name='')
+                            self.CPU_LEDTest(transmitData=inTest_transmitData,LED_name='')
                             if not self.isCancelAllTest:
-                                for j in range(8):
-                                    if j != 7:
-                                        w_transmitData[5] = hex(j)
+                                for l in range(8):
+                                    if l != 7:
+                                        self.result_signal.emit(f"----------开始测试{name_LED[l]}----------\n")
+                                        w_transmitData[5] = l
+                                        w_transmitData[7] = self.getCheckNum(w_transmitData[:7])
+                                        self.CPU_LEDTest(transmitData=w_transmitData, LED_name=name_LED[l])
                                     else:
-                                        w_transmitData[5] = 0xAA
-                                    self.CPU_LEDTest(itemRow=i,transmitData=w_transmitData,LED_name=name_LED[j])
+                                        #关闭所有LED
+                                        w_allLED = [0xAC, 8, 0x00, 0x09, 0x10, 0xAA, 0x00, 0x00, 0x88]
+                                        self.CPU_LEDTest(transmitData=w_allLED, LED_name=name_LED[l])
                                     if not self.isCancelAllTest:
-                                        if j != 7:
-                                            r_transmitData[5] = hex(j)
+                                        if l != 7:
+                                            r_transmitData[5] = l
+                                            r_transmitData[6] = self.getCheckNum(r_transmitData[:6])
+                                            self.CPU_LEDTest(transmitData=r_transmitData, LED_name=name_LED[l])
                                         else:
-                                            r_transmitData[5] = 0xAA
-                                        self.CPU_LEDTest(itemRow=i, transmitData=r_transmitData,LED_name=name_LED[j])
+                                            r_allLED = [0xAC, 6, 0x00, 0x09, 0x0E, 0xAA, 0x8c]
+                                            self.CPU_LEDTest(transmitData=r_allLED, LED_name=name_LED[l])
+
                                     else:
                                         break
                         except:
@@ -533,7 +544,7 @@ class CPUThread(QObject):
                         finally:
                             self.testNum = self.testNum - 1
                             # 退出灯测试模式
-                            self.CPU_LEDTest(itemRow=i, transmitData=test_transmitData, LED_name='')
+                            self.CPU_LEDTest(transmitData=outTest_transmitData, LED_name='')
                             if self.isPassLED:
                                 self.changeTabItem(testStartTime, row=i, state=2, result=1)
                             else:
@@ -754,8 +765,8 @@ class CPUThread(QObject):
                                                 else:
                                                     self.cancelAllTest()
                                                 break
-                                            for loopNum in range(50):
-                                                rightCAN_transmitData = [(x+loopNum*10) for x in range(8)]
+                                            for loopNum in range(32):
+                                                rightCAN_transmitData = [(x+8*loopNum) for x in range(8)]
                                                 isBool, whatEver = CAN_option.transmitCAN(0x701,rightCAN_transmitData,0)
                                                 if isBool:
                                                     self.pauseOption()
@@ -1476,77 +1487,115 @@ class CPUThread(QObject):
 
 
     # 各指示灯测试
-    def CPU_LEDTest(self, itemRow:int, transmitData:list,LED_name:str):
+    def CPU_LEDTest(self, transmitData:list,LED_name:str):
+        isThisPass = True
         try:
-            #打开串口
-            typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
-        except serial.SerialException as e:
-            self.messageBox_signal.emit(['错误警告',f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'
-                                                    f'Failed to open serial port: {e}'])
-        loopStartTime = time.time()
-        while True:
-            if (time.time() - loopStartTime) * 1000 > self.waiting_time:
-                self.isPassLED = False
-                break
-            # 发送数据
-            typeC_serial.write(bytes(transmitData))
-            # 等待0.5s后接收数据
-            time.sleep(1)
-            serial_receiveData = [0 for x in range(40)]
-            # 接收数组数据
-            data = typeC_serial.read(40)
-            serial_receiveData = [hex(i) for i in data]
-            for i in range(len(serial_receiveData)):
-                serial_receiveData[i] = int(serial_receiveData[i],16)
-            trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
-            if isSendAgain:
-                self.result_signal.emit('未接收到正确数据，再次接收！\n')
-                continue
-            if dataLen == 3:  # 指令出错
-                self.orderError(trueData[2])
-                break
-            if dataLen == 6:
-                if trueData[5] == 0x00:  # 进入（退出）测试模式成功
+            try:
+                #打开串口
+                typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
+            except serial.SerialException as e:
+                self.messageBox_signal.emit(['错误警告',f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'
+                                                        f'Failed to open serial port: {e}'])
+            loopStartTime = time.time()
+            while True:
+                if (time.time() - loopStartTime) * 1000 > self.waiting_time:
+                    self.isPassLED &= False
+                    isThisPass = False
                     break
-                elif trueData[5] == 0x01:  # 进入（退出）测试模式失败
-                    self.isPassLED = False
+                # 发送数据
+                typeC_serial.write(bytes(transmitData))
+                # 等待0.5s后接收数据
+                time.sleep(0.1)
+                serial_receiveData = [0 for x in range(40)]
+                # 接收数组数据
+                data = typeC_serial.read(40)
+                serial_receiveData = [hex(i) for i in data]
+                for i in range(len(serial_receiveData)):
+                    serial_receiveData[i] = int(serial_receiveData[i],16)
+                trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
+                if isSendAgain:
+                    self.result_signal.emit('未接收到正确数据，再次接收！\n')
+                    continue
+                if dataLen == 3:  # 指令出错
+                    self.orderError(trueData[2])
+                    self.isPassLED &= False
+                    isThisPass = False
                     break
-            elif dataLen == 7: #写
-                if trueData[6] == 0x00:  # 写入成功
-                    self.isPassLED = True
-                elif trueData[6] == 0x01:  # 写入失败
-                    self.isPassLED = False
-                break
-            elif dataLen == 8: #读
-                if trueData[7] == 0x00:#灯熄灭
-                    self.messageBox_signal.emit(['操作提示',f'{LED_name}是否熄灭？'])
-                    reply = self.result_queue.get()
-                    if reply == QMessageBox.Yes:
-                        self.isPassLED = True
+                if (dataLen == 7 and trueData[5] == 0x53) or (dataLen == 7 and trueData[5] == 0x50):
+                    if trueData[6] == 0x00:  # 进入（退出）测试模式成功
+                        break
+                    elif trueData[6] == 0x01:  # 进入（退出）测试模式失败
+                        self.isPassLED &= False
+                        isThisPass = False
+                        break
+                elif dataLen == 7 and trueData[5] != 0xAA: #单个灯写
+                    if trueData[6] == 0x00:  # 写入成功
+                        self.isPassLED &= True
+                        isThisPass = True
+                    elif trueData[6] == 0x01:  # 写入失败
+                        self.isPassLED &= False
+                        isThisPass = False
+                    break
+                elif dataLen == 7 and trueData[5] == 0xAA: #所有灯写/读
+                    if trueData[6] == 0x00:  # 写/读所有灯成功
+                        self.isPassLED &= True
+                        isThisPass = True
+                    elif trueData[6] == 0x01:  # 写/读所有灯失败
+                        self.isPassLED &= False
+                        isThisPass = False
+                    break
+                elif dataLen == 8: #读
+                    if trueData[7] == 0x00:#灯熄灭
+                        self.messageBox_signal.emit(['操作提示',f'{LED_name}是否熄灭？'])
+                        reply = self.result_queue.get()
+                        if reply == QMessageBox.Yes:
+                            self.isPassLED &= True
+                            isThisPass = True
+                        else:
+                            self.isPassLED &= False
+                            isThisPass = False
+                        break
+                    elif trueData[7] == 0x01:#灯点亮
+                        self.messageBox_signal.emit(['操作提示',f'{LED_name}是否点亮？'])
+                        reply = self.result_queue.get()
+                        if reply == QMessageBox.Yes:
+                            self.isPassLED &= True
+                            isThisPass = True
+                        else:
+                            self.isPassLED &= False
+                            isThisPass = False
+                        break
+                elif dataLen == 9:#读所有灯状态
+                    if trueData[7] == 0x00 and trueData[8] == 0x00:
+                        self.messageBox_signal.emit(['操作提示', f'{LED_name}是否熄灭？'])
+                        reply = self.result_queue.get()
+                        if reply == QMessageBox.Yes:
+                            self.isPassLED &= True
+                            isThisPass = True
+                        else:
+                            self.isPassLED &= False
+                            isThisPass = False
+                        break
                     else:
-                        self.isPassLED = False
-                    break
-                elif trueData[7] == 0x01:#灯点亮
-                    self.messageBox_signal.emit(['操作提示',f'{LED_name}是否点亮？'])
-                    reply = self.result_queue.get()
-                    if reply == QMessageBox.Yes:
-                        self.isPassLED = True
-                    else:
-                        self.isPassLED = False
-                    break
-            elif dataLen == 9:#控制所有灯，暂不用这个模式
-                pass
-            else:
-                continue
-        if not self.isPassLED:
-            self.messageBox_signal.emit(['测试警告', 'LED测试不通过，是否进行后续测试？'])
-            reply = self.result_queue.get()
-            if reply == QMessageBox.Yes:
-                pass
-            else:
-                self.cancelAllTest()
-        # 关闭串口
-        typeC_serial.close()
+                        self.isPassLED &= False
+                        isThisPass = False
+                        break
+                else:
+                    continue
+        except Exception as e:
+            self.result_signal.emit(f'LED error:{traceback.format_exc()}\n')
+            self.isPassLED &= False
+            isThisPass = False
+        finally:
+            if not isThisPass:
+                self.messageBox_signal.emit(['测试警告', 'LED测试不通过，是否进行后续测试？'])
+                reply = self.result_queue.get()
+                if reply == QMessageBox.Yes:
+                    pass
+                else:
+                    self.cancelAllTest()
+            # 关闭串口
+            typeC_serial.close()
 
     def CPU_InTest(self, transmitData:list):
         try:
