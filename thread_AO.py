@@ -870,7 +870,7 @@ class AOThread(QObject):
 
         for i in range(channelNum):
             data = bytes([self.m_can_obj.Data[i * 2],self.m_can_obj.Data[i * 2 + 1]])
-            recv[i] = value=struct.unpack('<h', data)[0]
+            recv[i] = struct.unpack('<h', data)[0]
             # # print(f'recv[{i}]={recv[i]}')
             # self.isPause()
             # if not self.isStop():

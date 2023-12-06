@@ -7,6 +7,7 @@ from main_logic import *
 from CAN_option import *
 import otherOption
 import logging
+import struct
 
 class CPUThread(QObject):
     result_signal = pyqtSignal(str)
@@ -752,12 +753,12 @@ class CPUThread(QObject):
                                         if not self.isCancelAllTest:
                                             try:
                                                 # 连接CAN设备CANalyst-II，并初始化两个CAN通道
-                                                self.CAN_init(0)
+                                                self.CAN_init([0])
                                             except Exception as e:
                                                 self.result_signal.emit(
-                                                    f'CAN_init error:{e}\nCAN设备通道{0}启动失败，后续测试全部取消。\n')
+                                                    f'CAN_init error:{e}\nCAN设备通道0启动失败，后续测试全部取消。\n')
                                                 self.messageBox_signal.emit(['警告',
-                                                                             f'CAN_init error:{e}\nCAN设备通道{1}启动失败，'
+                                                                             f'CAN_init error:{e}\nCAN设备通道0启动失败，'
                                                                              f'后续测试全部取消。\n'])
                                                 reply = self.result_queue.get()
                                                 if reply == QMessageBox.Yes:
@@ -925,30 +926,329 @@ class CPUThread(QObject):
                         baudRate = [115200, 57600, 38400, 19200, 9600, 4800]
                         #读选项版类型
                         r_exType = [0xAC, 7, 0x00, 0x0F, 0x0E, 0xFF,0x00,
-                                    self.getCheckNum([0xAC, 7, 0x00, 0x0F, 0x0E, 0xFF,0x00])]
+                                    0x30]
 
                         try:
                             opType = self.CPU_optionPanel(transmitData=r_exType)
                             if opType == 'MA0202':
-                                # 写MA0202
-                                w_MA0202 = [0xAC, 11, 0x00, 0x0F, 0x10, 0x00,
+                                # 写MA0202量程和码值
+                                w_MA0202_1 = [0xAC, 11, 0x00, 0x0F, 0x10, 0x00,
                                             0x00, 0x00, 0x01, 0x00,0x00,
                                             0x00]
-                                # 读MA0202
-                                r_MA0202 = [0xAC, 6, 0x00, 0x0F, 0x0E, 0x00]
+                                # 写MA0202三码
+                                # w_MA0202_2 = [0xAC, 11, 0x00, 0x0F, 0x10, 0x00,
+                                #               0x00, 0x00, 0x01, 0x00, 0x00,
+                                #               0x00]
+                                # 读MA0202量程和码值
+                                r_MA0202_1 = [0xAC, 9, 0x00, 0x0F, 0x0E, 0x00,0x00,0x00,0x00,0x00]
+                                # 读MA0202三码
+                                r_MA0202_2 = [0xAC, 8, 0x00, 0x0F, 0x0E, 0x00,0x00,0xF1,0x00]
 
                                         #   0-10V     0-20mA
                                 AI_range=[0x2A,0x00,0x34,0x00]
                                         #   0-10V
                                 AO_range=[0xE8,0x03]
                                 #写AI量程0-10v
-                                w_MA0202[6] = 0x00
-                                w_MA0202[7] = 0x00
-                                w_MA0202[8] = 0x01
-                                w_MA0202[9] = 0x2A
-                                w_MA0202[10] = 0x00
-                                w_MA0202[11] = self.getCheckNum(w_MA0202[:11])
-                                self.CPU_optionPanel(transmitData=w_MA0202)
+                                w_MA0202_1[6] = 0x00
+                                w_MA0202_1[7] = 0x00
+                                w_MA0202_1[8] = 0x01
+                                w_MA0202_1[9] = 0x2A
+                                w_MA0202_1[10] = 0x00
+                                w_MA0202_1[11] = self.getCheckNum(w_MA0202_1[:11])
+                                #1 写AI通道1量程0-10V
+                                self.CPU_optionPanel(transmitData=w_MA0202_1)
+                                # 2 写AI通道2量程0-10V
+                                w_MA0202_1[8] = 0x02
+                                w_MA0202_1[11] = self.getCheckNum(w_MA0202_1[:11])
+                                self.CPU_optionPanel(transmitData=w_MA0202_1)
+                                if not self.isCancelAllTest:
+                                    self.result_signal.emit('------------写选项板AI通道1、2量程0-10V成功------------\n')
+                                    # 3 读AI通道1量程0-10V
+                                    r_MA0202_1[6] = 0x00
+                                    r_MA0202_1[7] = 0x00
+                                    r_MA0202_1[8] = 0x01
+                                    r_MA0202_1[9] = self.getCheckNum(r_MA0202_1[:9])
+                                    self.CPU_optionPanel(transmitData=r_MA0202_1,param1=[0x2A,0x00])
+                                    r_MA0202_1[8] = 0x02
+                                    r_MA0202_1[9] = self.getCheckNum(r_MA0202_1[:9])
+                                    self.CPU_optionPanel(transmitData=r_MA0202_1,param1=[0x2A,0x00])
+                                    if not self.isCancelAllTest:
+                                        self.result_signal.emit('------------读选项板AI通道1、2量程0-10V成功------------\n')
+                                        # 4 写AI量程通道1量程0-20mA
+                                        w_MA0202_1 = [0xAC, 11, 0x00, 0x0F, 0x10, 0x00,0x00, 0x00, 0x01, 0x34, 0x00,
+                                                      0x00]
+                                        w_MA0202_1[11] = self.getCheckNum(w_MA0202_1[:11])
+                                        self.CPU_optionPanel(transmitData=w_MA0202_1)
+                                        # 5 写AI量程通道2量程0-20mA
+                                        w_MA0202_1 = [0xAC, 11, 0x00, 0x0F, 0x10, 0x00, 0x00, 0x00, 0x02, 0x34, 0x00,
+                                                      0x00]
+                                        w_MA0202_1[11] = self.getCheckNum(w_MA0202_1[:11])
+                                        self.CPU_optionPanel(transmitData=w_MA0202_1)
+                                        if not self.isCancelAllTest:
+                                            self.result_signal.emit('------------写选项板AI通道1、2量程0-20mA成功------------\n')
+                                            # 6 读AI通道1量程0-20mA
+                                            r_MA0202_1[6] = 0x00
+                                            r_MA0202_1[7] = 0x00
+                                            r_MA0202_1[8] = 0x01
+                                            r_MA0202_1[9] = self.getCheckNum(r_MA0202_1[:9])
+                                            self.CPU_optionPanel(transmitData=r_MA0202_1,param1=[0x34,0x00])
+                                            # 7 读AI通道2量程0-20mA
+                                            r_MA0202_1[8] = 0x02
+                                            r_MA0202_1[9] = self.getCheckNum(r_MA0202_1[:9])
+                                            self.CPU_optionPanel(transmitData=r_MA0202_1,param1=[0x34,0x00])
+                                            if not self.isCancelAllTest:
+                                                self.result_signal.emit('------------读选项板AI通道1、2量程0-20mA成功------------\n')
+                                                try:
+                                                    #8控制AQ0004模块发送电流
+                                                    CAN_bool,mess = self.CAN_init([1])
+                                                except Exception as e:
+                                                    self.isPassOp &= False
+                                                    self.result_signal.emit(
+                                                        f'CAN_init error:{e}\nCAN设备通道1启动失败，后续测试全部取消。\n')
+                                                    self.messageBox_signal.emit(['警告',
+                                                                                 f'CAN_init error:{e}\nCAN设备通道1启动失败，'
+                                                                                 f'后续测试全部取消。\n'])
+                                                    reply = self.result_queue.get()
+                                                    if reply == QMessageBox.Yes:
+                                                        self.cancelAllTest()
+                                                    else:
+                                                        self.cancelAllTest()
+                                                    break
+                                                if CAN_bool:
+                                                    # 0v-10v的理论值
+                                                    voltageTheory_0010 = [int(0x6c00*1.17),0x6c00, (int)(0x6c00 * 0.75),
+                                                                          (int)(0x6c00 * 0.5), (int)(0x6c00 * 0.25),
+                                                                          0]  # 0x6c00 =>27648
+                                                    arrayVol_0010 = ["11.7V测试","10V测试", "7.5V测试", "5V测试",
+                                                                     "2.5V测试","0V测试"]
+                                                    # 0mA-20mA的理论值
+                                                    currentTheory_0020 = [(int)(0x6c00*1.17),0x6c00, (int)(0x6c00 * 0.75),
+                                                                          (int)(0x6c00 * 0.5), (int)(0x6c00 * 0.25),
+                                                                          0]  # 0x6c00 =>27648
+                                                    arrayCur_0020 = ["23.4mA", "20mA", "15mA",
+                                                                     "10mA", "5mA","0mA"]
+                                                    AQ_transmit = (c_ubyte * 8)(0x00,0x00,0x00,0x00,
+                                                                              0x00,0x00,0x00,0x00)
+                                                    for va in range(len(currentTheory_0020)):
+                                                        if va == 0:
+                                                            # 修改AQ量程为0-20mA
+                                                            AQ_transmit = [0x2b, 0x10, 0x63, 1,
+                                                                           0xeb, 0x03, 0x00, 0x00]
+                                                            bool_range1 = CAN_option.transmitCAN((0x600 + self.CANAddr5),
+                                                                                                AQ_transmit, 1)[0]
+                                                            AQ_transmit = [0x2b, 0x10, 0x63, 2,
+                                                                           0xeb, 0x03, 0x00, 0x00]
+                                                            bool_range2 = \
+                                                            CAN_option.transmitCAN((0x600 + self.CANAddr5),
+                                                                                   AQ_transmit, 1)[0]
+                                                            if bool_range1&bool_range2:
+                                                                self.result_signal.emit(
+                                                                    f"------------成功修改AQ0004通道1、2量程为0-20mA------------\n")
+                                                            else:
+                                                                self.result_signal.emit(
+                                                                    f"------------修改AQ0004通道1、2量程为0-20mA失败，取消后续测试------------\n")
+                                                                self.cancelAllTest()
+                                                                self.isPassOp &= False
+                                                                break
+                                                            time.sleep(0.5)
+                                                        for ch in range(2):
+                                                            #发送0-20mA的电流
+                                                            AQ_transmit=[0x2b,0x11,0x64, ch+1,
+                                                                         (currentTheory_0020[va] & 0xff),
+                                                                         ((currentTheory_0020[va] >> 8)& 0xff),
+                                                                         0x00,0x00]
+                                                            CAN_option.transmitCAN((0x600 + self.CANAddr5),
+                                                                                   AQ_transmit,1)
+                                                            self.result_signal.emit(f'\n\n------------AQ0004通道{ch+1}'
+                                                                                    f'输出电流为：{arrayCur_0020[va]}'
+                                                                                    f'------------\n')
+                                                            r_MA0202_1 = [0xAC, 9, 0x00, 0x0F, 0x0E, 0x00, 0x00,
+                                                                          0x01,ch+1,0x00]
+                                                            r_MA0202_1[9] = self.getCheckNum(r_MA0202_1[:9])
+                                                            rate = round(float(27648/4095),2)
+                                                            self.CPU_optionPanel(transmitData=r_MA0202_1,
+                                                                                 param1=[(int(currentTheory_0020[va]/rate) & 0xff),
+                                                                                        ((int(currentTheory_0020[va]/rate) >> 8)& 0xff)])
+                                                        if self.isCancelAllTest:
+                                                            break
+                                                else:
+                                                    self.isPassOp &=False
+                                                    self.messageBox_signal.emit(mess)
+                                                    reply = self.result_queue.get()
+                                                    if reply == QMessageBox.Yes:
+                                                        self.cancelAllTest()
+                                                    else:
+                                                        self.cancelAllTest()
+                                                    break
+                                            else:
+                                                break
+                                        else:
+                                            break
+                                    else:
+                                        break
+                                else:
+                                    break
+                                # AO
+                                if not self.isCancelAllTest:
+                                    # 写AO量程0-10v
+                                    w_MA0202_1[6] = 0x01
+                                    w_MA0202_1[7] = 0x00
+                                    w_MA0202_1[8] = 0x01
+                                    w_MA0202_1[9] = 0xE8
+                                    w_MA0202_1[10] = 0x03
+                                    w_MA0202_1[11] = self.getCheckNum(w_MA0202_1[:11])
+                                    # 1 写AO通道1量程0-10V
+                                    self.CPU_optionPanel(transmitData=w_MA0202_1)
+                                    # 2 写AI通道2量程0-10V
+                                    w_MA0202_1[8] = 0x02
+                                    w_MA0202_1[11] = self.getCheckNum(w_MA0202_1[:11])
+                                    self.CPU_optionPanel(transmitData=w_MA0202_1)
+                                    if not self.isCancelAllTest:
+                                        self.result_signal.emit(
+                                            '------------写选项板AO通道1、2量程0-10V成功------------\n')
+                                        # 3 读AO通道1量程0-10V
+                                        r_MA0202_1[6] = 0x01
+                                        r_MA0202_1[7] = 0x00
+                                        r_MA0202_1[8] = 0x01
+                                        r_MA0202_1[9] = self.getCheckNum(r_MA0202_1[:9])
+                                        self.CPU_optionPanel(transmitData=r_MA0202_1, param1=[0xE8, 0x03])
+                                        r_MA0202_1[8] = 0x02
+                                        r_MA0202_1[9] = self.getCheckNum(r_MA0202_1[:9])
+                                        self.CPU_optionPanel(transmitData=r_MA0202_1, param1=[0xE8, 0x03])
+                                        if not self.isCancelAllTest:
+                                            self.result_signal.emit(
+                                                '------------读选项板AO通道1、2量程0-10V成功------------\n')
+                                            try:
+                                                # 8控制选项板AO通道发送电压
+                                                CAN_bool, mess = self.CAN_init([1])
+                                                if CAN_bool:
+                                                    # 0v-10v的理论值
+                                                    voltageTheory_0010 = [int(4095 * 1.17),4095,
+                                                                          (int)(4095 * 0.75),
+                                                                          (int)(4095 * 0.5), (int)(4095 * 0.25),
+                                                                          0]  # 0x6c00 =>27648
+                                                    # voltageTheory_0010 = [0]
+                                                    arrayVol_0010 = ["11.7V测试", "10V测试", "7.5V测试", "5V测试",
+                                                                     "2.5V测试", "0V测试"]
+
+                                                    AE_transmit = (c_ubyte * 8)(0x00, 0x00, 0x00, 0x00,
+                                                                                0x00, 0x00, 0x00, 0x00)
+                                                    for va in range(len(voltageTheory_0010)):
+                                                        if va == 0:
+                                                            # 修改AI量程为0-10V
+                                                            AE_transmit = [0x2b, 0x10, 0x61, 1,
+                                                                           0x2a, 0x00, 0x00, 0x00]
+                                                            bool_range1 = \
+                                                            CAN_option.transmitCAN((0x600 + self.CANAddr5),
+                                                                                   AE_transmit, 1)[0]
+                                                            AE_transmit = [0x2b, 0x10, 0x61, 2,
+                                                                           0x2a, 0x00, 0x00, 0x00]
+                                                            bool_range2 = \
+                                                                CAN_option.transmitCAN((0x600 + self.CANAddr5),
+                                                                                       AE_transmit, 1)[0]
+                                                            if bool_range1 & bool_range2:
+                                                                self.result_signal.emit(
+                                                                    f"------------成功修改AE0400通道1、2量程为0-10V------------\n")
+                                                            else:
+                                                                self.result_signal.emit(
+                                                                    f"------------修改AE0400通道1、2量程为0-10V失败，取消后续测试------------\n")
+                                                                self.cancelAllTest()
+                                                                self.isPassOp &= False
+                                                                break
+
+                                                        for ch in range(2):
+                                                            # 发送0-10V的电压
+                                                            w_MA0202_1 = [0xAC, 11, 0x00, 0x0F, 0x10, 0x00,
+                                                                          0x01, 0x01, ch+1,
+                                                                          (voltageTheory_0010[va] & 0xff),
+                                                                          ((voltageTheory_0010[va] >> 8) & 0xff),0x00]
+                                                            if va == 5:
+                                                                w_MA0202_1[9] = 0x00
+                                                                w_MA0202_1[10] = 0x00
+                                                            w_MA0202_1[11] = self.getCheckNum(w_MA0202_1[:11])
+                                                            self.CPU_optionPanel(transmitData=w_MA0202_1)
+                                                            if not self.isCancelAllTest:
+                                                                self.result_signal.emit(
+                                                                    f'\n\n------------选项板AO通道{ch+1}'
+                                                                    f'输出电压为：{arrayVol_0010[va]}'
+                                                                    f'------------\n')
+                                                                self.result_signal.emit('等待接收的信号稳定……\n\n')
+                                                                tt0 = time.time()
+                                                                while True:
+                                                                    rate = round(float(27648 / 4095), 2)
+                                                                    if (time.time() - tt0)*1000 >10000:
+                                                                        self.result_signal.emit(
+                                                                            '\n\n*********AE0400无法接收到稳定数据，'
+                                                                            '取消后续测试！*********\n\n')
+                                                                        self.isPassOp &= False
+                                                                        # self.cancelAllTest()
+                                                                        break
+                                                                    bool_AE,AE_value = self.receiveAIData(CANAddr_AI= self.CANAddr4,channel=ch)
+
+                                                                    if abs(voltageTheory_0010[va] - int(AE_value/rate)) < 50:
+                                                                        break
+                                                                if self.isCancelAllTest:
+                                                                    break
+
+                                                                tt1 = time.time()
+                                                                while True:
+                                                                    if (time.time() - tt1)*1000 >2000:
+                                                                        self.isPassOp &= False
+                                                                        self.result_signal.emit('\n\n*********AE0400未接收到数据，取消后续测试！*********\n\n')
+                                                                        # self.cancelAllTest()
+                                                                        break
+                                                                    try:
+                                                                        bool_AE,AE_value = self.receiveAIData(CANAddr_AI= self.CANAddr4,channel=ch)
+                                                                    except:
+                                                                        self.result_signal.emit(
+                                                                            f'ErrorInf:\n{traceback.format_exc()}')
+                                                                    if bool_AE:
+
+                                                                        self.result_signal.emit(
+                                                                            f'-----------模拟量输出通道{ch+1}写入的值为{voltageTheory_0010[va]}-----------。\n')
+                                                                        self.result_signal.emit(
+                                                                            f'-----------AE0400接收值转换比例后的值为{int(AE_value/rate)}。-----------\n')
+                                                                        try:
+                                                                            if abs(voltageTheory_0010[va] - int(AE_value/rate)) < 50:
+                                                                                self.isPassOp &= True
+                                                                                break
+                                                                            else:
+                                                                                self.isPassOp &= False
+                                                                                break
+                                                                        except:
+                                                                            self.result_signal.emit(
+                                                                                f'ErrorInf:\n{traceback.format_exc()}')
+                                                                            break
+                                                                    else:
+                                                                        continue
+                                                        if self.isCancelAllTest:
+                                                            break
+                                                else:
+                                                    self.isPassOp &= False
+                                                    self.messageBox_signal.emit(mess)
+                                                    reply = self.result_queue.get()
+                                                    if reply == QMessageBox.Yes:
+                                                        self.cancelAllTest()
+                                                    else:
+                                                        self.cancelAllTest()
+                                                    break
+                                            except Exception as e:
+                                                self.isPassOp &= False
+                                                self.result_signal.emit(
+                                                    f'CAN_init error:{e}\nCAN设备通道1启动失败，后续测试全部取消。\n')
+                                                self.messageBox_signal.emit(['警告',
+                                                                             f'CAN_init error:{e}\nCAN设备通道1启动失败，'
+                                                                             f'后续测试全部取消。\n'])
+
+                                                reply = self.result_queue.get()
+                                                if reply == QMessageBox.Yes:
+                                                    self.cancelAllTest()
+                                                else:
+                                                    self.cancelAllTest()
+                                                break
+                                else:
+                                    break
+
 
 
                             elif opType == '422':
@@ -1025,6 +1325,7 @@ class CPUThread(QObject):
                             self.showErrorInf('选项板测试')
                             self.cancelAllTest()
                         finally:
+                            self.isPassAll &=self.isPassOp
                             self.testNum = self.testNum - 1
                             if self.isPassOp:
                                 self.changeTabItem(testStartTime, row=i, state=2, result=1)
@@ -2274,7 +2575,8 @@ class CPUThread(QObject):
         typeC_serial.close()
 
     #选项板测试
-    def CPU_optionPanel(self,transmitData:list,baudRate:list=[0x00,0x00,0x00,0x00]):
+    def CPU_optionPanel(self,transmitData:list,baudRate:list=[0x00,0x00,0x00,0x00],
+                        param1:list=[0x00,0x00],param2:list=[0 for x in range(14)]):
         isThisPass = True
         opType = ''
         try:
@@ -2315,9 +2617,49 @@ class CPUThread(QObject):
                 elif trueData[5] == 0x00:#模拟量
                     if trueData[4] == 0x10:#写模拟量
                         if trueData[7] ==0x00 or trueData[7] ==0x01:#量程/码值
-
+                            if (trueData[8] == 0x01 and trueData[9] == 0x00) or\
+                                    (trueData[8] == 0x02 and trueData[9] == 0x00):
+                                self.isPassOp &= True
+                                isThisPass = True
+                            else:
+                                self.isPassOp &= False
+                                isThisPass = False
+                            break
+                        elif trueData[7] ==0xF1 or trueData[7] ==0xF2 or trueData[7] ==0xF3:#三码
+                            if trueData[8] == 0x00:
+                                self.isPassOp &= True
+                                isThisPass = True
+                            else:
+                                self.isPassOp &= False
+                                isThisPass = False
+                            break
                     elif trueData[4] == 0x0E:#读模拟量
-                        pass
+                        if trueData[7] == 0x00 or trueData[7] ==0x01:#量程/码值
+                            if (trueData[8] == 0x01 and trueData[9] == 0x00) or \
+                                    (trueData[8] == 0x02 and trueData[9] == 0x00):
+                                if trueData[7] == 0x00:
+                                    self.isPassOp &= True
+                                    isThisPass = True
+                                elif trueData[7] ==0x01:
+                                    r_data = bytes([trueData[10], trueData[11]])
+                                    int_r_data = struct.unpack('<h', r_data)[0]
+                                    w_data = bytes([param1[0], param1[1]])
+                                    int_w_data = struct.unpack('<h', w_data)[0]
+                                    self.result_signal.emit(f'-----------AQ0004写入值转换比例后的值为{int_w_data}。-----------\n')
+                                    self.result_signal.emit(f'-----------模拟量输入通道接收的到的值为{int_r_data}-----------。\n')
+                                    # if abs(r_data-w_data)<int(0.001*int_w_data):
+                                    if abs(int_r_data - int_w_data) < 50:
+                                        self.isPassOp &= True
+                                        isThisPass = True
+                                    else:
+                                        self.isPassOp &= False
+                                        isThisPass = False
+                            else:
+                                self.isPassOp &= False
+                                isThisPass = False
+                            break
+                        elif trueData[7] == 0xF1 or trueData[7] == 0xF2 or trueData[7] == 0xF3:  # 三码
+                            pass
                 elif trueData[5] == 0x02:#485
                     if trueData[4] == 0x10:#485写
                         if trueData[7] == 0x00:#485写成功
@@ -2430,7 +2772,7 @@ class CPUThread(QObject):
             isThisPass = False
         finally:
             if not isThisPass:
-                self.messageBox_signal.emit(['测试警告', '本体232测试不通过，是否进行后续测试？'])
+                self.messageBox_signal.emit(['测试警告', '选项板测试不通过，是否进行后续测试？'])
                 reply = self.result_queue.get()
                 if reply == QMessageBox.Yes:
                     pass
@@ -2452,12 +2794,12 @@ class CPUThread(QObject):
         # 确定数据头
         for i in range(len(serial_receiveData)):
             if serial_receiveData[i] == int(0xCA):
-                self.result_signal.emit(f'找到startNum:{startNum}\n')
+                # self.result_signal.emit(f'找到startNum:{startNum}\n')
                 startNum = i
                 isSendAgain = False
                 break
             if i == len(serial_receiveData) - 1 and serial_receiveData[i] != int(0xCA):
-                self.result_signal.emit(f'未找到startNum\n')
+                # self.result_signal.emit(f'未找到startNum\n')
                 isSendAgain = True
                 return trueData,dataLen,isSendAgain
         dataLen = int(serial_receiveData[startNum + 1])
@@ -2539,27 +2881,27 @@ class CPUThread(QObject):
         self.messageBox_signal.emit(['错误警告',(f"ErrorInf:\n{traceback.format_exc()}\n")])
 
     #CAN设备初始化
-    def CAN_init(self,CAN_channel:int):
+    def CAN_init(self,CAN_channel:list):
         CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
         time.sleep(0.1)
         QApplication.processEvents()
 
-        #通道0
-        if not CAN_option.connect(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_channel):
-            # self.showMessageBox(['CAN设备存在问题', 'CAN设备开启失败，请检查CAN设备！'])
-            # self.CANFail()
-            return [False, ['CAN设备存在问题', f'CAN设备通道{CAN_channel}开启失败，请检查CAN设备！']]
+        for channel in CAN_channel:
+            #通道0
+            if not CAN_option.connect(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, channel):
+                # self.showMessageBox(['CAN设备存在问题', 'CAN设备开启失败，请检查CAN设备！'])
+                # self.CANFail()
+                return [False, ['CAN设备存在问题', f'CAN设备通道{channel}开启失败，请检查CAN设备！']]
 
-        if not CAN_option.init(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_channel, init_config):
-            # self.showMessageBox(['CAN设备存在问题', 'CAN通道初始化失败，请检查CAN设备！'])
-            # self.CANFail()
-            return [False, ['CAN设备存在问题', f'CAN通道{CAN_channel}初始化失败，请检查CAN设备！']]
+            if not CAN_option.init(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, channel, init_config):
+                # self.showMessageBox(['CAN设备存在问题', 'CAN通道初始化失败，请检查CAN设备！'])
+                # self.CANFail()
+                return [False, ['CAN设备存在问题', f'CAN通道{channel}初始化失败，请检查CAN设备！']]
 
-        if not CAN_option.start(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_channel):
-            # self.showMessageBox(['CAN设备存在问题','CAN通道打开失败，请检查CAN设备！'])
-            # self.CANFail()
-            return [False, ['CAN设备存在问题', f'CAN通道{CAN_channel}打开失败，请检查CAN设备！']]
-        return [True, ['', '']]
+            if not CAN_option.start(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, channel):
+                # self.showMessageBox(['CAN设备存在问题','CAN通道打开失败，请检查CAN设备！'])
+                # self.CANFail()
+                return [False, ['CAN设备存在问题', f'CAN通道{channel}打开失败，请检查CAN设备！']]
 
         return [True, ['', '']]
     def getCANObj(self,receiveID):
@@ -2590,3 +2932,21 @@ class CPUThread(QObject):
                                            REMOTE_FLAG, EXTERN_FLAG,
                                            DATALEN, DATA, RESERVED_3)
         return m_can_obj
+
+    def  receiveAIData(self,CANAddr_AI,channel):
+        can_id = 0x280 + CANAddr_AI
+        recv = 0
+        time1 = time.time()
+        while True:
+            if (time.time() - time1)*1000 > self.waiting_time:
+                return False,0
+            bool_receive,self.m_can_obj = CAN_option.receiveCANbyID(can_id, self.waiting_time,1)
+            if bool_receive == 'stopReceive':
+                return 'stopReceive', recv
+            if bool_receive:
+                break
+        # self.result_signal.emit(f'self.m_can_obj.Data={hex(self.m_can_obj.Data[0])} {hex(self.m_can_obj.Data[1])} {hex(self.m_can_obj.Data[2])} {hex(self.m_can_obj.Data[3])} {hex(self.m_can_obj.Data[4])} {hex(self.m_can_obj.Data[5])} {hex(self.m_can_obj.Data[6])} {hex(self.m_can_obj.Data[7])}\n\n')
+        data = bytes([self.m_can_obj.Data[2*channel], self.m_can_obj.Data[2*channel+1]])
+        recv = struct.unpack('<h', data)[0]
+
+        return True,recv

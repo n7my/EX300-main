@@ -1345,7 +1345,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             #     self.showMessageBox(list_canInit[1])
             #     self.CANFail()
             #     return False
-            list_canInit=CAN_init(1)
+            list_canInit=CAN_init([1])
             if not list_canInit[0]:
                 self.showMessageBox(list_canInit[1])
                 self.CANFail()
@@ -1382,6 +1382,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                 if not self.configCANAddr(int(self.lineEdit_34.text()), int(self.lineEdit_35.text()),
                                           int(self.lineEdit_36.text()), int(self.lineEdit_37.text()),
                                           int(self.lineEdit_38.text())):
+
                     return False
 
             self.result_queue = Queue()
@@ -2412,7 +2413,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         if self.tabIndex == 1 or self.tabIndex == 2:
             list =[addr1,addr2,addr3,addr4]
         elif self.tabIndex == 3:
-            list = [addr1, addr2, addr3, addr4, addr5]
+            list = [addr4, addr5]
         else:
             list = [addr1, addr2]
         for a in list:
@@ -4901,25 +4902,25 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.subRunFlag = True
 
 
-def CAN_init(CAN_channel:int):
+def CAN_init(CAN_channel:list):
     CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
     time.sleep(0.1)
     QApplication.processEvents()
+    for channel in CAN_channel:
+        if not CAN_option.connect(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, channel):
+            # self.showMessageBox(['CAN设备存在问题', 'CAN设备开启失败，请检查CAN设备！'])
+            # self.CANFail()
+            return [False,['CAN设备存在问题', f'CAN通道{channel}开启失败，请检查CAN设备！']]
 
-    if not CAN_option.connect(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_channel):
-        # self.showMessageBox(['CAN设备存在问题', 'CAN设备开启失败，请检查CAN设备！'])
-        # self.CANFail()
-        return [False,['CAN设备存在问题', f'CAN通道{CAN_channel}开启失败，请检查CAN设备！']]
+        if not CAN_option.init(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, channel, init_config):
+            # self.showMessageBox(['CAN设备存在问题', 'CAN通道初始化失败，请检查CAN设备！'])
+            # self.CANFail()
+            return [False,['CAN设备存在问题', f'CAN通道{channel}初始化失败，请检查CAN设备！']]
 
-    if not CAN_option.init(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_channel, init_config):
-        # self.showMessageBox(['CAN设备存在问题', 'CAN通道初始化失败，请检查CAN设备！'])
-        # self.CANFail()
-        return [False,['CAN设备存在问题', f'CAN通道{CAN_channel}初始化失败，请检查CAN设备！']]
-
-    if not CAN_option.start(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_channel):
-        # self.showMessageBox(['CAN设备存在问题','CAN通道打开失败，请检查CAN设备！'])
-        # self.CANFail()
-        return [False,['CAN设备存在问题',f'CAN通道{CAN_channel}打开失败，请检查CAN设备！']]
+        if not CAN_option.start(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, channel):
+            # self.showMessageBox(['CAN设备存在问题','CAN通道打开失败，请检查CAN设备！'])
+            # self.CANFail()
+            return [False,['CAN设备存在问题',f'CAN通道{channel}打开失败，请检查CAN设备！']]
     return [True,['','']]
 
 
@@ -4929,7 +4930,7 @@ def mainThreadRunning():
         return False
     return True
 def canInit_thread():
-    q.put(CAN_init(1))
+    q.put(CAN_init([1]))
     event_canInit.set()
 
 def strToASCII(str):
