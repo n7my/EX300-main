@@ -338,7 +338,21 @@ class CPUThread(QObject):
                                 transmitData2 = [0xAC, 6, 0x00, 0x04, 0x53, 0x02,
                                                  self.getCheckNum([0xAC, 6, 0x00, 0x04, 0x53, 0x02])]
                                 transmitData_array = [transmitData0,transmitData1,transmitData2]
-                                self.CPU_FPGATest(serial_transmitData_array=transmitData_array)
+                                self.CPU_FPGATest(transmitData=transmitData0)
+                                if not self.isCancelAllTest:
+                                    self.result_signal.emit('保存固件成功。\n\n')
+                                    self.CPU_FPGATest(transmitData=transmitData1)
+                                    if not self.isCancelAllTest:
+                                        self.result_signal.emit('加载固件成功。\n\n')
+                                        self.CPU_FPGATest(transmitData=transmitData2)
+                                        if not self.isCancelAllTest:
+                                            self.result_signal.emit('端口配置成功。\n\n')
+                                        else:
+                                            break
+                                    else:
+                                        break
+                                else:
+                                    break
                             else:
                                 self.messageBox_signal.emit(['测试警告', '无法识别U盘，FPGA无法测试，是否进行后续测试？'])
                                 self.isPassFPGA = False
@@ -1880,7 +1894,8 @@ class CPUThread(QObject):
         typeC_serial.close()
 
     # FPGA测试
-    def CPU_FPGATest(self,serial_transmitData_array:list):
+    def CPU_FPGATest(self,transmitData:list):
+        isThisPass = True
         try:
             #打开串口
             typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
@@ -1888,38 +1903,41 @@ class CPUThread(QObject):
             self.messageBox_signal.emit(['错误警告',f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'
                                                     f'Failed to open serial port: {e}'])
         loopStartTime = time.time()
-        for serial_transmitData in serial_transmitData_array:
-            while True:
-                if (time.time() - loopStartTime) * 1000 > self.waiting_time:
-                    self.isPassFPGA = False
-                    break
-                # 发送数据
-                typeC_serial.write(bytes(serial_transmitData))
-                # 等待0.5s后接收数据
-                time.sleep(5)
-                serial_receiveData = [0 for x in range(40)]
-                # 接收数组数据
-                data = typeC_serial.read(40)
+
+        while True:
+            if (time.time() - loopStartTime) * 1000 > self.waiting_time:
+                self.isPassFPGA &= False
+                isThisPass = False
+                break
+            # 发送数据
+            typeC_serial.write(bytes(transmitData))
+            self.result_signal.emit('等待设备自测.\n\n')
+            # 等待0.5s后接收数据
+            time.sleep(7)
+            serial_receiveData = [0 for x in range(40)]
+            # 接收数组数据
+            data = typeC_serial.read(40)
             serial_receiveData = [hex(i) for i in data]
             for i in range(len(serial_receiveData)):
                 serial_receiveData[i] = int(serial_receiveData[i],16)
-                trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
-                if isSendAgain:
-                    continue
-                if dataLen == 3:  # 指令出错
-                    self.orderError(trueData[2])
-                    break
-                elif dataLen == 7:
-                    if trueData[6] == int(0x00):  # 成功
-                        self.isPassFPGA = True
-                        break
-                    elif trueData[6] == int(0x01):  # 失败
-                        self.isPassFPGA = False
-                        break
-                else:
-                    continue
-            if not self.isPassFPGA:
+            trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
+            if isSendAgain:
+                continue
+            if dataLen == 3:  # 指令出错
+                self.orderError(trueData[2])
                 break
+            elif dataLen == 7:
+                if trueData[6] == int(0x00):  # 成功
+                    self.isPassFPGA &= True
+                    isThisPass = True
+                    break
+                elif trueData[6] == int(0x01):  # 失败
+                    self.isPassFPGA &= False
+                    isThisPass = False
+                    break
+            else:
+                continue
+
         if not self.isPassFPGA:
             self.messageBox_signal.emit(['测试警告', 'FPGA测试不通过，是否进行后续测试？'])
             reply = self.result_queue.get()
