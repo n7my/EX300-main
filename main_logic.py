@@ -2413,7 +2413,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         if self.tabIndex == 1 or self.tabIndex == 2:
             list =[addr1,addr2,addr3,addr4]
         elif self.tabIndex == 3:
-            list = [addr4, addr5]
+            list = [addr1,addr2,addr3,addr4, addr5]
         else:
             list = [addr1, addr2]
         for a in list:
