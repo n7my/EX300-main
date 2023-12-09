@@ -323,7 +323,152 @@ class CPUThread(QObject):
                                 self.changeTabItem(testStartTime, row=i, state=2, result=2)
                             if self.isCancelAllTest:
                                 break
-                    elif i == 4:#FPGA
+                    elif i == 4:#拨杆测试
+                        testStartTime = time.time()
+                        self.item_signal.emit([i, 1, 0, ''])
+                        self.result_signal.emit(f'----------------拨杆测试----------------')
+                        try:
+                            self.messageBox_signal.emit(["操作提示","请将拨杆拨至STOP位置。"])
+                            reply = self.result_queue.get()
+                            if reply == QMessageBox.Yes or QMessageBox.No:
+                                self.CPU_LeverTest(0,serial_transmitData = [0xAC, 6, 0x00, 0x05, 0x0E, 0x00,
+                                                                self.getCheckNum([0xAC, 6, 0x00, 0x05, 0x0E, 0x00])])
+                            if not self.isCancelAllTest:
+                                self.messageBox_signal.emit(["操作提示", "请将拨杆拨至RUN位置。"])
+                                reply = self.result_queue.get()
+                                if reply == QMessageBox.Yes or QMessageBox.No:
+                                    self.CPU_LeverTest(1,serial_transmitData = [0xAC, 6, 0x00, 0x05, 0x0E, 0x00,
+                                                                self.getCheckNum([0xAC, 6, 0x00, 0x05, 0x0E, 0x00])])
+                        except:
+                            self.showErrorInf('拨杆测试')
+                            self.cancelAllTest()
+                        finally:
+                            self.isPassAll &= self.isPassLever
+                            self.testNum = self.testNum - 1
+                            if self.isPassLever:
+                                self.result_signal.emit("拨杆测试通过" + self.HORIZONTAL_LINE)
+                                self.changeTabItem(testStartTime, row=i, state=2, result=1)
+                            else:
+                                self.result_signal.emit("拨杆测试不通过" + self.HORIZONTAL_LINE)
+                                self.changeTabItem(testStartTime, row=i, state=2, result=2)
+                            if self.isCancelAllTest:
+                                break
+                    elif i == 5:#MFK按钮
+                        testStartTime = time.time()
+                        self.item_signal.emit([i, 1, 0, ''])
+                        self.result_signal.emit(f'----------------MFK测试----------------')
+                        try:
+                            self.CPU_MFKTest(0,serial_transmitData = [0xAC, 6, 0x00, 0x06, 0x0E, 0x00,
+                                                                  self.getCheckNum([0xAC, 6, 0x00, 0x06, 0x0E, 0x00])])
+                            if not self.isCancelAllTest:
+                                self.messageBox_signal.emit(["操作提示", "请长按MKF按钮不要松开。"])
+                                reply = self.result_queue.get()
+                                if reply == QMessageBox.Yes or QMessageBox.No:
+                                    self.CPU_MFKTest(1,serial_transmitData = [0xAC, 6, 0x00, 0x06, 0x0E, 0x00,
+                                                                  self.getCheckNum([0xAC, 6, 0x00, 0x06, 0x0E, 0x00])])
+                                self.messageBox_signal.emit(["操作提示", "请松开MKF按钮。"])
+                                reply = self.result_queue.get()
+                                if reply == QMessageBox.Yes or QMessageBox.No:
+                                    pass
+                        except:
+                            self.showErrorInf('MFK按钮')
+                            self.cancelAllTest()
+                        finally:
+                            self.isPassAll &= self.isPassMFK
+                            self.testNum = self.testNum - 1
+                            if self.isPassMFK:
+                                self.result_signal.emit("MFK测试通过" + self.HORIZONTAL_LINE)
+                                self.changeTabItem(testStartTime, row=i, state=2, result=1)
+                            else:
+                                self.result_signal.emit("MFK测试不通过" + self.HORIZONTAL_LINE)
+                                self.changeTabItem(testStartTime, row=i, state=2, result=2)
+                            if self.isCancelAllTest:
+                                break
+                    elif i == 6:#掉电保存
+                        testStartTime = time.time()
+                        self.item_signal.emit([i, 1, 0, ''])
+                        self.result_signal.emit(f'----------------掉电保存测试----------------')
+                        try:
+                            serial_transmitData0 = [0xAC, 6, 0x00, 0x08, 0x53, 0x00,
+                                                    self.getCheckNum([0xAC, 6, 0x00, 0x08, 0x53, 0x00])]
+                            serial_transmitData1 = [0xAC, 6, 0x00, 0x08, 0x53, 0x01,
+                                                    self.getCheckNum([0xAC, 6, 0x00, 0x08, 0x53, 0x01])]
+                            serial_transmitData2 = [0xAC, 6, 0x00, 0x08, 0x53, 0xFF,
+                                                    self.getCheckNum([0xAC, 6, 0x00, 0x08, 0x53, 0xFF])]
+                            serial_transmitData_array = [serial_transmitData0,
+                                                         serial_transmitData1, serial_transmitData2]
+                            #数据写入
+                            self.CPU_powerOffSaveTest(serial_transmitData=serial_transmitData0)
+                            if not self.isCancelAllTest:
+                                self.messageBox_signal.emit(['操作提示','请断开设备电源。'])
+                                reply= self.result_queue.get()
+                                if reply == QMessageBox.Yes:
+                                    for t in range(5):
+                                        if t == 0:
+                                            self.result_signal.emit(f'等待5秒。\n')
+                                        self.result_signal.emit(f'剩余等待{5 - t}秒……\n')
+                                        time.sleep(1)
+                                    self.messageBox_signal.emit(['操作提示', '请接通设备电源。'])
+                                    reply = self.result_queue.get()
+                                    if reply == QMessageBox.Yes:
+                                        for t in range(3):
+                                            if t == 0:
+                                                self.result_signal.emit(f'等待3秒。\n')
+                                            self.result_signal.emit(f'剩余等待{3 - t}秒……\n')
+                                            time.sleep(1)
+                                        # 数据检查
+                                        self.CPU_powerOffSaveTest(serial_transmitData=serial_transmitData1)
+                                        if not self.isCancelAllTest:
+                                            # 数据清除
+                                            self.CPU_powerOffSaveTest(serial_transmitData=serial_transmitData2)
+                                    else:
+                                        self.messageBox_signal.emit(['测试警告', '未按提示接通设备电源，测试停止。'])
+                                        self.isPassPowerOffSave = False
+                                        self.cancelAllTest()
+
+                                else:
+                                    self.messageBox_signal.emit(['测试警告', '未按提示断开设备电源，测试停止。'])
+                                    self.isPassPowerOffSave = False
+                                    self.cancelAllTest()
+
+                        except:
+                            self.showErrorInf('掉电保存测试')
+                            self.cancelAllTest()
+                        finally:
+                            #若工装的电是通过CPU供电的，断电后需要重新分配节点
+                            self.configCANAddr(self.CANAddr1, self.CANAddr2, self.CANAddr3,
+                                               self.CANAddr4, self.CANAddr5)
+                            self.isPassAll &= self.isPassPowerOffSave
+                            self.testNum = self.testNum - 1
+                            if self.isPassPowerOffSave:
+                                self.changeTabItem(testStartTime, row=i, state=2, result=1)
+                            else:
+                                self.changeTabItem(testStartTime, row=i, state=2, result=2)
+                            if self.isCancelAllTest:
+                                break
+
+
+                    elif i == 7:#RTC
+                        testStartTime = time.time()
+                        self.item_signal.emit([i, 1, 0, ''])
+                        self.result_signal.emit(f'----------------RTC测试----------------')
+                        try:
+                            testStartTime = time.time()
+                            self.CPU_RTCTest('write')
+                            if not self.isCancelAllTest:
+                                self.CPU_RTCTest('read')
+                        except:
+                            self.showErrorInf('RTC测试')
+                            self.cancelAllTest()
+                        finally:
+                            self.testNum = self.testNum - 1
+                            if self.isPassRTC:
+                                self.changeTabItem(testStartTime, row=i, state=2, result=1)
+                            else:
+                                self.changeTabItem(testStartTime, row=i, state=2, result=2)
+                            if self.isCancelAllTest:
+                                break
+                    elif i == 8:#FPGA
                         testStartTime = time.time()
                         self.item_signal.emit([i, 1, 0, ''])
                         self.result_signal.emit(f'----------------FPGA测试----------------')
@@ -381,146 +526,6 @@ class CPUThread(QObject):
                                 self.changeTabItem(testStartTime, row=i, state=2, result=1)
                             else:
                                 self.result_signal.emit("FPGA测试不通过" + self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=2)
-                            if self.isCancelAllTest:
-                                break
-                    elif i == 5:#拨杆测试
-                        testStartTime = time.time()
-                        self.item_signal.emit([i, 1, 0, ''])
-                        self.result_signal.emit(f'----------------拨杆测试----------------')
-                        try:
-                            self.messageBox_signal.emit(["操作提示","请将拨杆拨至STOP位置。"])
-                            reply = self.result_queue.get()
-                            if reply == QMessageBox.Yes or QMessageBox.No:
-                                self.CPU_LeverTest(0,serial_transmitData = [0xAC, 6, 0x00, 0x05, 0x0E, 0x00,
-                                                                self.getCheckNum([0xAC, 6, 0x00, 0x05, 0x0E, 0x00])])
-                            if not self.isCancelAllTest:
-                                self.messageBox_signal.emit(["操作提示", "请将拨杆拨至RUN位置。"])
-                                reply = self.result_queue.get()
-                                if reply == QMessageBox.Yes or QMessageBox.No:
-                                    self.CPU_LeverTest(1,serial_transmitData = [0xAC, 6, 0x00, 0x05, 0x0E, 0x00,
-                                                                self.getCheckNum([0xAC, 6, 0x00, 0x05, 0x0E, 0x00])])
-                        except:
-                            self.showErrorInf('拨杆测试')
-                            self.cancelAllTest()
-                        finally:
-                            self.isPassAll &= self.isPassLever
-                            self.testNum = self.testNum - 1
-                            if self.isPassLever:
-                                self.result_signal.emit("拨杆测试通过" + self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=1)
-                            else:
-                                self.result_signal.emit("拨杆测试不通过" + self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=2)
-                            if self.isCancelAllTest:
-                                break
-                    elif i == 6:#MFK按钮
-                        testStartTime = time.time()
-                        self.item_signal.emit([i, 1, 0, ''])
-                        self.result_signal.emit(f'----------------MFK测试----------------')
-                        try:
-                            self.CPU_MFKTest(0,serial_transmitData = [0xAC, 6, 0x00, 0x06, 0x0E, 0x00,
-                                                                  self.getCheckNum([0xAC, 6, 0x00, 0x06, 0x0E, 0x00])])
-                            if not self.isCancelAllTest:
-                                self.messageBox_signal.emit(["操作提示", "请长按MKF按钮不要松开。"])
-                                reply = self.result_queue.get()
-                                if reply == QMessageBox.Yes or QMessageBox.No:
-                                    self.CPU_MFKTest(1,serial_transmitData = [0xAC, 6, 0x00, 0x06, 0x0E, 0x00,
-                                                                  self.getCheckNum([0xAC, 6, 0x00, 0x06, 0x0E, 0x00])])
-                                self.messageBox_signal.emit(["操作提示", "请松开MKF按钮。"])
-                                reply = self.result_queue.get()
-                                if reply == QMessageBox.Yes or QMessageBox.No:
-                                    pass
-                        except:
-                            self.showErrorInf('MFK按钮')
-                            self.cancelAllTest()
-                        finally:
-                            self.isPassAll &= self.isPassMFK
-                            self.testNum = self.testNum - 1
-                            if self.isPassMFK:
-                                self.result_signal.emit("MFK测试通过" + self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=1)
-                            else:
-                                self.result_signal.emit("MFK测试不通过" + self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=2)
-                            if self.isCancelAllTest:
-                                break
-                    elif i == 7:#掉电保存
-                        testStartTime = time.time()
-                        self.item_signal.emit([i, 1, 0, ''])
-                        self.result_signal.emit(f'----------------掉电保存测试----------------')
-                        try:
-                            serial_transmitData0 = [0xAC, 6, 0x00, 0x08, 0x53, 0x00,
-                                                    self.getCheckNum([0xAC, 6, 0x00, 0x08, 0x53, 0x00])]
-                            serial_transmitData1 = [0xAC, 6, 0x00, 0x08, 0x53, 0x01,
-                                                    self.getCheckNum([0xAC, 6, 0x00, 0x08, 0x53, 0x01])]
-                            serial_transmitData2 = [0xAC, 6, 0x00, 0x08, 0x53, 0xFF,
-                                                    self.getCheckNum([0xAC, 6, 0x00, 0x08, 0x53, 0xFF])]
-                            serial_transmitData_array = [serial_transmitData0,
-                                                         serial_transmitData1, serial_transmitData2]
-                            #数据写入
-                            self.CPU_powerOffSaveTest(serial_transmitData=serial_transmitData0)
-                            if not self.isCancelAllTest:
-                                self.messageBox_signal.emit(['操作提示','请断开设备电源。'])
-                                reply= self.result_queue.get()
-                                if reply == QMessageBox.Yes:
-                                    for t in range(5):
-                                        if t == 0:
-                                            self.result_signal.emit(f'等待5秒。\n')
-                                        self.result_signal.emit(f'剩余等待{5 - t}秒……\n')
-                                        time.sleep(1)
-                                    self.messageBox_signal.emit(['操作提示', '请接通设备电源。'])
-                                    reply = self.result_queue.get()
-                                    if reply == QMessageBox.Yes:
-                                        for t in range(3):
-                                            if t == 0:
-                                                self.result_signal.emit(f'等待3秒。\n')
-                                            self.result_signal.emit(f'剩余等待{3 - t}秒……\n')
-                                            time.sleep(1)
-                                        # 数据检查
-                                        self.CPU_powerOffSaveTest(serial_transmitData=serial_transmitData1)
-                                        if not self.isCancelAllTest:
-                                            # 数据清除
-                                            self.CPU_powerOffSaveTest(serial_transmitData=serial_transmitData2)
-                                    else:
-                                        self.messageBox_signal.emit(['测试警告', '未按提示接通设备电源，测试停止。'])
-                                        self.isPassPowerOffSave = False
-                                        self.cancelAllTest()
-
-                                else:
-                                    self.messageBox_signal.emit(['测试警告', '未按提示断开设备电源，测试停止。'])
-                                    self.isPassPowerOffSave = False
-                                    self.cancelAllTest()
-
-                        except:
-                            self.showErrorInf('掉电保存测试')
-                            self.cancelAllTest()
-                        finally:
-                            self.testNum = self.testNum - 1
-                            if self.isPassPowerOffSave:
-                                self.changeTabItem(testStartTime, row=i, state=2, result=1)
-                            else:
-                                self.changeTabItem(testStartTime, row=i, state=2, result=2)
-                            if self.isCancelAllTest:
-                                break
-
-                    elif i == 8:#RTC
-                        testStartTime = time.time()
-                        self.item_signal.emit([i, 1, 0, ''])
-                        self.result_signal.emit(f'----------------RTC测试----------------')
-                        try:
-                            testStartTime = time.time()
-                            self.CPU_RTCTest('write')
-                            if not self.isCancelAllTest:
-                                self.CPU_RTCTest('read')
-                        except:
-                            self.showErrorInf('RTC测试')
-                            self.cancelAllTest()
-                        finally:
-                            self.testNum = self.testNum - 1
-                            if self.isPassRTC:
-                                self.changeTabItem(testStartTime, row=i, state=2, result=1)
-                            else:
                                 self.changeTabItem(testStartTime, row=i, state=2, result=2)
                             if self.isCancelAllTest:
                                 break
@@ -582,6 +587,7 @@ class CPUThread(QObject):
                         r_transmitData = [0xAC, 7,0x00, 0x0A, 0x0E, 0x00, 0xAA,
                                           self.getCheckNum([0xAC, 7,0x00, 0x0A, 0x0E, 0x00, 0xAA])]
                         try:
+                            CAN_init([1])
                             #先控制两块QN0016模块向CPU输入端口发送高电平
                             self.m_transmitData = [0xff,0xff,0x00,0x00,0x00,0x00,0x00,0x00]
                             CAN_option.transmitCAN(0x200 + self.CANAddr2, self.m_transmitData,1)
@@ -614,6 +620,7 @@ class CPUThread(QObject):
                         w_transmitData = [0xAC, 10, 0x00, 0x0A, 0x10, 0x01, 0xAA, 2, 0xff, 0xff,
                               self.getCheckNum([0xAC, 10, 0x00, 0x0A, 0x10, 0x01, 0xAA, 2, 0xff, 0xff])]
                         try:
+                            CAN_init([1])
                             self.CPU_OutTest(transmitData=w_transmitData)
                             w_transmitData = [0xAC, 10, 0x00, 0x0A, 0x10, 0x01, 0xAA, 2, 0x00, 0x00,
                               self.getCheckNum([0xAC, 10, 0x00, 0x0A, 0x10, 0x01, 0xAA, 2, 0x00, 0x00])]
@@ -864,7 +871,6 @@ class CPUThread(QObject):
                                                     pass
                                                 else:
                                                     self.cancelAllTest()
-                                            break
                                         else:
                                             break
                                     else:
@@ -1680,17 +1686,22 @@ class CPUThread(QObject):
                     self.isPassAll = False
                     break
             if self.is_running:
+
                 if self.isPassAll and self.testNum == 0:
                     self.messageBox_signal.emit(['操作提示', f'产品全部测试项合格,请烧录正式固件。\n'])
+                    self.label_signal.emit(['pass', '全部通过'])
                 elif self.isPassAll and self.testNum != 0:
                     self.messageBox_signal.emit(['操作提示', f'产品部分测试项合格,请决定是否烧录正式固件。\n'])
+                    self.label_signal.emit(['testing', '部分通过'])
                 elif not self.isPassAll:
                     self.messageBox_signal.emit(['操作提示', f'产品存在部分测试项不合格，请检查！\n'])
+                    self.label_signal.emit(['fail', '未通过'])
                 reply = self.result_queue.get()
                 if reply == QMessageBox.Yes or reply == QMessageBox.No:
                     self.messageBox_signal.emit(['操作提示', f'请将拨杆拨到STOP位置。\n'])
             else:
                 self.messageBox_signal.emit(['操作提示', f'测试被中止！\n'])
+                self.label_signal.emit(['fail', '测试停止'])
 
         except:
             self.isPassAll &= False
@@ -1936,7 +1947,7 @@ class CPUThread(QObject):
             # 发送数据
             typeC_serial.write(bytes(transmitData))
             name_dict ={0x00:'保存固件',0x01:'加载固件',0x02:'端口配平'}
-            self.result_signal.emit(f'等待{name_dict[transmitData[5]]}自测。\n\n')
+            self.result_signal.emit(f'等待<{name_dict[transmitData[5]]}>自测。\n\n')
             # 等待0.5s后接收数据
             time.sleep(5)
             serial_receiveData = [0 for x in range(40)]
@@ -3400,3 +3411,19 @@ class CPUThread(QObject):
     def clearList(self, array):
         for i in range(len(array)):
             array[i] = 0x00
+
+    # 自动分配节点
+    def configCANAddr(self, addr1, addr2, addr3, addr4, addr5):
+
+        list = [addr1, addr2, addr3, addr4, addr5]
+
+        for a in list:
+            self.m_transmitData = [0xac, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+            self.m_transmitData[2] = a
+            boola = CAN_option.transmitCANAddr(0x0, self.m_transmitData)[0]
+            time.sleep(0.01)
+            if not boola:
+                self.result_signal.emit(f'节点{a}分配失败' + self.HORIZONTAL_LINE)
+                return False
+        self.result_signal.emit(f'所有节点分配成功' + self.HORIZONTAL_LINE)
+        return True

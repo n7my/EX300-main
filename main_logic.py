@@ -218,7 +218,7 @@ class Ui_Control(QMainWindow,Ui_Form):
     def __init__(self,parent = None):
         super(Ui_Control,self).__init__(parent)
         self.setupUi(self)
-        # self.pushButton_13.setVisible(False)
+        self.pushButton_13.setVisible(False)
         self.label_11.setPixmap(QtGui.QPixmap(f"{current_dir}/beast5.png"))
         # CPU页面参数配置
         self.CPU_lineEdit_array = [self.lineEdit_33, self.lineEdit_34, self.lineEdit_35, self.lineEdit_36,
@@ -230,9 +230,9 @@ class Ui_Control(QMainWindow,Ui_Form):
                                    self.checkBox_62, self.checkBox_63, self.checkBox_64, self.checkBox_65,
                                    self.checkBox_66,self.checkBox_54, self.checkBox_67, self.checkBox_68,
                                    self.checkBox_71,self.checkBox_73]
-        self.CPU_checkBoxName_array = ["外观检测", "型号检查", "SRAM", "FLASH", "FPGA", "拨杆测试",
-                                       "MFK按键",
-                                       "掉电保存", "RTC测试", "各指示灯", "本体IN", "本体OUT", "以太网", "RS-232C",
+        self.CPU_checkBoxName_array = ["外观检测", "型号检查", "SRAM", "FLASH", "拨杆测试",
+                                       "MFK按键","掉电保存", "RTC测试", "FPGA",
+                                        "各指示灯", "本体IN", "本体OUT", "以太网", "RS-232C",
                                        "RS-485",
                                        "右扩CAN", "MAC/三码写入",  "MA0202", "测试报告", "修改参数","全选"]
 
@@ -2308,8 +2308,8 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.module_3 = '工装3（QN0016）'
             self.module_4 = '工装4（AE0400）'
             self.module_5 = '工装5（AQ0004）'
-            self.testNum = 18  # ["外观检测", "型号检查", "SRAM", "FLASH", "FPGA", "拨杆测试", "MFK按键",
-                                  #  "掉电保存", "RTC测试","各指示灯", "本体IN", "本体OUT", "以太网",
+            self.testNum = 18  # ["外观检测", "型号检查", "SRAM", "FLASH", "拨杆测试", "MFK按键",
+                                  #  "掉电保存", "RTC测试", "FPGA","各指示灯", "本体IN", "本体OUT", "以太网",
                                     # "RS-232C", "RS-485","右扩CAN", "MAC/三码写入", "MA0202"]
 
             self.inf_param = [mTable, self.module_1, self.module_2, self.module_3,
@@ -2352,8 +2352,8 @@ class Ui_Control(QMainWindow,Ui_Form):
                                    self.checkBox_62, self.checkBox_63, self.checkBox_64, self.checkBox_65,
                                    self.checkBox_66, self.checkBox_54, self.checkBox_67
                                    ]
-            self.CPU_testName_array = [ "外观检测", "型号检查", "SRAM", "FLASH", "FPGA",
-                                        "拨杆测试","MFK按键","掉电保存", "RTC测试", "各指示灯", "本体IN", "本体OUT",
+            self.CPU_testName_array = [ "外观检测", "型号检查", "SRAM", "FLASH","拨杆测试","MFK按键",
+                                        "掉电保存", "RTC测试", "FPGA", "各指示灯", "本体IN", "本体OUT",
                                         "以太网","RS-232C","RS-485","右扩CAN", "MAC/三码写入", "MA0202"]
             self.inf_CPU_test = [False for x in range(len(self.CPU_test_array))]
             for i in range(len(self.CPU_test_array)):
@@ -2365,7 +2365,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             # :param
             # row: 进行操作的单元行
             # :param
-            # state: 测试状态['无需检测', '正在检测', '检测完成', '等待检测']
+            # state: 测试状态['本次不检测', '正在检测', '检测完成', '等待检测']
             # :param
             # result: 测试结果
             # col2 = ['', '通过', '未通过']
@@ -2945,13 +2945,13 @@ class Ui_Control(QMainWindow,Ui_Form):
         '''
         :param list = [row,state,result,operationTime]
         :param row: 进行操作的单元行
-        :param state: 测试状态 ['无需检测','正在检测','检测完成','等待检测']
+        :param state: 测试状态 ['本次不检测','正在检测','检测完成','等待检测']
         :param result: 测试结果 col2 = ['','通过','未通过']
         :param operationTime: 测试时间
         :return:
         '''
         mTable = self.tableWidget_AI
-        col1 = ['无需检测','正在检测','检测完成','等待检测']
+        col1 = ['本次不检测','正在检测','检测完成','等待检测']
         col2 = ['','通过','未通过']
         font = QtGui.QColor(0, 0, 0)
         if list[1] == 0:
@@ -2986,13 +2986,13 @@ class Ui_Control(QMainWindow,Ui_Form):
         '''
         :param list = [row,state,result,operationTime]
         :param row: 进行操作的单元行
-        :param state: 测试状态 ['无需检测','正在检测','检测完成','等待检测']
+        :param state: 测试状态 ['本次不检测','正在检测','检测完成','等待检测']
         :param result: 测试结果 col2 = ['','通过','未通过']
         :param operationTime: 测试时间
         :return:
         '''
         mTable = self.tableWidget_AO
-        col1 = ['无需检测','正在检测','检测完成','等待检测']
+        col1 = ['本次不检测','正在检测','检测完成','等待检测']
         col2 = ['','通过','未通过']
         font = QtGui.QColor(0, 0, 0)
         if list[1] == 0:
@@ -3027,13 +3027,13 @@ class Ui_Control(QMainWindow,Ui_Form):
         '''
         :param list = [row,state,result,operationTime]
         :param row: 进行操作的单元行
-        :param state: 测试状态 ['无需检测','正在检测','检测完成','等待检测']
+        :param state: 测试状态 ['本次不检测','正在检测','检测完成','等待检测']
         :param result: 测试结果 col2 = ['','通过','未通过']
         :param operationTime: 测试时间
         :return:
         '''
         mTable = self.tableWidget_DIDO
-        col1 = ['无需检测', '正在检测', '检测完成', '等待检测']
+        col1 = ['本次不检测', '正在检测', '检测完成', '等待检测']
         col2 = ['', '通过', '未通过']
         font = QtGui.QColor(0, 0, 0)
         if list[1] == 0:
@@ -3068,13 +3068,13 @@ class Ui_Control(QMainWindow,Ui_Form):
         '''
         :param list = [row,state,result,operationTime]
         :param row: 进行操作的单元行
-        :param state: 测试状态 ['无需检测','正在检测','检测完成','等待检测']
+        :param state: 测试状态 ['本次不检测','正在检测','检测完成','等待检测']
         :param result: 测试结果 col2 = ['','通过','未通过']
         :param operationTime: 测试时间
         :return:
         '''
         mTable = self.tableWidget_CPU
-        col1 = ['无需检测','正在检测','检测完成','等待检测']
+        col1 = ['本次不检测','正在检测','检测完成','等待检测']
         col2 = ['','通过','未通过']
         font = QtGui.QColor(0, 0, 0)
         if list[1] == 0:
@@ -3110,12 +3110,12 @@ class Ui_Control(QMainWindow,Ui_Form):
 
         :param mTable: 进行操作的表格
         :param row: 进行操作的单元行
-        :param state: 测试状态 ['无需检测','正在检测','检测完成','等待检测']
+        :param state: 测试状态 ['本次不检测','正在检测','检测完成','等待检测']
         :param result: 测试结果 col2 = ['','通过','未通过']
         :param operationTime: 测试时间
         :return:
         '''
-        col1 = ['无需检测','正在检测','检测完成','等待检测']
+        col1 = ['本次不检测','正在检测','检测完成','等待检测']
         col2 = ['','通过','未通过']
         font = QtGui.QColor(0, 0, 0)
         if state == 0:
