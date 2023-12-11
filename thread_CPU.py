@@ -400,13 +400,18 @@ class CPUThread(QObject):
                             #数据写入
                             self.CPU_powerOffSaveTest(serial_transmitData=serial_transmitData0)
                             if not self.isCancelAllTest:
+                                if self.CPU_isTest[7]:
+                                    self.CPU_RTCTest('write')
+                                    if not self.isPassRTC:
+                                        self.CPU_isTest[7] = False
+                                        self.result_signal.emit('RTC写入失败，取消后续RTC测试！\n\n')
                                 self.messageBox_signal.emit(['操作提示','请断开设备电源。'])
                                 reply= self.result_queue.get()
                                 if reply == QMessageBox.Yes:
-                                    for t in range(5):
+                                    for t in range(3):
                                         if t == 0:
-                                            self.result_signal.emit(f'等待5秒。\n')
-                                        self.result_signal.emit(f'剩余等待{5 - t}秒……\n')
+                                            self.result_signal.emit(f'等待3秒。\n')
+                                        self.result_signal.emit(f'剩余等待{3 - t}秒……\n')
                                         time.sleep(1)
                                     self.messageBox_signal.emit(['操作提示', '请接通设备电源。'])
                                     reply = self.result_queue.get()
@@ -453,14 +458,36 @@ class CPUThread(QObject):
                         self.item_signal.emit([i, 1, 0, ''])
                         self.result_signal.emit(f'----------------RTC测试----------------')
                         try:
-                            testStartTime = time.time()
-                            self.CPU_RTCTest('write')
-                            if not self.isCancelAllTest:
+                            if not self.CPU_isTest[6]:
+                                testStartTime = time.time()
+                                self.CPU_RTCTest('write')
+                                if not self.isCancelAllTest:
+                                    self.messageBox_signal.emit(['操作提示', '请断开设备电源。'])
+                                    reply = self.result_queue.get()
+                                    if reply == QMessageBox.Yes:
+                                        for t in range(3):
+                                            if t == 0:
+                                                self.result_signal.emit(f'等待3秒。\n')
+                                            self.result_signal.emit(f'剩余等待{3 - t}秒……\n')
+                                            time.sleep(1)
+                                        self.messageBox_signal.emit(['操作提示', '请接通设备电源。'])
+                                        reply = self.result_queue.get()
+                                        if reply == QMessageBox.Yes:
+                                            for t in range(3):
+                                                if t == 0:
+                                                    self.result_signal.emit(f'等待3秒。\n')
+                                                self.result_signal.emit(f'剩余等待{3 - t}秒……\n')
+                                                time.sleep(1)
+                                    self.CPU_RTCTest('read')
+                                else:
+                                    self.isPassRTC &= False
+                            else:
                                 self.CPU_RTCTest('read')
                         except:
                             self.showErrorInf('RTC测试')
                             self.cancelAllTest()
                         finally:
+                            self.isPassAll &= self.isPassRTC
                             self.testNum = self.testNum - 1
                             if self.isPassRTC:
                                 self.changeTabItem(testStartTime, row=i, state=2, result=1)
@@ -486,21 +513,21 @@ class CPUThread(QObject):
                                 self.CPU_FPGATest(transmitData=transmitData0)
                                 if not self.isCancelAllTest:
                                     if self.isPassFPGA:
-                                        self.result_signal.emit('保存固件成功。\n\n')
+                                        self.result_signal.emit('<保存固件>成功。\n\n')
                                     else:
-                                        self.result_signal.emit('保存固件失败。\n\n')
+                                        self.result_signal.emit('<保存固件>失败。\n\n')
                                     self.CPU_FPGATest(transmitData=transmitData1)
                                     if not self.isCancelAllTest:
                                         if self.isPassFPGA:
-                                            self.result_signal.emit('加载固件成功。\n\n')
+                                            self.result_signal.emit('<加载固件>成功。\n\n')
                                         else:
-                                            self.result_signal.emit('加载固件失败。\n\n')
+                                            self.result_signal.emit('<加载固件>失败。\n\n')
                                         self.CPU_FPGATest(transmitData=transmitData2)
                                         if not self.isCancelAllTest:
                                             if self.isPassFPGA:
-                                                self.result_signal.emit('端口配置成功。\n\n')
+                                                self.result_signal.emit('<端口配置>成功。\n\n')
                                             else:
-                                                self.result_signal.emit('端口配置失败。\n\n')
+                                                self.result_signal.emit('<端口配置>失败。\n\n')
                                         else:
                                             break
                                     else:
@@ -895,61 +922,78 @@ class CPUThread(QObject):
                         testStartTime = time.time()
                         self.item_signal.emit([i, 1, 0, ''])
                         #写MAC
-                        w_MAC = [0xAC, hex(19), 0x00, 0x03, 0x10, 0x01,hex(12),
-                                  ord(self.module_MAC[0]), ord(self.module_MAC[1]),
-                                  ord(self.module_MAC[2]), ord(self.module_MAC[3]),
-                                  ord(self.module_MAC[4]), ord(self.module_MAC[5]),
-                                  ord(self.module_MAC[6]), ord(self.module_MAC[7]),
-                                  ord(self.module_MAC[8]), ord(self.module_MAC[9]),
-                                  ord(self.module_MAC[10]), ord(self.module_MAC[11])]
+                        w_MAC = [0xAC, 13, 0x00, 0x03, 0x10, 0x00,6,
+                                 0x11, 0x22, 0x33, 0x44, 0x55, 0x66,
+                                 0x00]
+                        # for mac in range(len(self.module_MAC)):
+                        #     w_MAC[7+mac] = ord(self.module_MAC[mac])
+                        w_MAC[13] = self.getCheckNum(w_MAC[:13])
                         #读MAC
-                        r_MAC = [0xAC, hex(6), 0x00, 0x03, 0x0E, 0x01]
+                        r_MAC = [0xAC, 6, 0x00, 0x03, 0x0E, 0x00,
+                                 self.getCheckNum([0xAC, 6, 0x00, 0x03, 0x0E, 0x00])]
+                        # 写PN
+                        w_PN = [0xAC, 31, 0x00, 0x03, 0x10, 0x01, 24,
+                                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                0x00]
+                        for pn in range(len(self.module_pn)):
+                            w_PN[7+pn] = ord(self.module_pn[pn])
+                        w_PN[31] = self.getCheckNum(w_PN[:31])
+                        # 读PN
+                        r_PN = [0xAC, 6, 0x00, 0x03, 0x0E, 0x01,
+                                self.getCheckNum([0xAC, 6, 0x00, 0x03, 0x0E, 0x01])]
 
                         # 写SN
-                        w_SN = [0xAC, hex(19), 0x00, 0x03, 0x10, 0x02, hex(12),
-                                ord(self.module_sn[0]), ord(self.module_sn[1]),
-                                ord(self.module_sn[2]), ord(self.module_sn[3]),
-                                ord(self.module_sn[4]), ord(self.module_sn[5]),
-                                ord(self.module_sn[6]), ord(self.module_sn[7]),
-                                ord(self.module_sn[8]), ord(self.module_sn[9]),
-                                ord(self.module_sn[10]), ord(self.module_sn[11])]
+                        w_SN = [0xAC, 23, 0x00, 0x03, 0x10, 0x02, 16,
+                                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                0x00]
+                        for sn in range(len(self.module_sn)):
+                            w_SN[7 + sn] = ord(self.module_sn[sn])
+                        w_SN[23] = self.getCheckNum(w_SN[:23])
                         # 读SN
-                        r_SN = [0xAC, hex(6), 0x00, 0x03, 0x0E, 0x02]
+                        r_SN = [0xAC, 6, 0x00, 0x03, 0x0E, 0x02,
+                                self.getCheckNum([0xAC, 6, 0x00, 0x03, 0x0E, 0x02])]
 
-                        # 写PN
-                        w_PN = [0xAC, hex(21), 0x00, 0x03, 0x10, 0x03, hex(14),
-                                 ord(self.module_pn[0]), ord(self.module_pn[1]),
-                                 ord(self.module_pn[2]), ord(self.module_pn[3]),
-                                 ord(self.module_pn[4]), ord(self.module_pn[5]),
-                                 ord(self.module_pn[6]), ord(self.module_pn[7]),
-                                 ord(self.module_pn[8]), ord(self.module_pn[9]),
-                                 ord(self.module_pn[10]), ord(self.module_pn[11]),
-                                 ord(self.module_pn[12]), ord(self.module_pn[13])]
+                        # 写REV
+                        w_REV = [0xAC, 15, 0x00, 0x03, 0x10, 0x03, 8,
+                                 ord(self.module_rev[0]), ord(self.module_rev[1]),0,0,0,0,0,0,
+                                 self.getCheckNum([0xAC, 15, 0x00, 0x03, 0x10, 0x03, 8,
+                                 ord(self.module_rev[0]), ord(self.module_rev[1])])]
                         # 读PN
-                        r_PN = [0xAC, hex(6), 0x00, 0x03, 0x0E, 0x03]
+                        r_REV = [0xAC, 6, 0x00, 0x03, 0x0E, 0x03,
+                                 self.getCheckNum([0xAC, 6, 0x00, 0x03, 0x0E, 0x03])]
 
                         try:
                             #写MAC
-                            self.CPU_configTest(transmitData=w_MAC, type='MAC')
+                            self.CPU_configTest(transmitData=w_MAC)
                             if not self.isCancelAllTest:
                                 # 读MAC
-                                self.CPU_configTest(transmitData=r_MAC, type='MAC')
+                                self.CPU_configTest(transmitData=r_MAC)
                                 if not self.isCancelAllTest:
-                                    #写SN
-                                    self.CPU_configTest(transmitData=w_SN, type='SN')
+                                    # 写PN
+                                    self.CPU_configTest(transmitData=w_PN)
                                     if not self.isCancelAllTest:
-                                        # 读SN
-                                        self.CPU_configTest(transmitData=r_SN, type='SN')
+                                        # 读PN
+                                        self.CPU_configTest(transmitData=r_PN)
                                         if not self.isCancelAllTest:
-                                            # 写PN
-                                            self.CPU_configTest(transmitData=w_PN, type='PN')
+                                            #写SN
+                                            self.CPU_configTest(transmitData=w_SN)
                                             if not self.isCancelAllTest:
-                                                # 读PN
-                                                self.CPU_configTest(transmitData=r_PN, type='PN')
+                                                # 读SN
+                                                self.CPU_configTest(transmitData=r_SN)
+                                                if not self.isCancelAllTest:
+                                                    # 写REV
+                                                    self.CPU_configTest(transmitData=w_REV)
+                                                    if not self.isCancelAllTest:
+                                                        # 读REV
+                                                        self.CPU_configTest(transmitData=r_REV)
+
                         except:
                             self.showErrorInf('三码与MAC地址写入测试')
                             self.cancelAllTest()
                         finally:
+                            self.isPassAll &= self.isPassConfig
                             self.testNum = self.testNum - 1
                             if self.isPassConfig:
                                 self.changeTabItem(testStartTime, row=i, state=2, result=1)
@@ -1891,6 +1935,11 @@ class CPUThread(QObject):
             # 等待0.5s后接收数据
             for t in range(15):
                 if t ==0:
+                    self.pauseOption()
+                    if not self.is_running:
+                        self.isPassFLASH = False
+                        self.cancelAllTest()
+                        break
                     self.result_signal.emit(f'等待设备自检查。\n')
                 self.result_signal.emit(f'剩余等待{15-t}秒……\n')
                 time.sleep(1)
@@ -2160,15 +2209,20 @@ class CPUThread(QObject):
 
     # RTC测试
     def CPU_RTCTest(self,wr:str):
+        isThisPass = True
         serial_transmitData=[]
         if wr == 'write':
             now = datetime.datetime.now()
-            serial_transmitData = [0xAC, hex(13), 0x00, 0x07, 0x10, 0x00,
-                                        hex(now.year-2000), hex(now.month), hex(now.day),
-                                        hex(now.hour), hex(now.minute), hex(now.second),
-                                        hex(now.weekday())]
+            serial_transmitData = [0xAC, 13, 0x00, 0x07, 0x10, 0x00,
+                                        now.year-2000, now.month, now.day,
+                                        now.hour, now.minute, now.second,
+                                        now.weekday(),self.getCheckNum( [0xAC, 13, 0x00, 0x07, 0x10, 0x00,
+                                        now.year-2000, now.month, now.day,
+                                        now.hour, now.minute, now.second,
+                                        now.weekday()])]
         elif wr == 'read':
-            serial_transmitData = [0xAC, hex(6), 0x00, 0x07, 0x0E, 0x00]
+            serial_transmitData = [0xAC, 6, 0x00, 0x07, 0x0E, 0x00,
+                                   self.getCheckNum([0xAC, 6, 0x00, 0x07, 0x0E, 0x00])]
 
         try:
             #打开串口
@@ -2179,7 +2233,8 @@ class CPUThread(QObject):
         loopStartTime = time.time()
         while True:
             if (time.time() - loopStartTime) * 1000 > self.waiting_time:
-                self.isPassRTC = False
+                self.isPassRTC &= False
+                isThisPass = False
                 break
             # 发送数据
             typeC_serial.write(bytes(serial_transmitData))
@@ -2200,10 +2255,17 @@ class CPUThread(QObject):
                 break
             elif dataLen == 7: #写
                 if trueData[6] == 0x00:  # 写成功
-                    self.isPassRTC = True
+                    self.isPassRTC &= True
+                    isThisPass = True
+                    week_dict={0:'一',1:'二',2:'三',3:'四',4:'五',5:'六',6:'日',}
+                    self.result_signal.emit(f'写入时间为：{serial_transmitData[6]+2000}年{serial_transmitData[7]}月'
+                                            f'{serial_transmitData[8]}日{serial_transmitData[9]}时'
+                                            f'{serial_transmitData[10]}分{serial_transmitData[11]}秒，'
+                                            f'星期{week_dict[serial_transmitData[12]]}\n')
                     break
                 elif trueData[6] == 0x01:  # 写失败
-                    self.isPassRTC = True
+                    self.isPassRTC &= False
+                    isThisPass = False
                     break
             elif dataLen == 14:#读
                 if trueData[6] == 0x00:  # 读成功
@@ -2213,19 +2275,42 @@ class CPUThread(QObject):
                         now.weekday() == trueData[13]:
                         if (now.hour-trueData[10]) *3600+(now.minute-trueData[11])*60\
                                 +(now.second-trueData[12])<30:
-                            self.isPassRTC = True
+                            self.isPassRTC &= True
+                            isThisPass = True
+                            week_dict = {0: '一', 1: '二', 2: '三', 3: '四', 4: '五', 5: '六', 6: '日', }
+                            # now1 = datetime.datetime.now()
+                            self.result_signal.emit(f'当前时间为：{now.year}年{now.month}月{now.day}日'
+                                             f'{now.hour}时{now.minute}分{now.second}秒，'
+                                             f'星期{week_dict[now.weekday()]}\n')
+                            self.result_signal.emit(f'读取时间为：{trueData[7]+2000}年{trueData[8]}月{trueData[9]}日'
+                                             f'{trueData[10]}时{trueData[11]}分{trueData[12]}秒，'
+                                             f'星期{week_dict[trueData[13]]},合格\n')
                             break
                         else:
-                            self.isPassRTC = False
+                            self.isPassRTC &= False
+                            isThisPass = False
+                            week_dict = {0: '一', 1: '二', 2: '三', 3: '四', 4: '五', 5: '六', 6: '日', }
+                            # now1 = datetime.datetime.now()
+                            self.result_result.emit(f'当前时间为：{now.year}年{now.month,}月{now.day}日'
+                                             f'{now.hour}时{now.minute}分{now.second}秒，'
+                                             f'星期{week_dict[now.weekday()]}\n')
+                            self.result_result.emit(f'读取时间为：{trueData[7] + 2000}年{trueData[8]}月{trueData[9]}日'
+                                             f'{trueData[10]}时{trueData[11]}分{trueData[12]}秒，'
+                                             f'星期{week_dict[trueData[7]]},不合格\n')
                             break
                     else:
-                        self.isPassRTC = False
+                        self.isPassRTC &= False
+                        isThisPass = False
+                        self.result_signal.emit("时间读取失败\n")
                         break
                 elif trueData[6] == 0x01:  # 读失败
+                    self.isPassRTC &= False
+                    isThisPass = False
+                    self.result_signal.emit("时间读取失败\n")
                     break
             else:
                 continue
-        if not self.isPassRTC:
+        if not isThisPass:
             self.messageBox_signal.emit(['测试警告', 'RTC测试不通过，是否进行后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
@@ -2234,8 +2319,6 @@ class CPUThread(QObject):
                 self.cancelAllTest()
         # 关闭串口
         typeC_serial.close()
-
-
 
     # 各指示灯测试
     def CPU_LEDTest(self, transmitData:list,LED_name:str):
@@ -2878,7 +2961,8 @@ class CPUThread(QObject):
         typeC_serial.close()
 
     #MAC地址和3码
-    def CPU_configTest(self, transmitData: list, type:str):
+    def CPU_configTest(self, transmitData: list):
+        isThisPass = True
         try:
             #打开串口
             typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
@@ -2888,7 +2972,8 @@ class CPUThread(QObject):
         loopStartTime = time.time()
         while True:
             if (time.time() - loopStartTime) * 1000 > self.waiting_time:
-                self.isPassConfig = False
+                self.isPassConfig &= False
+                isThisPass = False
                 break
             # 发送数据
             typeC_serial.write(bytes(transmitData))
@@ -2901,68 +2986,114 @@ class CPUThread(QObject):
             for i in range(len(serial_receiveData)):
                 serial_receiveData[i] = int(serial_receiveData[i],16)
             trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
+            # self.result_signal.emit(f'trueData:{trueData}')
             if isSendAgain:
                 self.result_signal.emit('未接收到正确数据，再次接收！\n')
                 continue
             if dataLen == 3:  # 指令出错
                 self.orderError(trueData[2])
+                self.isPassConfig &= False
+                isThisPass = False
                 break
             elif dataLen == 7:  # 写
                 if trueData[6] == 0x00:  # 写成功
-                    self.isPassConfig = True
+                    self.isPassConfig &= True
+                    isThisPass = True
                     break
                 elif trueData[6] == 0x01:  # 写/读失败
-                    self.isPassConfig = False
+                    self.isPassConfig &= False
+                    isThisPass = False
                     break
-            elif dataLen == 20 and type == 'MAC':  # 读MAC
+            elif trueData[5] == 0x00:  # 读MAC
                 if trueData[6] == 0x00:  # 读成功
-                    if trueData[7] == 12:
-                        for MACNum in range(12):
-                            if not (trueData[MACNum+8] == ord(self.module_MAC[MACNum])):
-                                self.isPassConfig = False
+                    if trueData[7] == 6:
+                        for MACNum in range(6):
+                            mac_stand = [0x11,0x22,0x33,0x44,0x55,0x66]
+                            if (hex(trueData[MACNum+8]) != hex(mac_stand[MACNum])):
+                                self.isPassConfig &= False
+                                isThisPass = False
+                                self.result_signal.emit('MAC读取失败\n')
                                 break
                             else:
-                                self.isPassConfig = True
+                                if MACNum == 5:
+                                    self.result_signal.emit('MAC读取成功\n')
+                                self.isPassConfig &= True
+                                isThisPass = True
                     else:
-                        self.isPassConfig = False
+                        self.isPassConfig &= False
+                        isThisPass = False
                     break
                 elif trueData[6] == 0x01:  # 读失败
                     self.isPassConfig = False
+                    isThisPass = False
                     break
-            elif dataLen == 20 and type == 'SN':  # 读SN
+            elif trueData[5] == 0x02:  # 读SN
                 if trueData[6] == 0x00:  # 读成功
-                    if trueData[7] == 12:
+                    if trueData[7] == 16:
                         for SNNum in range(12):
-                            if not (trueData[SNNum+8] == ord(self.module_pn[SNNum])):
-                                self.isPassConfig = False
-                                break
+                            if (int(trueData[SNNum+8]) != ord(self.module_sn[SNNum])):
+                                self.isPassConfig &= False
+                                isThisPass = False
+                                self.result_signal.emit('SN读取失败\n')
                             else:
-                                self.isPassConfig = True
+                                self.isPassConfig &= True
+                                isThisPass = True
+                                if SNNum == 11:
+                                    self.result_signal.emit('SN读取成功\n')
                     else:
-                        self.isPassConfig = False
+                        self.isPassConfig &= False
+                        isThisPass = False
                     break
                 elif trueData[6] == 0x01:  # 读失败
-                    self.isPassConfig = False
+                    self.isPassConfig &= False
+                    isThisPass = False
                     break
-            elif dataLen == 22 and type == 'PN':  # 读PN
+            elif trueData[5] == 0x01:  # 读PN
                 if trueData[6] == 0x00:  # 读成功
-                    if trueData[7] == 12:
+                    if trueData[7] == 24:
                         for PNNum in range(14):
-                            if not (trueData[PNNum+8] == ord(self.module_pn[PNNum])):
-                                self.isPassConfig = False
-                                break
+                            if (int(trueData[PNNum+8]) != ord(self.module_pn[PNNum])):
+                                self.isPassConfig &= False
+                                isThisPass = False
+                                self.result_signal.emit('PN读取失败\n')
                             else:
-                                self.isPassConfig = True
+                                self.isPassConfig &= True
+                                isThisPass = True
+                                if PNNum == 13:
+                                    self.result_signal.emit('PN读取成功\n')
                     else:
-                        self.isPassConfig = False
+                        self.isPassConfig &= False
+                        isThisPass = False
                     break
                 elif trueData[6] == 0x01:  # 读失败
-                    self.isPassConfig = False
+                    self.isPassConfig &= False
+                    isThisPass = False
+                    break
+            elif trueData[5] == 0x03:  # 读REV
+                if trueData[6] == 0x00:  # 读成功
+                    if trueData[7] == 8:
+                        for REVNum in range(2):
+                            if (int(trueData[REVNum+8]) != ord(self.module_rev[REVNum])):
+                                self.isPassConfig &= False
+                                isThisPass = False
+                                self.result_signal.emit('REV读取失败\n')
+                            else:
+                                self.isPassConfig &= True
+                                isThisPass = True
+                                if REVNum == 1:
+                                    self.result_signal.emit('REV读取成功\n')
+                    else:
+                        self.isPassConfig &= False
+                        isThisPass = False
+                    break
+                elif trueData[6] == 0x01:  # 读失败
+                    self.isPassConfig &= False
+                    isThisPass = False
                     break
             else:
                 continue
-        if not self.isPassConfig:
-            self.messageBox_signal.emit(['测试警告', '本体Config测试不通过，是否进行后续测试？'])
+        if not isThisPass:
+            self.messageBox_signal.emit(['测试警告', 'MAC与三码写入测试不通过，是否进行后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
                 pass

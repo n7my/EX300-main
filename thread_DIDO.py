@@ -244,7 +244,7 @@ class DIDOThread(QObject):
             self.m_transmitData[5] = 0x54
             self.m_transmitData[6] = 0x41
             self.m_transmitData[7] = 0x52
-            isLEDTest, whatEver = CAN_option.transmitCAN((0x600 + int(self.CANAddr_DI)), self.m_transmitData)
+            isLEDTest, whatEver = CAN_option.transmitCAN((0x600 + int(self.CANAddr_DI)), self.m_transmitData,1)
             if isLEDTest:
                 self.pauseOption()
                 if not self.is_running:
@@ -270,7 +270,7 @@ class DIDOThread(QObject):
                 self.m_transmitData[6] = 0x49
                 self.m_transmitData[7] = 0x54
                 bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + self.CANAddr_DI),
-                                                                       self.m_transmitData)
+                                                                       self.m_transmitData,1)
                 if bool_transmit:
                     self.pauseOption()
                     if not self.is_running:
@@ -377,7 +377,7 @@ class DIDOThread(QObject):
             self.m_transmitData[5] = 0x54
             self.m_transmitData[6] = 0x41
             self.m_transmitData[7] = 0x52
-            isLEDTest, whatEver = CAN_option.transmitCAN((0x600 + int(self.CANAddr_DO)), self.m_transmitData)
+            isLEDTest, whatEver = CAN_option.transmitCAN((0x600 + int(self.CANAddr_DO)), self.m_transmitData,1)
             if isLEDTest:
                 self.pauseOption()
                 if not self.is_running:
@@ -402,7 +402,7 @@ class DIDOThread(QObject):
                 self.m_transmitData[5] = 0x58
                 self.m_transmitData[6] = 0x49
                 self.m_transmitData[7] = 0x54
-                bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + self.CANAddr_DO), self.m_transmitData)
+                bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + self.CANAddr_DO), self.m_transmitData,1)
                 if bool_transmit:
                     self.pauseOption()
                     if not self.is_running:
@@ -639,7 +639,7 @@ class DIDOThread(QObject):
             self.m_transmitData[1] = self.m_arrayTestData[index][1]
             self.m_transmitData[2] = self.m_arrayTestData[index][2]
             self.m_transmitData[3] = self.m_arrayTestData[index][3]
-        CAN_option.transmitCAN(0x200 + self.CANAddr_DO, self.m_transmitData)
+        CAN_option.transmitCAN(0x200 + self.CANAddr_DO, self.m_transmitData,1)
 
     def testRunErr(self, addr):
         self.testNum -= 1
@@ -668,7 +668,7 @@ class DIDOThread(QObject):
         self.m_transmitData[2] = 0x5f
         self.m_transmitData[3] = 0x01
         self.m_transmitData[4] = 0x01
-        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData)
+        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
         runEnd_time = time.time()
         runTest_time = round(runEnd_time - runStart_time, 2)
         time.sleep(0.5)
@@ -704,7 +704,7 @@ class DIDOThread(QObject):
             self.m_transmitData[2] = 0x5f
             self.m_transmitData[3] = 0x01
             self.m_transmitData[4] = 0x00
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
             time.sleep(1)
             self.isLEDRunOK = True
             # self.result_signal.emit(f'self.isLEDRunOK:{self.isLEDRunOK}')
@@ -757,7 +757,7 @@ class DIDOThread(QObject):
         self.m_transmitData[3] = 0x02
         self.m_transmitData[4] = 0x01
 
-        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData)
+        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
         errorEnd_time = time.time()
         errorTest_time = round(errorEnd_time - errorStart_time, 2)
         time.sleep(0.5)
@@ -794,7 +794,7 @@ class DIDOThread(QObject):
             self.m_transmitData[2] = 0x5f
             self.m_transmitData[3] = 0x02
             self.m_transmitData[4] = 0x00
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
             time.sleep(1)
             self.isLEDErrOK = True
         elif reply == QMessageBox.No:
@@ -854,7 +854,7 @@ class DIDOThread(QObject):
         self.m_transmitData[6] = 0x41
         self.m_transmitData[7] = 0x52
         #print(f'{self.module_2}地址:{0x600 + addr}')
-        isLEDTest, whatEver = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData)
+        isLEDTest, whatEver = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
         if isLEDTest:
             self.pauseOption()
             if not self.is_running:
@@ -872,7 +872,7 @@ class DIDOThread(QObject):
             self.m_transmitData[2] = 0x5f
             self.m_transmitData[3] = 0x03
             self.m_transmitData[4] = 0x01
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
             CANRunEnd_time = time.time()
             CANRunTest_time = round(CANRunEnd_time - CANRunStart_time, 2)
             time.sleep(0.5)
@@ -899,7 +899,7 @@ class DIDOThread(QObject):
                 self.m_transmitData[2] = 0x5f
                 self.m_transmitData[3] = 0x03
                 self.m_transmitData[4] = 0x00
-                bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData)
+                bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
                 time.sleep(1)
                 isLEDCANRunOK = True
             elif reply == QMessageBox.No:
@@ -933,7 +933,7 @@ class DIDOThread(QObject):
             self.m_transmitData[2] = 0x5f
             self.m_transmitData[3] = 0x04
             self.m_transmitData[4] = 0x01
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
             CANErrEnd_time = time.time()
             CANErrTest_time = round(CANErrEnd_time - CANErrStart_time, 2)
             time.sleep(0.5)
@@ -960,7 +960,7 @@ class DIDOThread(QObject):
                 self.m_transmitData[2] = 0x5f
                 self.m_transmitData[3] = 0x04
                 self.m_transmitData[4] = 0x00
-                bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData)
+                bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
                 time.sleep(1)
                 isLEDCANErrOK = True
             elif reply == QMessageBox.No:
@@ -990,7 +990,7 @@ class DIDOThread(QObject):
             self.m_transmitData[5] = 0x58
             self.m_transmitData[6] = 0x49
             self.m_transmitData[7] = 0x54
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
 
         else:
             self.pauseOption()
@@ -1016,7 +1016,7 @@ class DIDOThread(QObject):
             # self.m_transmitData[6] = 0x00
             # self.m_transmitData[7] = 0x00
             # #print(f'{self.module_1}地址:{0x600+self.CANAddr_AO}')
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + self.CANAddr_AO), self.m_transmitData)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + self.CANAddr_AO), self.m_transmitData,1)
             bool_all = bool_all & bool_transmit
             # self.isPause()
             # if not self.isStop():

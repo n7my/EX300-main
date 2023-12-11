@@ -2062,12 +2062,12 @@ class Ui_Form(object):
         self.groupBox_19.setTitle(_translate("Form", "检测"))
         self.checkBox_53.setText(_translate("Form", "4.FLASH"))
         # self.checkBox_69.setText(_translate("Form", "19.固件烧录"))
-        self.checkBox_56.setText(_translate("Form", "6.拨杆"))
-        self.checkBox_55.setText(_translate("Form", "5.FPGA"))
-        self.checkBox_57.setText(_translate("Form", "7.MFK按键"))
-        self.checkBox_58.setText(_translate("Form", "8.掉电保存"))
+        self.checkBox_56.setText(_translate("Form", "6.MFK按键"))
+        self.checkBox_55.setText(_translate("Form", "5.拨杆"))
+        self.checkBox_57.setText(_translate("Form", "7.掉电保存"))
+        self.checkBox_58.setText(_translate("Form", "8.RTC"))
         self.checkBox_60.setText(_translate("Form", "10.各指示灯"))
-        self.checkBox_59.setText(_translate("Form", "9.RTC"))
+        self.checkBox_59.setText(_translate("Form", "9.FPGA"))
         self.checkBox_61.setText(_translate("Form", "11.本体IN"))
         self.checkBox_62.setText(_translate("Form", "12.本体OUT"))
         self.checkBox_64.setText(_translate("Form", "14.RS-232C"))
@@ -2451,8 +2451,8 @@ class Ui_Form(object):
         brush.setStyle(QtCore.Qt.NoBrush)
         item.setBackground(brush)
         tabIndex = self.tabWidget.currentIndex()
-        itemText_array = ["外观检测","型号检查","SRAM","FLASH","FPGA","拨杆","MFK按键","掉电保存",
-                          "RTC","各指示灯","本体IN","本体OUT","以太网","RS-232C","RS-485","右扩CAN",
+        itemText_array = ["外观检测","型号检查","SRAM","FLASH","拨杆","MFK按键","掉电保存",
+                          "RTC","FPGA","各指示灯","本体IN","本体OUT","以太网","RS-232C","RS-485","右扩CAN",
                           "MAC/三码写入","MA0202"]
         for i in range(29):
             item = QtWidgets.QTableWidgetItem()

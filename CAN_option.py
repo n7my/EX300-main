@@ -269,7 +269,7 @@ def close(VCI_USB_CAN_2, DEV_INDEX):
     Can_DLL.VCI_CloseDevice(VCI_USB_CAN_2, DEV_INDEX)
     # print("VCI_CloseDevice: 设备关闭成功")
 
-def receiveCANbyID(can_id, max_waiting):
+def receiveCANbyID(can_id, max_waiting,CAN_INDEX):
     ubyte_array_8 = c_ubyte * 8
     DATA = ubyte_array_8(RESERVED, RESERVED, RESERVED, RESERVED, RESERVED, RESERVED, RESERVED, RESERVED)
     ubyte_array_3 = c_ubyte * 3
@@ -315,7 +315,53 @@ def receiveCANbyID(can_id, max_waiting):
                         # print('Data: ', hex(m_can_obj.Data[0]),hex(m_can_obj.Data[1]),hex(m_can_obj.Data[2]),hex(m_can_obj.Data[3]),hex(m_can_obj.Data[4]),hex(m_can_obj.Data[5]),hex(m_can_obj.Data[6]),hex(m_can_obj.Data[7]))
                         return True, m_can_obj
 
-def transmitCAN(can_id, sendContent):
+def receiveCANbyIDLen(can_id, max_waiting,CAN_INDEX,dataLen:int):
+    ubyte_array = c_ubyte * dataLen
+    DATA = ubyte_array()
+    ubyte_array_3 = c_ubyte * 3
+    RESERVED_3 = ubyte_array_3(RESERVED, RESERVED, RESERVED)
+    # 参数结构参考122行
+    m_can_obj = VCI_CAN_OBJ(can_id, TIME_STAMP, TIME_FLAG, RECEIVE_SEND_TYPE, REMOTE_FLAG, EXTERN_FLAG, DATA_LEN, DATA, RESERVED_3)
+    #
+    now_time = time.time()
+    while True:
+        global receiveFlag
+        global receivePauseFlag
+
+        if not receiveFlag:
+            # print('停止接收数据1！')
+            return 'stopReceive', m_can_obj
+
+        if receivePauseFlag:
+            while True:
+                if not receiveFlag:
+                    # print('停止接收数据2！')
+                    return 'stopReceive', m_can_obj
+                if not receivePauseFlag:
+                    break
+        else:
+            if (time.time() - now_time) * 1000 > 2000:
+                # print('接收数据超时！')
+                return False, m_can_obj
+            else:
+                ret = Can_DLL.VCI_Receive(VCI_USB_CAN_2, DEV_INDEX, CAN_INDEX, byref(m_can_obj), RECEIVE_LEN, WAIT_TIME)
+                while ret != 1:
+                    # print('VCI_Receive: CAN通道 ' + str(CAN_INDEX + 1) + ' 接收数据失败, 正在重试')
+                    ret = Can_DLL.VCI_Receive(VCI_USB_CAN_2, DEV_INDEX, CAN_INDEX, byref(m_can_obj), RECEIVE_LEN, WAIT_TIME)
+                    # print(f'time.time() - now_time:{time.time() - now_time}')
+                    if (time.time() - now_time) * 1000 > 2000:
+                        # print('接收数据错误且超时！')
+                        return False, m_can_obj
+                else:
+                    # # print('VCI_Receive: 通道 ' + str(CAN_INDEX + 1) + f' 接收到{m_can_obj.ID}数据')
+                    if m_can_obj.ID == can_id:
+                        # print('VCI_Receive: CAN通道 ' + str(CAN_INDEX + 1) + f' 接收到 {hex(m_can_obj.ID)} 成功')
+                        # print('ID: ', hex(m_can_obj.ID))
+                        # # print('DataLen: ', m_can_obj.DataLen)
+                        # print('Data: ', hex(m_can_obj.Data[0]),hex(m_can_obj.Data[1]),hex(m_can_obj.Data[2]),hex(m_can_obj.Data[3]),hex(m_can_obj.Data[4]),hex(m_can_obj.Data[5]),hex(m_can_obj.Data[6]),hex(m_can_obj.Data[7]))
+                        return True, m_can_obj
+
+def transmitCAN(can_id, sendContent,CAN_INDEX):
     Can_DLL.VCI_ClearBuffer(VCI_USB_CAN_2, DEV_INDEX, CAN_INDEX)
     bool_result = True
     loopCount = 3
