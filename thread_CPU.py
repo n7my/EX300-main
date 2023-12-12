@@ -669,26 +669,43 @@ class CPUThread(QObject):
                         self.item_signal.emit([i, 1, 0, ''])
                         testStartTime = time.time()
                         self.result_signal.emit(f'----------------以太网测试----------------')
-                        defaultIP_0 = 192
-                        defaultIP_1 = 168
-                        defaultIP_2 = 1
-                        defaultIP_3 = 66
-                        defaultUDP_LSB = 1213
-                        defaultUDP_MSB = 50000
-
-                        r_transmitData_IP = [0xAC, hex(9), 0x00, 0x0B, 0x0E, hex(defaultIP_0),
-                                          hex(defaultIP_1), hex(defaultIP_2),
-                                          hex(defaultIP_3)]
-                        r_transmitData_UDP = [0xAC, hex(7), 0x00, 0x0B, 0x0E, hex(defaultUDP_LSB),
-                                              hex(defaultUDP_MSB)]
+                        # defaultIP_0 = 192
+                        # defaultIP_1 = 168
+                        # defaultIP_2 = 1
+                        # defaultIP_3 = 66
+                        # defaultUDP_LSB = 1213
+                        # defaultUDP_MSB = 50000
+                        #
+                        # r_transmitData_IP = [0xAC, 9, 0x00, 0x0B, 0x0E, defaultIP_0,
+                        #                   defaultIP_1, defaultIP_2,defaultIP_3,
+                        #                      self.getCheckNum([0xAC, 9, 0x00, 0x0B, 0x0E,
+                        #                    defaultIP_0,defaultIP_1, defaultIP_2,defaultIP_3])]
+                        # r_transmitData_UDP = [0xAC, 7, 0x00, 0x0B, 0x0E, defaultUDP_LSB,
+                        #                       defaultUDP_MSB]
                         try:
-                            self.CPU_ETHTest(transmitData=r_transmitData_IP, isPassSign = self.isPassETH_IP)
-                            if not self.isCancelAllTest:
-                                self.CPU_ETHTest(transmitData=r_transmitData_UDP, isPassSign = self.isPassETH_UDP)
+                            self.messageBox_signal.emit(['操作提示','请将网线插入第一个网口'])
+                            reply = self.result_queue.get()
+                            if reply == QMessageBox.Yes:
+                                self.TCP_UDPTest()
+                                if not self.isCancelAllTest:
+                                    self.messageBox_signal.emit(['操作提示', '请将网线插入第二个网口'])
+                                    reply = self.result_queue.get()
+                                    if reply == QMessageBox.Yes:
+                                        self.TCP_UDPTest()
+                                    else:
+                                        self.result_signal.emit('网线未插入，测试不通过!')
+                                        self.isPassETH &= False
+                                else:
+                                    pass
+                            else:
+                                self.result_signal.emit('网线未插入，测试不通过!')
+                                self.isPassETH &= False
+
                         except:
                             self.showErrorInf('本体ETH测试')
                             self.cancelAllTest()
                         finally:
+                            self.isPassAll &= self.isPassETH
                             self.testNum = self.testNum - 1
                             if self.isPassETH:
                                 self.changeTabItem(testStartTime, row=i, state=2, result=1)
@@ -2586,8 +2603,63 @@ class CPUThread(QObject):
         # 关闭串口
         typeC_serial.close()
 
+    def TCP_UDPTest(self):
+        isThisPass = True
+        try:
+            import socket
+            # 创建TCP连接
+            client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            server_address = ('192.168.1.66', 8000)
+            client_socket.connect(server_address)
+
+            for i in range(200):
+                # 发送数据
+                message = f'不要返航,这里不是家。前进，前进，不择手段地前进!{i + 1}'
+                client_socket.send(message.encode())
+                print(f'TCP发送的数据：{message}')
+
+                # 接收数据
+                data = client_socket.recv(1024)
+                print(f'TCP接收的数据：{data.decode()}')
+
+            # 关闭TCP连接
+            client_socket.close()
+
+            # 创建UDP连接
+            client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            client_address = ('192.168.1.100', 1025)
+            client_socket.bind(client_address)
+            for i in range(200):
+                # 发送数据
+                server_address = ('192.168.1.66', 1025)
+                message = f'不要返航,这里不是家。前进，前进，不择手段地前进!{i + 1}'
+                client_socket.sendto(message.encode(), server_address)
+                print(f'UDP发送的数据：{message}')
+
+                # 接收数据
+                data, address = client_socket.recvfrom(1024)
+                print(f'UDP接收的数据：{data.decode()}')
+
+            # 关闭UDP连接
+            client_socket.close()
+            self.isPassETH &= True
+            isThisPass = True
+        except:
+            self.isPassETH &= False
+            isThisPass = False
+        finally:
+            if not isThisPass:
+                self.messageBox_signal.emit(['测试警告', f'本体ETH测试不通过，是否进行后续测试？'])
+                reply = self.result_queue.get()
+                if reply == QMessageBox.Yes:
+                    pass
+                else:
+                    self.cancelAllTest()
+
+
     # 本体ETH测试
     def CPU_ETHTest(self, transmitData: list,isPassSign:bool):
+        isThisPass = True
         try:
             #打开串口
             typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
@@ -2597,7 +2669,8 @@ class CPUThread(QObject):
         loopStartTime = time.time()
         while True:
             if (time.time() - loopStartTime) * 1000 > self.waiting_time:
-                self.isPassETH = False
+                self.isPassETH &= False
+                isThisPass = False
                 break
             # 发送数据
             typeC_serial.write(bytes(transmitData))
@@ -2620,24 +2693,30 @@ class CPUThread(QObject):
                 if trueData[6] == 0x00:  # 读IP成功
                     if trueData[7] == transmitData[5] and trueData[8] == transmitData[6] \
                             and trueData[9] == transmitData[7] and trueData[10] == transmitData[8]:
-                        isPassSign = True
+                        isPassSign &= True
+                        isThisPass = True
                         break
                     else:
-                        isPassSign = False
+                        isPassSign &= False
+                        isThisPass = False
                         break
                 elif trueData[6] == 0x01:  # 读IP失败
-                    isPassSign = False
+                    isPassSign &= False
+                    isThisPass = False
                     break
             elif dataLen == 9:  # 读UDP
                 if trueData[6] == 0x00:  # 读UDP成功
                     if trueData[7] == transmitData[5] and trueData[8] == transmitData[6]:
-                        isPassSign = True
+                        isPassSign &= True
+                        isThisPass = True
                         break
                     else:
-                        isPassSign = False
+                        isPassSign &= False
+                        isThisPass = False
                         break
                 elif trueData[6] == 0x01:  # 读UDP失败
-                    isPassSign = False
+                    isPassSign &= False
+                    isThisPass = False
                     break
             else:
                 continue
