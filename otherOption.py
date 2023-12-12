@@ -80,7 +80,8 @@ def check_heartbeat(can_addr, inf, max_waiting):
     # self.result_signal.emit(f'发现{inf}:收到心跳帧:{hex(self.m_can_obj.ID)}\n\n')
     return True
 
-def generateExcel(code_array:list,station_array:list, channels:int,module:str):
+def generateExcel(code_array:list,station_array:list=[False,False,False],
+                  channels:int=16,module:str=''):
     """
 
     :param self:
@@ -268,16 +269,16 @@ def generateExcel(code_array:list,station_array:list, channels:int,module:str):
         generalTest_row = 4
         sheet.write_merge(generalTest_row, generalTest_row + 1, 0, 0, '常规检测', leftTitle_style)
         CPU_row = 6
-        sheet.write_merge(CPU_row, CPU_row + 7, 0, 0, 'CPU检测', leftTitle_style)
-        DI_row = 14
+        sheet.write_merge(CPU_row, CPU_row + 8, 0, 0, 'CPU检测', leftTitle_style)
+        DI_row = 15
         if module == 'DI':
             returnRow = DI_row
         sheet.write_merge(DI_row, DI_row + 3, 0, 0, 'DI信号', leftTitle_style)
-        DO_row = 18
+        DO_row = 19
         if module == 'DO':
             returnRow = DO_row
         sheet.write_merge(DO_row, DO_row + 3, 0, 0, 'DO信号', leftTitle_style)
-        AI_row = 22
+        AI_row = 23
         if module == 'AI':
             returnRow = AI_row
             if (station_array[1] and not station_array[2]):
@@ -312,6 +313,8 @@ def generateExcel(code_array:list,station_array:list, channels:int,module:str):
         else:
             sheet.write_merge(AO_row, AO_row + 1 + channels, 0, 0, 'AO信号', leftTitle_style)
             result_row = AO_row + 2
+        if module == 'CPU':
+            returnRow = CPU_row
 
         sheet.write_merge(result_row, result_row + 1, 0, 3, '整机检测结果', leftTitle_style)
 
@@ -383,66 +386,61 @@ def generateExcel(code_array:list,station_array:list, channels:int,module:str):
         sheet.write_merge(generalTest_row + 1, generalTest_row + 1, 16, 17, '------', contentTitle_style)
         sheet.write(generalTest_row + 1, 18, '---', contentTitle_style)
 
-        sheet.write_merge(CPU_row, CPU_row, 1, 2, '片外Flash读写', contentTitle_style)
+        sheet.write_merge(CPU_row, CPU_row, 1, 2, '型号', contentTitle_style)
         sheet.write(CPU_row, 3, '---', contentTitle_style)
-        sheet.write_merge(CPU_row, CPU_row, 4, 5, 'MAC&序列号', contentTitle_style)
+        sheet.write_merge(CPU_row, CPU_row, 4, 5, 'SRAM', contentTitle_style)
         sheet.write(CPU_row, CPU_row, '---', contentTitle_style)
-        sheet.write_merge(CPU_row, CPU_row, 7, 8, '多功能按钮', contentTitle_style)
+        sheet.write_merge(CPU_row, CPU_row, 7, 8, 'FLASH读写', contentTitle_style)
         sheet.write(CPU_row, 9, '---', contentTitle_style)
         sheet.write_merge(CPU_row, CPU_row, 10, 11, 'R/S拨杆', contentTitle_style)
         sheet.write(CPU_row, 12, '---', contentTitle_style)
-        sheet.write_merge(CPU_row, CPU_row, 13, 14, '实时时钟', contentTitle_style)
+        sheet.write_merge(CPU_row, CPU_row, 13, 14, 'MFK按键', contentTitle_style)
         sheet.write(CPU_row, 15, '---', contentTitle_style)
-        sheet.write_merge(CPU_row, CPU_row, 16, 17, 'SRAM', contentTitle_style)
+        sheet.write_merge(CPU_row, CPU_row, 16, 17, '掉电保存', contentTitle_style)
         sheet.write(CPU_row, 18, '---', contentTitle_style)
-        sheet.write_merge(CPU_row + 1, CPU_row + 1, 1, 2, '掉电保存', contentTitle_style)
+        sheet.write_merge(CPU_row + 1, CPU_row + 1, 1, 2, 'RTC', contentTitle_style)
         sheet.write(CPU_row + 1, 3, '---', contentTitle_style)
-        sheet.write_merge(CPU_row + 1, CPU_row + 1, 4, 5, 'U盘', contentTitle_style)
+        sheet.write_merge(CPU_row + 1, CPU_row + 1, 4, 5, 'FPGA', contentTitle_style)
         sheet.write(CPU_row + 1, 6, '---', contentTitle_style)
-        sheet.write_merge(CPU_row + 1, CPU_row + 1, 7, 8, 'type-C', contentTitle_style)
+        sheet.write_merge(CPU_row + 1, CPU_row + 1, 7, 8, '各指示灯', contentTitle_style)
         sheet.write(CPU_row + 1, 9, '---', contentTitle_style)
-        sheet.write_merge(CPU_row + 1, CPU_row + 1, 10, 11, 'RS232通讯', contentTitle_style)
+        sheet.write_merge(CPU_row + 1, CPU_row + 1, 10, 11, '输入通道', contentTitle_style)
         sheet.write(CPU_row + 1, 12, '---', contentTitle_style)
-        sheet.write_merge(CPU_row + 1, CPU_row + 1, 13, 14, 'RS485通讯', contentTitle_style)
+        sheet.write_merge(CPU_row + 1, CPU_row + 1, 13, 14, '输出通道', contentTitle_style)
         sheet.write(CPU_row + 1, 15, '---', contentTitle_style)
-        sheet.write_merge(CPU_row + 1, CPU_row + 1, 16, 17, 'CAN通讯(预留)', contentTitle_style)
+        sheet.write_merge(CPU_row + 1, CPU_row + 1, 16, 17, '以太网', contentTitle_style)
         sheet.write(CPU_row + 1, 18, '---', contentTitle_style)
 
-        sheet.write_merge(CPU_row + 2, CPU_row + 4, 1, 2, '输入通道', contentTitle_style)
+        sheet.write_merge(CPU_row + 2, CPU_row + 2, 1, 2, 'RS-232C', contentTitle_style)
         sheet.write(CPU_row + 2, 3, '---', contentTitle_style)
-        sheet.write(CPU_row + 2, 4, '---', contentTitle_style)
-        sheet.write(CPU_row + 2, 5, '---', contentTitle_style)
+        sheet.write_merge(CPU_row + 2, CPU_row + 2, 4, 5, 'RS-485', contentTitle_style)
         sheet.write(CPU_row + 2, 6, '---', contentTitle_style)
-        sheet.write(CPU_row + 2, 7, '---', contentTitle_style)
-        sheet.write(CPU_row + 2, 8, '---', contentTitle_style)
+        sheet.write_merge(CPU_row + 2, CPU_row + 2, 7, 8, '右扩CAN', contentTitle_style)
         sheet.write(CPU_row + 2, 9, '---', contentTitle_style)
-        sheet.write(CPU_row + 2, 10, '---', contentTitle_style)
-        sheet.write(CPU_row + 2, 11, '---', contentTitle_style)
+        sheet.write_merge(CPU_row + 2, CPU_row + 2, 10, 11, 'MAC&三码', contentTitle_style)
         sheet.write(CPU_row + 2, 12, '---', contentTitle_style)
-        sheet.write(CPU_row + 2, 13, '---', contentTitle_style)
-        sheet.write(CPU_row + 2, 14, '---', contentTitle_style)
+        sheet.write_merge(CPU_row + 2, CPU_row + 2, 13, 14, '选项板', contentTitle_style)
         sheet.write(CPU_row + 2, 15, '---', contentTitle_style)
-        sheet.write(CPU_row + 2, 16, '---', contentTitle_style)
-        sheet.write(CPU_row + 2, 17, '---', contentTitle_style)
+        sheet.write_merge(CPU_row + 2, CPU_row + 2, 16, 17, '------', contentTitle_style)
         sheet.write(CPU_row + 2, 18, '---', contentTitle_style)
 
-        sheet.write(CPU_row + 3, 3, '---', contentTitle_style)
-        sheet.write(CPU_row + 3, 4, '---', contentTitle_style)
-        sheet.write(CPU_row + 3, 5, '---', contentTitle_style)
-        sheet.write(CPU_row + 3, 6, '---', contentTitle_style)
-        sheet.write(CPU_row + 3, 7, '---', contentTitle_style)
-        sheet.write(CPU_row + 3, 8, '---', contentTitle_style)
-        sheet.write(CPU_row + 3, 9, '---', contentTitle_style)
-        sheet.write(CPU_row + 3, 10, '---', contentTitle_style)
-        sheet.write(CPU_row + 3, 11, '---', contentTitle_style)
-        sheet.write(CPU_row + 3, 12, '---', contentTitle_style)
-        sheet.write(CPU_row + 3, 13, '---', contentTitle_style)
-        sheet.write(CPU_row + 3, 14, '---', contentTitle_style)
-        sheet.write(CPU_row + 3, 15, '---', contentTitle_style)
-        sheet.write(CPU_row + 3, 16, '---', contentTitle_style)
-        sheet.write(CPU_row + 3, 17, '---', contentTitle_style)
-        sheet.write(CPU_row + 3, 18, '---', contentTitle_style)
-
+        sheet.write_merge(CPU_row + 3, CPU_row + 6, 1, 2, '输入通道', contentTitle_style)
+        sheet.write(CPU_row + 3, 3, 'CH1', contentTitle_style)
+        sheet.write(CPU_row + 3, 4, 'CH2', contentTitle_style)
+        sheet.write(CPU_row + 3, 5, 'CH3', contentTitle_style)
+        sheet.write(CPU_row + 3, 6, 'CH4', contentTitle_style)
+        sheet.write(CPU_row + 3, 7, 'CH5', contentTitle_style)
+        sheet.write(CPU_row + 3, 8, 'CH6', contentTitle_style)
+        sheet.write(CPU_row + 3, 9, 'CH7', contentTitle_style)
+        sheet.write(CPU_row + 3, 10, 'CH8', contentTitle_style)
+        sheet.write(CPU_row + 3, 11, 'CH9', contentTitle_style)
+        sheet.write(CPU_row + 3, 12, 'CH10', contentTitle_style)
+        sheet.write(CPU_row + 3, 13, 'CH11', contentTitle_style)
+        sheet.write(CPU_row + 3, 14, 'CH12', contentTitle_style)
+        sheet.write(CPU_row + 3, 15, 'CH13', contentTitle_style)
+        sheet.write(CPU_row + 3, 16, 'CH14', contentTitle_style)
+        sheet.write(CPU_row + 3, 17, 'CH15', contentTitle_style)
+        sheet.write(CPU_row + 3, 18, 'CH16', contentTitle_style)
         sheet.write(CPU_row + 4, 3, '---', contentTitle_style)
         sheet.write(CPU_row + 4, 4, '---', contentTitle_style)
         sheet.write(CPU_row + 4, 5, '---', contentTitle_style)
@@ -460,15 +458,14 @@ def generateExcel(code_array:list,station_array:list, channels:int,module:str):
         sheet.write(CPU_row + 4, 17, '---', contentTitle_style)
         sheet.write(CPU_row + 4, 18, '---', contentTitle_style)
 
-        sheet.write_merge(CPU_row + 5, CPU_row + 7, 1, 2, '输出通道', contentTitle_style)
-        sheet.write(CPU_row + 5, 3, '---', contentTitle_style)
-        sheet.write(CPU_row + 5, 4, '---', contentTitle_style)
-        sheet.write(CPU_row + 5, 5, '---', contentTitle_style)
-        sheet.write(CPU_row + 5, 6, '---', contentTitle_style)
-        sheet.write(CPU_row + 5, 7, '---', contentTitle_style)
-        sheet.write(CPU_row + 5, 8, '---', contentTitle_style)
-        sheet.write(CPU_row + 5, 9, '---', contentTitle_style)
-        sheet.write(CPU_row + 5, 10, '---', contentTitle_style)
+        sheet.write(CPU_row + 5, 3, 'CH17', contentTitle_style)
+        sheet.write(CPU_row + 5, 4, 'CH18', contentTitle_style)
+        sheet.write(CPU_row + 5, 5, 'CH19', contentTitle_style)
+        sheet.write(CPU_row + 5, 6, 'CH20', contentTitle_style)
+        sheet.write(CPU_row + 5, 7, 'CH21', contentTitle_style)
+        sheet.write(CPU_row + 5, 8, 'CH22', contentTitle_style)
+        sheet.write(CPU_row + 5, 9, 'CH23', contentTitle_style)
+        sheet.write(CPU_row + 5, 10, 'CH24', contentTitle_style)
         sheet.write(CPU_row + 5, 11, '---', contentTitle_style)
         sheet.write(CPU_row + 5, 12, '---', contentTitle_style)
         sheet.write(CPU_row + 5, 13, '---', contentTitle_style)
@@ -495,22 +492,40 @@ def generateExcel(code_array:list,station_array:list, channels:int,module:str):
         sheet.write(CPU_row + 6, 17, '---', contentTitle_style)
         sheet.write(CPU_row + 6, 18, '---', contentTitle_style)
 
-        sheet.write(CPU_row + 7, 3, '---', contentTitle_style)
-        sheet.write(CPU_row + 7, 4, '---', contentTitle_style)
-        sheet.write(CPU_row + 7, 5, '---', contentTitle_style)
-        sheet.write(CPU_row + 7, 6, '---', contentTitle_style)
-        sheet.write(CPU_row + 7, 7, '---', contentTitle_style)
-        sheet.write(CPU_row + 7, 8, '---', contentTitle_style)
-        sheet.write(CPU_row + 7, 9, '---', contentTitle_style)
-        sheet.write(CPU_row + 7, 10, '---', contentTitle_style)
-        sheet.write(CPU_row + 7, 11, '---', contentTitle_style)
-        sheet.write(CPU_row + 7, 12, '---', contentTitle_style)
-        sheet.write(CPU_row + 7, 13, '---', contentTitle_style)
-        sheet.write(CPU_row + 7, 14, '---', contentTitle_style)
-        sheet.write(CPU_row + 7, 15, '---', contentTitle_style)
-        sheet.write(CPU_row + 7, 16, '---', contentTitle_style)
-        sheet.write(CPU_row + 7, 17, '---', contentTitle_style)
-        sheet.write(CPU_row + 7, 18, '---', contentTitle_style)
+        sheet.write_merge(CPU_row + 7, CPU_row + 8, 1, 2, '输出通道', contentTitle_style)
+        sheet.write(CPU_row + 7, 3, 'CH1', contentTitle_style)
+        sheet.write(CPU_row + 7, 4, 'CH2', contentTitle_style)
+        sheet.write(CPU_row + 7, 5, 'CH3', contentTitle_style)
+        sheet.write(CPU_row + 7, 6, 'CH4', contentTitle_style)
+        sheet.write(CPU_row + 7, 7, 'CH5', contentTitle_style)
+        sheet.write(CPU_row + 7, 8, 'CH6', contentTitle_style)
+        sheet.write(CPU_row + 7, 9, 'CH7', contentTitle_style)
+        sheet.write(CPU_row + 7, 10, 'CH8', contentTitle_style)
+        sheet.write(CPU_row + 7, 11, 'CH9', contentTitle_style)
+        sheet.write(CPU_row + 7, 12, 'CH10', contentTitle_style)
+        sheet.write(CPU_row + 7, 13, 'CH11', contentTitle_style)
+        sheet.write(CPU_row + 7, 14, 'CH12', contentTitle_style)
+        sheet.write(CPU_row + 7, 15, 'CH13', contentTitle_style)
+        sheet.write(CPU_row + 7, 16, 'CH14', contentTitle_style)
+        sheet.write(CPU_row + 7, 17, 'CH15', contentTitle_style)
+        sheet.write(CPU_row + 7, 18, 'CH16', contentTitle_style)
+
+        sheet.write(CPU_row + 8, 3, '---', contentTitle_style)
+        sheet.write(CPU_row + 8, 4, '---', contentTitle_style)
+        sheet.write(CPU_row + 8, 5, '---', contentTitle_style)
+        sheet.write(CPU_row + 8, 6, '---', contentTitle_style)
+        sheet.write(CPU_row + 8, 7, '---', contentTitle_style)
+        sheet.write(CPU_row + 8, 8, '---', contentTitle_style)
+        sheet.write(CPU_row + 8, 9, '---', contentTitle_style)
+        sheet.write(CPU_row + 8, 10, '---', contentTitle_style)
+        sheet.write(CPU_row + 8, 11, '---', contentTitle_style)
+        sheet.write(CPU_row + 8, 12, '---', contentTitle_style)
+        sheet.write(CPU_row + 8, 13, '---', contentTitle_style)
+        sheet.write(CPU_row + 8, 14, '---', contentTitle_style)
+        sheet.write(CPU_row + 8, 15, '---', contentTitle_style)
+        sheet.write(CPU_row + 8, 16, '---', contentTitle_style)
+        sheet.write(CPU_row + 8, 17, '---', contentTitle_style)
+        sheet.write(CPU_row + 8, 18, '---', contentTitle_style)
         # DO
         sheet.write_merge(DO_row, DO_row, 1, 2, '通道号', contentTitle_style)
         sheet.write(DO_row, 3, 'CH1', contentTitle_style)
@@ -736,6 +751,7 @@ def generateExcel(code_array:list,station_array:list, channels:int,module:str):
         sheet.write_merge(result_row + 3, result_row + 3, 11, 13, ' ', contentTitle_style)
         sheet.write_merge(result_row + 3, result_row + 3, 14, 15, '审核日期:', contentTitle_style)
         sheet.write_merge(result_row + 3, result_row + 3, 16, 18, ' ', contentTitle_style)
+
         return True, book,sheet,returnRow
         # print("eID: ",eID)
     except Exception as e:

@@ -2076,11 +2076,11 @@ class Ui_Form(object):
         self.checkBox_66.setText(_translate("Form", "16.右扩CAN"))
         self.checkBox_68.setText(_translate("Form", "生成报告"))
         self.checkBox_67.setText(_translate("Form", "18.MA0202"))
-        self.checkBox_50.setText(_translate("Form", "1.外观检查"))
+        self.checkBox_50.setText(_translate("Form", "1.外观"))
         self.checkBox_54.setText(_translate("Form", "17.MAC/三码写入"))
         self.label_14.setText(_translate("Form", "默认IP:192.168.1.66"))
         # self.checkBox_72.setText(_translate("Form", "21.U盘读写"))
-        self.checkBox_51.setText(_translate("Form", "2.型号检查"))
+        self.checkBox_51.setText(_translate("Form", "2.型号"))
         self.checkBox_52.setText(_translate("Form", "3.SRAM"))
         self.checkBox_73.setText(_translate("Form", "取消全选"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_4), _translate("Form", "CPU"))
@@ -2174,7 +2174,7 @@ class Ui_Form(object):
             self.tableWidget_DIDO.setItem(i, 3, item)
 
         item = self.tableWidget_DIDO.item(0, 0)
-        item.setText("外观检测")
+        item.setText("外观")
         item.setTextAlignment(QtCore.Qt.AlignCenter)
         item = self.tableWidget_DIDO.item(0, 1)
         item.setText("无需测试")
@@ -2266,7 +2266,7 @@ class Ui_Form(object):
             self.tableWidget_AI.setItem(i, 3, item)
 
         item = self.tableWidget_AI.item(0, 0)
-        item.setText("外观检测")
+        item.setText("外观")
         item.setTextAlignment(QtCore.Qt.AlignCenter)
         item = self.tableWidget_AI.item(0, 1)
         item.setText("无需测试")
@@ -2377,7 +2377,7 @@ class Ui_Form(object):
             self.tableWidget_AO.setItem(i, 3, item)
 
         item = self.tableWidget_AO.item(0, 0)
-        item.setText("外观检测")
+        item.setText("外观")
         item.setTextAlignment(QtCore.Qt.AlignCenter)
         item = self.tableWidget_AO.item(0, 1)
         item.setText("无需测试")
@@ -2451,7 +2451,7 @@ class Ui_Form(object):
         brush.setStyle(QtCore.Qt.NoBrush)
         item.setBackground(brush)
         tabIndex = self.tabWidget.currentIndex()
-        itemText_array = ["外观检测","型号检查","SRAM","FLASH","拨杆","MFK按键","掉电保存",
+        itemText_array = ["外观","型号","SRAM","FLASH","拨杆","MFK按键","掉电保存",
                           "RTC","FPGA","各指示灯","本体IN","本体OUT","以太网","RS-232C","RS-485","右扩CAN",
                           "MAC/三码写入","MA0202"]
         for i in range(29):

@@ -225,7 +225,7 @@ class AOThread(QObject):
         self.errorNum = 0
         self.errorInf = ''
         self.pause_num = 1
-        errorNum = 0
+
 
     def AOOption(self):
         self.isExcel = True
@@ -2283,11 +2283,11 @@ class AOThread(QObject):
             self.errorNum += 1
             self.errorInf += f'\n{self.errorNum})外观存在瑕疵 '
         if not self.isTestRunErr:
-            sheet.write(self.generalTest_row, 6, '未检测', warning_style)
-            sheet.write(self.generalTest_row, 9, '未检测', warning_style)
+            sheet.write(self.generalTest_row, 6, '未测试', warning_style)
+            sheet.write(self.generalTest_row, 9, '未测试', warning_style)
         if not self.isTestCANRunErr:
-            sheet.write(self.generalTest_row, 12, '未检测', warning_style)
-            sheet.write(self.generalTest_row, 15, '未检测', warning_style)
+            sheet.write(self.generalTest_row, 12, '未测试', warning_style)
+            sheet.write(self.generalTest_row, 15, '未测试', warning_style)
         if self.CAN_runLED and self.isTestCANRunErr:
             sheet.write(self.generalTest_row, 12, '√', pass_style)
         elif not self.CAN_runLED and self.isTestCANRunErr:
