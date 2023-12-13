@@ -165,6 +165,10 @@ class CPUThread(QObject):
         self.errorInf = ''
         self.isPassAll = True
         self.pause_num = 1
+        #CPU输入通道错误信息
+        self.inErrorInf = '输入通道'
+        # CPU输出通道错误信息
+        self.outErrorInf = '输出通道'
         # #初始化表格状态
         # for i in range(len(self.CPU_isTest)):
         #     self.result_signal.emit(f"self.CPU_isTest[{i}]:{self.CPU_isTest[i]}\n")
@@ -274,6 +278,7 @@ class CPUThread(QObject):
                                 self.CPU_typeTest(serial_transmitData=[0xAC, 6, 0x00, 0x00, 0x0E, 0x01,
                                                                        self.getCheckNum(serial_transmitData)])
                         except:
+                            self.isPassTypeTest &= False
                             self.showErrorInf('型号检查')
                             self.cancelAllTest()
                         finally:
@@ -298,6 +303,7 @@ class CPUThread(QObject):
                             self.CPU_SRAMTest(serial_transmitData=[0xAC, 5, 0x00, 0x01, 0x53,
                                                                  self.getCheckNum(serial_transmitData)])
                         except:
+                            self.isPassSRAM &= False
                             self.showErrorInf('SRAM')
                             self.cancelAllTest()
                         finally:
@@ -353,6 +359,7 @@ class CPUThread(QObject):
                                     self.CPU_LeverTest(1,serial_transmitData = [0xAC, 6, 0x00, 0x05, 0x0E, 0x00,
                                                                 self.getCheckNum([0xAC, 6, 0x00, 0x05, 0x0E, 0x00])])
                         except:
+                            self.isPassLever = False
                             self.showErrorInf('拨杆测试')
                             self.cancelAllTest()
                         finally:
@@ -386,6 +393,7 @@ class CPUThread(QObject):
                                 if reply == QMessageBox.Yes or QMessageBox.No:
                                     pass
                         except:
+                            self.isPassMFK = False
                             self.showErrorInf('MFK按钮')
                             self.cancelAllTest()
                         finally:
@@ -454,6 +462,7 @@ class CPUThread(QObject):
                                     self.cancelAllTest()
 
                         except:
+                            self.isPassPowerOffSave = False
                             self.showErrorInf('掉电保存测试')
                             self.cancelAllTest()
                         finally:
@@ -505,6 +514,7 @@ class CPUThread(QObject):
                             else:
                                 self.CPU_RTCTest('read')
                         except:
+                            self.isPassRTC = False
                             self.showErrorInf('RTC测试')
                             self.cancelAllTest()
                         finally:
@@ -564,14 +574,14 @@ class CPUThread(QObject):
                                 # else:
                                 #     break
                             else:
-                                self.messageBox_signal.emit(['测试警告', '无法识别U盘，FPGA无法测试，是否进行后续测试？'])
+                                self.messageBox_signal.emit(['测试警告', '无法识别U盘，FPGA无法测试，是否取消后续测试？'])
                                 self.isPassFPGA = False
                                 reply = self.result_queue.get()
                                 if reply == QMessageBox.Yes:
-                                    pass
-                                else:
                                     self.cancelAllTest()
+
                         except:
+                            self.isPassFPGA = False
                             self.showErrorInf('FPGA')
                             self.cancelAllTest()
                         finally:
@@ -626,6 +636,7 @@ class CPUThread(QObject):
                                     else:
                                         break
                         except:
+                            self.isPassLED =False
                             self.showErrorInf('LED测试')
                             self.cancelAllTest()
                         finally:
@@ -657,13 +668,15 @@ class CPUThread(QObject):
                             CAN_option.transmitCAN(0x200 + self.CANAddr3, self.m_transmitData,1)
                             #1.读输入端口
                             self.CPU_InTest(transmitData=r_transmitData)
-                            self.m_transmitData = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-                            CAN_option.transmitCAN(0x200 + self.CANAddr2, self.m_transmitData, 1)
-                            time.sleep(0.1)
-                            CAN_option.transmitCAN(0x200 + self.CANAddr3, self.m_transmitData, 1)
-                            # 2.读输入端口
-                            self.CPU_InTest(transmitData=r_transmitData)
+                            if not self.isCancelAllTest:
+                                self.m_transmitData = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+                                CAN_option.transmitCAN(0x200 + self.CANAddr2, self.m_transmitData, 1)
+                                time.sleep(0.1)
+                                CAN_option.transmitCAN(0x200 + self.CANAddr3, self.m_transmitData, 1)
+                                # 2.读输入端口
+                                self.CPU_InTest(transmitData=r_transmitData)
                         except:
+                            self.isPassIn = False
                             self.showErrorInf('本体IN测试')
                             self.cancelAllTest()
                         finally:
@@ -690,9 +703,10 @@ class CPUThread(QObject):
                             self.CPU_OutTest(transmitData=w_transmitData)
                             w_transmitData = [0xAC, 10, 0x00, 0x0A, 0x10, 0x01, 0xAA, 2, 0x00, 0x00,
                               self.getCheckNum([0xAC, 10, 0x00, 0x0A, 0x10, 0x01, 0xAA, 2, 0x00, 0x00])]
-
-                            self.CPU_OutTest(transmitData=w_transmitData)
+                            if not self.isCancelAllTest:
+                                self.CPU_OutTest(transmitData=w_transmitData)
                         except:
+                            self.isPassOut = False
                             self.showErrorInf('本体OUT测试')
                             self.cancelAllTest()
                         finally:
@@ -745,6 +759,7 @@ class CPUThread(QObject):
                                 self.isPassETH &= False
 
                         except:
+                            self.isPassETH=False
                             self.showErrorInf('本体以太网测试')
                             self.cancelAllTest()
                         finally:
@@ -801,6 +816,7 @@ class CPUThread(QObject):
                                 else:
                                     break
                         except:
+                            self.isPass232=False
                             self.showErrorInf('本体232测试')
                             self.cancelAllTest()
                         finally:
@@ -859,6 +875,7 @@ class CPUThread(QObject):
                                 else:
                                     break
                         except:
+                            self.isPass485=False
                             self.showErrorInf('本体485测试')
                             self.cancelAllTest()
                         finally:
@@ -964,12 +981,11 @@ class CPUThread(QObject):
                                                     break
                                             if not self.isPassRightCAN:
                                                 self.messageBox_signal.emit(
-                                                    ['测试警告', '右扩CAN测试不通过，是否进行后续测试？'])
+                                                    ['测试警告', '右扩CAN测试不通过，是否取消后续测试？'])
                                                 reply = self.result_queue.get()
                                                 if reply == QMessageBox.Yes:
-                                                    pass
-                                                else:
                                                     self.cancelAllTest()
+
                             #             else:
                             #                 pass
                             #         else:
@@ -979,6 +995,7 @@ class CPUThread(QObject):
                             # else:
                             #     pass
                         except:
+                            self.isPassRightCAN=False
                             self.showErrorInf('本体右扩CAN测试')
                             self.cancelAllTest()
                         finally:
@@ -1066,6 +1083,7 @@ class CPUThread(QObject):
                                                         self.CPU_configTest(transmitData=r_REV)
 
                         except:
+                            self.isPassConfig=False
                             self.showErrorInf('三码与MAC地址写入测试')
                             self.cancelAllTest()
                         finally:
@@ -1787,6 +1805,7 @@ class CPUThread(QObject):
                             else:
                                 self.isPassOp &= False
                         except:
+                            self.isPassOp=False
                             self.showErrorInf('选项板测试')
                             self.cancelAllTest()
                         finally:
@@ -1847,15 +1866,12 @@ class CPUThread(QObject):
                 if not excel_bool:
                     self.result_signal.emit('校准校验表生成出错！请检查代码！' + self.HORIZONTAL_LINE)
                 else:
-                    self.fillInCPUData(True, book, sheet)
-
-                    self.result_signal.emit('生成校准校验表成功' + self.HORIZONTAL_LINE)
-            #
-            #     if not self.isAOVolPass or not self.isAOCurPass:
-            #         self.result_signal.emit(f'不通过原因：\n{self.errorInf}' + self.HORIZONTAL_LINE)
-            #
-            # elif not self.isExcel:
-            #     self.result_signal.emit('测试停止，未生成校准校验表！' + self.HORIZONTAL_LINE)
+                    try:
+                        self.fillInCPUData(True, book, sheet)
+                        self.result_signal.emit('生成校准校验表成功' + self.HORIZONTAL_LINE)
+                    except:
+                        self.result_signal.emit('校准校验表生成出错！请检查代码！' + self.HORIZONTAL_LINE)
+                        self.result_signal.emit(f"校验表错误信息:\n{traceback.format_exc()}\n")
 
             self.allFinished_signal.emit()
             self.pass_signal.emit(False)
@@ -1992,12 +2008,11 @@ class CPUThread(QObject):
             else:
                 continue
         if not self.isPassSRAM:
-            self.messageBox_signal.emit(['测试警告', 'SRAM测试不通过，是否进行后续测试？'])
+            self.messageBox_signal.emit(['测试警告', 'SRAM测试不通过，是否取消后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
-                pass
-            else:
                 self.cancelAllTest()
+
         # 关闭串口
         typeC_serial.close()
 
@@ -2052,12 +2067,11 @@ class CPUThread(QObject):
             else:
                 continue
         if not self.isPassFLASH:
-            self.messageBox_signal.emit(['测试警告', 'FLASH测试不通过，是否进行后续测试？'])
+            self.messageBox_signal.emit(['测试警告', 'FLASH测试不通过，是否取消后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
-                pass
-            else:
                 self.cancelAllTest()
+
 
         # 关闭串口
         typeC_serial.close()
@@ -2109,12 +2123,11 @@ class CPUThread(QObject):
                 continue
 
         if not self.isPassFPGA:
-            self.messageBox_signal.emit(['测试警告', 'FPGA测试不通过，是否进行后续测试？'])
+            self.messageBox_signal.emit(['测试警告', 'FPGA测试不通过，是否取消后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
-                pass
-            else:
                 self.cancelAllTest()
+
         # 关闭串口
         typeC_serial.close()
 
@@ -2168,12 +2181,11 @@ class CPUThread(QObject):
             else:
                 continue
         if not isThisPass:
-            self.messageBox_signal.emit(['测试警告', '拨杆测试不通过，是否进行后续测试？'])
+            self.messageBox_signal.emit(['测试警告', '拨杆测试不通过，是否取消后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
-                pass
-            else:
                 self.cancelAllTest()
+
         # 关闭串口
         typeC_serial.close()
 
@@ -2227,12 +2239,11 @@ class CPUThread(QObject):
             else:
                 continue
         if not isThisPass:
-            self.messageBox_signal.emit(['测试警告', 'MFK测试不通过，是否进行后续测试？'])
+            self.messageBox_signal.emit(['测试警告', 'MFK测试不通过，是否取消后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
-                pass
-            else:
                 self.cancelAllTest()
+
         # 关闭串口
         typeC_serial.close()
 
@@ -2283,12 +2294,12 @@ class CPUThread(QObject):
             # if not self.isPassPowerOffSave:
             #     break
         if not isThisPass:
-            self.messageBox_signal.emit(['测试警告', '掉电保存测试不通过，是否进行后续测试？'])
+            self.messageBox_signal.emit(['测试警告', '掉电保存测试不通过，是否取消后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
-                pass
-            else:
                 self.cancelAllTest()
+
+
         # 关闭串口
         typeC_serial.close()
 
@@ -2396,12 +2407,11 @@ class CPUThread(QObject):
             else:
                 continue
         if not isThisPass:
-            self.messageBox_signal.emit(['测试警告', 'RTC测试不通过，是否进行后续测试？'])
+            self.messageBox_signal.emit(['测试警告', 'RTC测试不通过，是否取消后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
-                pass
-            else:
                 self.cancelAllTest()
+
         # 关闭串口
         typeC_serial.close()
 
@@ -2507,12 +2517,11 @@ class CPUThread(QObject):
             isThisPass = False
         finally:
             if not isThisPass:
-                self.messageBox_signal.emit(['测试警告', 'LED测试不通过，是否进行后续测试？'])
+                self.messageBox_signal.emit(['测试警告', 'LED测试不通过，是否取消后续测试？'])
                 reply = self.result_queue.get()
                 if reply == QMessageBox.Yes:
-                    pass
-                else:
                     self.cancelAllTest()
+
             # 关闭串口
             typeC_serial.close()
 
@@ -2556,6 +2565,7 @@ class CPUThread(QObject):
                             self.isPassIn &= True
                             isThisPass = True
                         else:
+                            self.result_signal.emit('CPU输入通道或模块QN0016存在故障。\n')
                             self.isPassIn &= False
                             isThisPass = False
                         break
@@ -2566,10 +2576,24 @@ class CPUThread(QObject):
                             self.isPassIn &= True
                             isThisPass = True
                         else:
+                            self.result_signal.emit('CPU输入通道或模块QN0016存在故障。\n')
                             self.isPassIn &= False
                             isThisPass = False
                         break
                     else:
+                        # ch1_8 = trueData[9][:2]+trueData[9][]
+                        hex_trueData = [hex(i) for i in trueData]
+                        self.in_bin_str = [(bin(int(hex_trueData[9], 16))[2:])[::-1],#颠倒字符串顺序
+                                           (bin(int(hex_trueData[10], 16))[2:])[::-1],
+                                            (bin(int(hex_trueData[11], 16))[2:])[::-1]]
+                        for ibs in range(3):
+                            if len(self.in_bin_str[ibs])<8:
+                                for ii in range(8-len(self.in_bin_str[ibs])):
+                                    self.in_bin_str[ibs] +='0'
+                        self.inCh_bin = self.in_bin_str[0]+self.in_bin_str[1]+self.in_bin_str[2]
+                        self.result_signal.emit(f'CPU输入通道1-8:{self.in_bin_str[0]}\n'
+                                                f'CPU输入通道9-16:{self.in_bin_str[1]}\n'
+                                                f'CPU输入通道17-24:{self.in_bin_str[2]}\n')
                         self.isPassIn &= False
                         isThisPass = False
                         break
@@ -2579,12 +2603,11 @@ class CPUThread(QObject):
                     break
 
         if not isThisPass:
-            self.messageBox_signal.emit(['测试警告', '本体IN测试不通过，是否进行后续测试？'])
+            self.messageBox_signal.emit(['测试警告', '本体IN测试不通过，是否取消后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
-                pass
-            else:
                 self.cancelAllTest()
+
         # 关闭串口
         typeC_serial.close()
 
@@ -2651,10 +2674,29 @@ class CPUThread(QObject):
                             self.isPassOut &= True
                             isThisPass = True
                         else:
+                            self.result_signal.emit('CPU输出通道或模块ET1600存在故障。\n')
                             self.isPassOut &= False
                             isThisPass = False
                         break
-                elif trueData[7] == 0x01:  # 读所有输出通道失败
+                    else:#读到的ET1600通道数据不对
+                        self.isPassOut &= False
+                        isThisPass = False
+                        if hex(transmitData[8]) == '0xff':
+                            self.result_signal.emit(f'{hex(self.m_receiveData[0])}\n{hex(self.m_receiveData[1])}\n')
+                            self.out_bin_str = [(bin(int(hex(self.m_receiveData[0]), 16))[2:])[::-1],
+                                                (bin(int(hex(self.m_receiveData[1]), 16))[2:])[::-1]]
+                            self.outCh_bin = self.out_bin_str[0] + self.out_bin_str[1]
+                            self.result_signal.emit(f'ET1600通道1-8 = {self.outCh_bin[:8]}\n'
+                                                    f'ET1600通道9-16 = {self.outCh_bin[8:]}\n')
+                            for obs in range(2):
+                                if len(self.out_bin_str[obs]) < 8:
+                                    for ii in range(8 - len(self.out_bin_str[obs])):
+                                        self.out_bin_str[obs] += '0'
+                        # elif transmitData[8] == '0x0':
+                        #     self.out_bin_str = [''.join(['1' if b == '0' else '0' for b in (bin(int(hex(self.m_receiveData[0]), 16))[2:])]),
+                        #                         ''.join(['1' if b == '0' else '0' for b in (bin(int(hex(self.m_receiveData[1]), 16))[2:])]),]
+                elif trueData[7] == 0x01:  # 写所有输出通道失败
+                    self.result_signal.emit('CPU输出通道写入失败。\n')
                     self.isPassOut &= False
                     isThisPass = False
                     break
@@ -2662,11 +2704,9 @@ class CPUThread(QObject):
                 continue
 
         if not isThisPass:
-            self.messageBox_signal.emit(['测试警告', '本体OUT测试不通过，是否进行后续测试？'])
+            self.messageBox_signal.emit(['测试警告', '本体OUT测试不通过，是否取消后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
-                pass
-            else:
                 self.cancelAllTest()
         # 关闭串口
         typeC_serial.close()
@@ -2721,11 +2761,9 @@ class CPUThread(QObject):
             isThisPass = False
         finally:
             if not isThisPass:
-                self.messageBox_signal.emit(['测试警告', f'本体ETH测试不通过，是否进行后续测试？'])
+                self.messageBox_signal.emit(['测试警告', f'本体ETH测试不通过，是否取消后续测试？'])
                 reply = self.result_queue.get()
                 if reply == QMessageBox.Yes:
-                    pass
-                else:
                     self.cancelAllTest()
 
 
@@ -2794,20 +2832,16 @@ class CPUThread(QObject):
                 continue
 
         if not self.isPassETH_IP and self.isPassETH_UDP:
-            self.messageBox_signal.emit(['测试警告', '本体ETH IP测试不通过，是否进行后续测试？'])
+            self.messageBox_signal.emit(['测试警告', '本体ETH IP测试不通过，是否取消后续测试？'])
             self.isPassETH = False
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
-                pass
-            else:
                 self.cancelAllTest()
         elif (not self.isPassETH_UDP and self.isPassETH_IP) or (not self.isPassETH_UDP and not self.isPassETH_IP):
             self.isPassETH = False
-            self.messageBox_signal.emit(['测试警告', '本体ETH UDP测试不通过，是否进行后续测试？'])
+            self.messageBox_signal.emit(['测试警告', '本体ETH UDP测试不通过，是否取消后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
-                pass
-            else:
                 self.cancelAllTest()
         # 关闭串口
         typeC_serial.close()
@@ -2872,11 +2906,9 @@ class CPUThread(QObject):
             else:
                 continue
         if not isThisPass:
-            self.messageBox_signal.emit(['测试警告', '本体232测试不通过，是否进行后续测试？'])
+            self.messageBox_signal.emit(['测试警告', '本体232测试不通过，是否取消后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
-                pass
-            else:
                 self.cancelAllTest()
         # 关闭串口
         typeC_serial.close()
@@ -2937,11 +2969,9 @@ class CPUThread(QObject):
 
 
         if not isReceiveTrueData:
-            self.messageBox_signal.emit(['测试警告', '本体232测试不通过，是否进行后续测试？'])
+            self.messageBox_signal.emit(['测试警告', '本体232测试不通过，是否取消后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
-                pass
-            else:
                 self.cancelAllTest()
         # 关闭串口
         typeC_serial.close()
@@ -3013,11 +3043,9 @@ class CPUThread(QObject):
             else:
                 continue
         if not isThisPass:
-            self.messageBox_signal.emit(['测试警告', '本体485测试不通过，是否进行后续测试？'])
+            self.messageBox_signal.emit(['测试警告', '本体485测试不通过，是否取消后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
-                pass
-            else:
                 self.cancelAllTest()
         # 关闭串口
         typeC_serial.close()
@@ -3102,11 +3130,9 @@ class CPUThread(QObject):
             else:
                 continue
         if not isThisPass:
-            self.messageBox_signal.emit(['测试警告', '本体右扩CAN测试不通过，是否进行后续测试？'])
+            self.messageBox_signal.emit(['测试警告', '本体右扩CAN测试不通过，是否取消后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
-                pass
-            else:
                 self.cancelAllTest()
         # 关闭串口
         typeC_serial.close()
@@ -3254,11 +3280,9 @@ class CPUThread(QObject):
             else:
                 continue
         if not isThisPass:
-            self.messageBox_signal.emit(['测试警告', 'MAC与三码写入测试不通过，是否进行后续测试？'])
+            self.messageBox_signal.emit(['测试警告', 'MAC与三码写入测试不通过，是否取消后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
-                pass
-            else:
                 self.cancelAllTest()
         # 关闭串口
         typeC_serial.close()
@@ -3519,11 +3543,9 @@ class CPUThread(QObject):
             isThisPass = False
         finally:
             if not isThisPass:
-                self.messageBox_signal.emit(['测试警告', '选项板测试不通过，是否进行后续测试？'])
+                self.messageBox_signal.emit(['测试警告', '选项板测试不通过，是否取消后续测试？'])
                 reply = self.result_queue.get()
                 if reply == QMessageBox.Yes:
-                    pass
-                else:
                     self.cancelAllTest()
             # 关闭串口
             typeC_serial.close()
@@ -3760,11 +3782,11 @@ class CPUThread(QObject):
         pass_pattern.pattern_fore_colour = 3
 
         # # 初始化样式
-        pass_style = xlwt.XFStyle()
-        pass_style.borders = pass_borders
-        pass_style.alignment = pass_alignment
-        pass_style.font = pass_font
-        pass_style.pattern = pass_pattern
+        self.pass_style = xlwt.XFStyle()
+        self.pass_style.borders = pass_borders
+        self.pass_style.alignment = pass_alignment
+        self.pass_style.font = pass_font
+        self.pass_style.pattern = pass_pattern
 
         # 未通过单元格样式
         # 为样式创建字体
@@ -3804,11 +3826,11 @@ class CPUThread(QObject):
         fail_pattern.pattern_fore_colour = 2
 
         # # 初始化样式
-        fail_style = xlwt.XFStyle()
-        fail_style.borders = fail_borders
-        fail_style.alignment = fail_alignment
-        fail_style.font = fail_font
-        fail_style.pattern = fail_pattern
+        self.fail_style = xlwt.XFStyle()
+        self.fail_style.borders = fail_borders
+        self.fail_style.alignment = fail_alignment
+        self.fail_style.font = fail_font
+        self.fail_style.pattern = fail_pattern
 
         # 提示警告单元格样式
         # 为样式创建字体
@@ -3848,237 +3870,151 @@ class CPUThread(QObject):
         warning_pattern.pattern_fore_colour = 5
 
         # # 初始化样式
-        warning_style = xlwt.XFStyle()
-        warning_style.borders = warning_borders
-        warning_style.alignment = warning_alignment
-        warning_style.font = warning_font
-        warning_style.pattern = warning_pattern
-
-        # if station and self.testNum == 0:
-        #     name_save = '合格'
-        # if station and self.testNum != 0:
-        #     name_save = '部分合格'
-        # elif not station:
-        #     name_save = '不合格'
+        self.warning_style = xlwt.XFStyle()
+        self.warning_style.borders = warning_borders
+        self.warning_style.alignment = warning_alignment
+        self.warning_style.font = warning_font
+        self.warning_style.pattern = warning_pattern
 
         if self.CPU_testItem[0] and self.isPassAppearance:
-            sheet.write(self.generalTest_row, 3, '√', pass_style)
+            sheet.write(self.generalTest_row, 3, '√', self.pass_style)
         elif self.CPU_testItem[0] and not self.isPassAppearance:
-            sheet.write(self.generalTest_row, 3, '×', fail_style)
+            sheet.write(self.generalTest_row, 3, '×', self.fail_style)
             self.errorNum += 1
             self.errorInf += f'\n{self.errorNum})外观存在瑕疵 '
         elif not self.CPU_testItem[0]:
-            sheet.write(self.generalTest_row, 3, '未测试', warning_style)
-
+            sheet.write(self.generalTest_row, 3, '未测试', self.warning_style)
+        CPU_testName_dict = {1:"型号", 2:"SRAM", 3:"FLASH读写", 4:"拨杆", 5:"MFK按键",
+                                   6:"掉电保存", 7:"RTC", 8:"FPGA", 9:"各指示灯", #10:self.inErrorInf, 11:self.outErrorInf,
+                                   12:"以太网", 13:"RS-232C", 14:"RS-485", 15:"右扩CAN", 16:"MAC/三码写入", 17:"选项板"}
         for it in range(1,len(self.CPU_passItem)):
             if it <7:
                 if self.CPU_testItem[it] and self.CPU_passItem[it]:
-                    sheet.write(self.generalTest_row + 2, 3 * it, '√', pass_style)
+                    sheet.write(self.generalTest_row + 2, 3 * it, '√', self.pass_style)
                 elif self.CPU_testItem[it] and not self.CPU_passItem[it]:
-                    sheet.write(self.generalTest_row + 2, 3 * it, '×', fail_style)
+                    sheet.write(self.generalTest_row + 2, 3 * it, '×', self.fail_style)
+                    self.errorInf += f'\n{CPU_testName_dict[it]}测试不通过'
                 elif not self.CPU_testItem[it]:
-                    sheet.write(self.generalTest_row + 2, 3 * it, '未测试', warning_style)
+                    sheet.write(self.generalTest_row + 2, 3 * it, '未测试', self.warning_style)
             elif it>=7 and it<13:
                 if self.CPU_testItem[it] and self.CPU_passItem[it]:
-                    sheet.write(self.generalTest_row + 3, 3 * (it-6), '√', pass_style)
+                    sheet.write(self.generalTest_row + 3, 3 * (it-6), '√', self.pass_style)
+                    if it == 10:
+                        self.fillCPUInOut(sheet,'in',0)
+                    elif it == 11:
+                        self.fillCPUInOut(sheet,'out',0)
                 elif self.CPU_testItem[it] and not self.CPU_passItem[it]:
-                    sheet.write(self.generalTest_row + 3, 3 * (it-6), '×', fail_style)
+                    sheet.write(self.generalTest_row + 3, 3 * (it-6), '×', self.fail_style)
+                    if it == 10:
+                        self.fillCPUInOut(sheet,'in',1)
+                        self.errorInf += f'\n{self.inErrorInf}测试不通过'
+                    elif it == 11:
+                        self.fillCPUInOut(sheet,'out',1)
+                        self.errorInf += f'\n{self.outErrorInf}测试不通过'
+                    else:
+                        self.errorInf += f'\n{CPU_testName_dict[it]}测试不通过'
                 elif not self.CPU_testItem[it]:
-                    sheet.write(self.generalTest_row + 3, 3 * (it-6), '未测试', warning_style)
+                    if it == 10:
+                        self.fillCPUInOut(sheet,'in',2)
+                    elif it == 11:
+                        self.fillCPUInOut(sheet, 'out', 2)
+                    sheet.write(self.generalTest_row + 3, 3 * (it-6), '未测试', self.warning_style)
             elif it>=13:
                 if self.CPU_testItem[it] and self.CPU_passItem[it]:
-                    sheet.write(self.generalTest_row + 4, 3 * (it-12), '√', pass_style)
+                    sheet.write(self.generalTest_row + 4, 3 * (it-12), '√', self.pass_style)
                 elif self.CPU_testItem[it] and not self.CPU_passItem[it]:
-                    sheet.write(self.generalTest_row + 4, 3 * (it-12), '×', fail_style)
+                    sheet.write(self.generalTest_row + 4, 3 * (it-12), '×', self.fail_style)
+                    self.errorInf += f'\n{CPU_testName_dict[it]}测试不通过'
                 elif not self.CPU_testItem[it]:
-                    sheet.write(self.generalTest_row + 4, 3 * (it-12), '未测试', warning_style)
-        # self.vol_excelName_array = ["-10V～10V", "-5V～5V", "0V～5V", "0V～10V", "1V～5V"]
-        # self.cur_excelName_array = ["4mA～20mA", "0mA～20mA"]
-        # # 填写信号类型、通道号、测试点数据
-        # if self.isAITestVol:
-        #     all_row = 9 + 4 + 4 + (2 + self.AI_Channels*5) + 2  # CPU + DI + DO + AI + AO
-        #     sheet.write_merge(self.AI_row + 2, self.AI_row + 1 + self.AI_Channels*5, 1, 1, '电压', pass_style)
-        #     for typeNum in range(5):
-        #         sheet.write_merge(self.AI_row + 2 + self.AI_Channels*typeNum,
-        #                           self.AI_row + 1 + self.AI_Channels*(typeNum+1),2, 2,
-        #                           f'{self.vol_excelName_array[typeNum]}', pass_style)
-        #         for i in range(5):
-        #             for j in range(self.AI_Channels):
-        #                 # 通道号
-        #                 sheet.write(self.AI_row + 2 + j + self.AI_Channels * typeNum, 3, f'CH{j + 1}', pass_style)
-        #                 # 理论值
-        #                 sheet.write(self.AI_row + 2 + j + self.AI_Channels * typeNum, 3 + 3 * i + 1,
-        #                             f'{int(self.volValue_array[typeNum][i])}', pass_style)
-        #                 # # 测试值
-        #                 # sheet.write(self.AI_row + 2 + j, 4 + 3 * i + 1, f'{self.volReceValue[typeNum][i][j]}', pass_style)
-        #                 # 精度
-        #                 if isinstance(self.volPrecision[typeNum][i][j], float) and \
-        #                         abs(self.volPrecision[typeNum][i][j]) < 1:
-        #                     # 测试值
-        #                     sheet.write(self.AI_row + 2 + j + self.AI_Channels * typeNum, 4 + 3 * i + 1,
-        #                                 f'{self.volReceValue[typeNum][i][j]}', pass_style)
-        #                     sheet.write(self.AI_row + 2 + j + self.AI_Channels * typeNum, 5 + 3 * i + 1,
-        #                                 f'{self.volPrecision[typeNum][i][j]}‰', pass_style)
-        #                 elif isinstance(self.volPrecision[typeNum][i][j], str) and \
-        #                         self.volPrecision[typeNum][i][j] == '-':
-        #                     # 测试值
-        #                     sheet.write(self.AI_row + 2 + j + self.AI_Channels * typeNum, 4 + 3 * i + 1,
-        #                                 f'{self.volReceValue[typeNum][i][j]}', warning_style)
-        #                     sheet.write(self.AI_row + 2 + j + self.AI_Channels * typeNum, 5 + 3 * i + 1,
-        #                                 f'{self.volPrecision[typeNum][i][j]}', warning_style)
-        #                     self.errorNum += 1
-        #                     self.errorInf += f'\n{self.errorNum})AI模块量程"{self.vol_excelName_array[typeNum]}"' \
-        #                                      f'的测试点{i + 1}在通道{j + 1}的数据接收有误'
-        #                 elif isinstance(self.volPrecision[typeNum][i][j], float) and \
-        #                         abs(self.volPrecision[typeNum][i][j]) >= 1:
-        #                     self.errorNum += 1
-        #                     self.errorInf += f'\n{self.errorNum})AI模块量程"{self.vol_excelName_array[typeNum]}"' \
-        #                                      f'的测试点{i + 1}在通道{j + 1}的电压精度超出范围'
-        #                     # 测试值
-        #                     sheet.write(self.AI_row + 2 + j + self.AI_Channels * typeNum, 4 + 3 * i + 1,
-        #                                 f'{self.volReceValue[typeNum][i][j]}', fail_style)
-        #                     sheet.write(self.AI_row + 2 + j+ self.AI_Channels * typeNum, 5 + 3 * i + 1,
-        #                                 f'{self.volPrecision[typeNum][i][j]}‰', fail_style)
-        # if self.isAITestVol and self.isAITestCur:
-        #     all_row = 9 + 4 + 4 + (2 + 7 * self.AI_Channels) + 2  # CPU + DI + DO + AI + AO
-        #     sheet.write_merge(self.AI_row + 2 + self.AI_Channels*5, self.AI_row + 1 + 7 * self.AI_Channels, 1, 1,
-        #                       '电流', pass_style)
-        #     # sheet.write_merge(self.AI_row + 2, self.AI_row + 1 + self.AI_Channels * 5, 1, 1, '电压', pass_style)
-        #     for typeNum in range(2):
-        #         sheet.write_merge(self.AI_row + 2 + self.AI_Channels * 5 + self.AI_Channels*typeNum,
-        #                           self.AI_row + 1 + self.AI_Channels * 5 + self.AI_Channels*(typeNum+1),2, 2,
-        #                           f'{self.cur_excelName_array[typeNum]}', pass_style)
-        #         for i in range(5):
-        #             for j in range(self.AI_Channels):
-        #                 # 通道号
-        #                 sheet.write(self.AI_row + 2 + 5*self.AI_Channels + j + self.AI_Channels*typeNum,
-        #                             3,f'CH{j + 1}',pass_style)
-        #                 # 理论值
-        #                 sheet.write(self.AI_row + 2 + 5*self.AI_Channels + j + self.AI_Channels*typeNum,
-        #                             3 + 3 * i + 1,f'{int(self.curValue_array[typeNum][i])}',pass_style)
-        #                 # # 测试值
-        #                 # sheet.write(self.AI_row + 2 + 5*self.AI_Channels + j + self.AI_Channels*typeNum,
-        #                 #             4 + 3 * i + 1,f'{self.curReceValue[typeNum][i][j]}',pass_style)
-        #                 # 精度
-        #                 if isinstance(self.curPrecision[typeNum][i][j], float) and \
-        #                         abs(self.curPrecision[typeNum][i][j]) < 1:
-        #                     # 测试值
-        #                     sheet.write(self.AI_row + 2 + 5 * self.AI_Channels + j + self.AI_Channels * typeNum,
-        #                                 4 + 3 * i + 1, f'{self.curReceValue[typeNum][i][j]}', pass_style)
-        #                     # 精度
-        #                     sheet.write(self.AI_row + 2 + 5*self.AI_Channels + j + self.AI_Channels*typeNum,
-        #                                 5 + 3 * i + 1,f'{self.curPrecision[typeNum][i][j]}‰', pass_style)
-        #                 elif isinstance(self.curPrecision[typeNum][i][j], str) and \
-        #                         self.curPrecision[typeNum][i][j] == '-':
-        #                     # 测试值
-        #                     sheet.write(self.AI_row + 2 + 5 * self.AI_Channels + j + self.AI_Channels * typeNum,
-        #                                 4 + 3 * i + 1, f'{self.curReceValue[typeNum][i][j]}', warning_style)
-        #                     # 精度
-        #                     sheet.write(self.AI_row + 2 + 5 * self.AI_Channels + j + self.AI_Channels * typeNum,
-        #                                 5 + 3 * i + 1,f'{self.curPrecision[typeNum][i][j]}', warning_style)
-        #                     self.errorNum += 1
-        #                     self.errorInf += f'\n{self.errorNum})AI模块量程"{self.cur_excelName_array[typeNum]}"' \
-        #                                      f'的测试点{i + 1}在通道{j + 1}的数据接收有误'
-        #                 elif isinstance(self.curPrecision[typeNum][i][j], float) and \
-        #                         abs(self.curPrecision[typeNum][i][j]) >= 1:
-        #                     self.errorNum += 1
-        #                     self.errorInf += f'\n{self.errorNum})AI模块量程"{self.cur_excelName_array[typeNum]}"' \
-        #                                      f'的测试点{i + 1}在通道{j + 1}的电流精度超出范围'
-        #                     # 测试值
-        #                     sheet.write(self.AI_row + 2 + 5 * self.AI_Channels + j + self.AI_Channels * typeNum,
-        #                                 4 + 3 * i + 1, f'{self.curReceValue[typeNum][i][j]}', fail_style)
-        #                     sheet.write(self.AI_row + 2 + 5*self.AI_Channels + j + self.AI_Channels*typeNum,
-        #                                 5 + 3 * i + 1,f'{self.curPrecision[typeNum][i][j]}‰', fail_style)
-        # if not self.isAITestVol and self.isAITestCur:
-        #     all_row = 9 + 4 + 4 + (2 + 2*self.AI_Channels) + 2  # CPU + DI + DO + AI + AO
-        #     sheet.write_merge(self.AI_row + 2, self.AI_row + 1 + 2 * self.AI_Channels, 1, 1, '电流', pass_style)
-        #     for typeNum in range(2):
-        #         sheet.write_merge(self.AI_row + 2 + self.AI_Channels * typeNum,
-        #                           self.AI_row + 1 + self.AI_Channels * (typeNum + 1), 2, 2,
-        #                           f'{self.cur_excelName_array[typeNum]}', pass_style)
-        #         for i in range(5):
-        #             for j in range(self.AI_Channels):
-        #                 # 通道号
-        #                 sheet.write(self.AI_row + 2 + j + self.AI_Channels * typeNum, 3, f'CH{j + 1}', pass_style)
-        #                 # 理论值
-        #                 sheet.write(self.AI_row + 2 + j + self.AI_Channels * typeNum, 3 + 3 * i + 1,
-        #                             f'{int(self.curValue_array[typeNum][i])}', pass_style)
-        #                 # # 测试值
-        #                 # sheet.write(self.AI_row + 2 + j + self.AI_Channels*typeNum, 4 + 3 * i + 1,
-        #                 #             f'{self.curReceValue[typeNum][i][j]}', pass_style)
-        #                 # 精度
-        #                 if isinstance(self.curPrecision[typeNum][i][j], float) and \
-        #                         abs(self.curPrecision[typeNum][i][j]) < 1:
-        #                     # 测试值
-        #                     sheet.write(self.AI_row + 2 + j + self.AI_Channels * typeNum, 4 + 3 * i + 1,
-        #                                 f'{self.curReceValue[typeNum][i][j]}', pass_style)
-        #                     # 精度
-        #                     sheet.write(self.AI_row + 2 + j + self.AI_Channels * typeNum, 5 + 3 * i + 1,
-        #                                 f'{self.curPrecision[typeNum][i][j]}‰', pass_style)
-        #                 elif isinstance(self.curPrecision[typeNum][i][j], str) and \
-        #                         self.curPrecision[typeNum][i][j] == '-':
-        #                     # 测试值
-        #                     sheet.write(self.AI_row + 2 + j + self.AI_Channels * typeNum, 4 + 3 * i + 1,
-        #                                 f'{self.curReceValue[typeNum][i][j]}', warning_style)
-        #                     # 精度
-        #                     sheet.write(self.AI_row + 2 + j + self.AI_Channels * typeNum, 5 + 3 * i + 1,
-        #                                 f'{self.volPrecision[typeNum][i][j]}', warning_style)
-        #                     self.errorNum += 1
-        #                     self.errorInf += f'\n{self.errorNum})AI模块量程"{self.cur_excelName_array[typeNum]}"' \
-        #                                      f'的测试点{i + 1}在通道{j + 1}的数据接收有误'
-        #                 elif isinstance(self.curPrecision[typeNum][i][j], float) and \
-        #                         abs(self.curPrecision[typeNum][i][j]) >= 1:
-        #                     self.errorNum += 1
-        #                     self.errorInf += f'\n{self.errorNum})AI模块量程"{self.cur_excelName_array[typeNum]}"' \
-        #                                      f'的测试点{i + 1}在通道{j + 1}的电流精度超出范围'
-        #                     # 测试值
-        #                     sheet.write(self.AI_row + 2 + j + self.AI_Channels * typeNum, 4 + 3 * i + 1,
-        #                                 f'{self.curReceValue[typeNum][i][j]}', fail_style)
-        #                     sheet.write(self.AI_row + 2 + j + self.AI_Channels * typeNum, 5 + 3 * i + 1,
-        #                                 f'{self.curPrecision[typeNum][i][j]}‰', fail_style)
-        #
-        # elif not self.isAITestVol and not self.isAITestCur:
-        #     all_row = 9 + 4 + 4 + 2 + 2  # CPU + DI + DO + AI + AO
-        # # # print(f'self.isAIPassTest:{self.isAIPassTest}')
-        # self.isAIPassTest = (((((self.isAIPassTest & self.isLEDRunOK) & self.isLEDErrOK)
-        #                        & self.CAN_runLED) & self.CAN_errorLED) & self.appearance)
-        # self.result_signal.emit(f'self.isLEDRunOK:{self.isLEDRunOK}')
-        # # print(f'self.isAIPassTest:{self.isAIPassTest}')
-        # # print(f'self.isLEDRunOK:{self.isLEDRunOK}')
-        # # print(f'self.isLEDErrOK:{self.isLEDErrOK}')
-        # # print(f'self.CAN_runLED:{self.CAN_runLED}')
-        # # print(f'self.CAN_errorLED:{self.CAN_errorLED}')
-        # # print(f'self.appearance:{self.appearance}')
-        # # print(f'self.testNum:{self.testNum}')
-        # self.result_signal.emit(f'self.testNum:{self.testNum}')
+                    sheet.write(self.generalTest_row + 4, 3 * (it-12), '未测试', self.warning_style)
+
         name_save = ''
         if self.isPassAll and self.testNum == 0:
             name_save = '合格'
-            sheet.write(27, 4, '■ 合格', pass_style)
+            sheet.write(27, 4, '■ 合格', self.pass_style)
             sheet.write(27, 6,
-                        '------------------ 全部项目测试通过！！！ ------------------', pass_style)
+                        '------------------ 全部项目测试通过！！！ ------------------', self.pass_style)
             self.label_signal.emit(['pass','全部通过'])
             self.print_signal.emit([f'/{name_save}{self.module_type}_{time.strftime("%Y%m%d%H%M%S")}', 'PASS', ''])
-            # self.label.setStyleSheet(self.testState_qss['pass'])
-            # self.label.setText('全部通过')
         elif self.isPassAll and self.testNum > 0:
             name_save = '部分合格'
-            sheet.write(27, 4, '■ 部分合格', pass_style)
+            sheet.write(27, 4, '■ 部分合格', self.pass_style)
             sheet.write(27, 6,
-                        '------------------ 注意：有部分项目未测试！！！ ------------------', warning_style)
+                        '------------------ 注意：有部分项目未测试！！！ ------------------', self.warning_style)
             self.label_signal.emit(['testing', '部分通过'])
             self.print_signal.emit([f'/{name_save}{self.module_type}_{time.strftime("%Y%m%d%H%M%S")}', 'PASS', ''])
-            # self.label.setStyleSheet(self.testState_qss['testing'])
-            # self.label.setText('部分通过')
+
         elif not self.isPassAll:
             name_save = '不合格'
-            sheet.write(28, 4, '■ 不合格', fail_style)
-            sheet.write(28, 6, f'不合格原因：{self.errorInf}', fail_style)
+            sheet.write(28, 4, '■ 不合格', self.fail_style)
+            sheet.write(28, 6, f'不合格原因：{self.errorInf}', self.fail_style)
             self.label_signal.emit(['fail', '未通过'])
             self.print_signal.emit(
                 [f'/{name_save}{self.module_type}_{time.strftime("%Y%m%d%H%M%S")}', 'FAIL', self.errorInf])
-            # self.label.setStyleSheet(self.testState_qss['fail'])
-            # self.label.setText('未通过')
 
         self.saveExcel_signal.emit([book,f'/{name_save}{self.module_type}_{time.strftime("%Y%m%d%H%M%S")}.xls'])
         # book.save(self.saveDir + f'/{name_save}{self.module_type}_{time.strftime("%Y%m%d%H%M%S")}.xls')
+
+    def fillCPUInOut(self,sheet,type:str,station:int):
+        '''
+        :param type: 'in','out'
+        :param station: 0:通过，1:不通过，2:未测试
+        :return:
+        '''
+        if station ==0:
+            if type == 'in':
+                for ch in range(24):
+                    if ch < 16:
+                        sheet.write(10, ch+3, '√', self.pass_style)
+                    else:
+                        sheet.write(12, ch-16 + 3, '√', self.pass_style)
+            elif type == 'out':
+                for ch in range(16):
+                    sheet.write(14, ch+3, '√', self.pass_style)
+            else:
+                self.result_signal.emit('type参数传递错误。\n')
+        elif station == 1:
+            if type == 'in':
+                for ch in range (24):
+                    # self.result_signal.emit(f'self.inCh_bin[{ch}}] = {self.inCh_bin[ch]}')
+                    if ch < 16:
+                        if self.inCh_bin[ch] == '0':
+                            sheet.write(10, ch + 3, '×', self.fail_style)
+                            self.inErrorInf += f'{ch+1}、'
+                        elif self.inCh_bin[ch] == '1':
+                            sheet.write(10, ch + 3, '√', self.pass_style)
+                    else:
+                        if self.inCh_bin[ch] == '0':
+                            sheet.write(12, ch-16 + 3, '×', self.fail_style)
+                            self.inErrorInf += f'{ch+1}、'
+                        elif self.inCh_bin[ch] == '1':
+                            sheet.write(12, ch-16 + 3, '√', self.pass_style)
+                len_in = len(self.inErrorInf)
+                if self.inErrorInf[len_in - 1] == '、':
+                    self.inErrorInf = self.inErrorInf[:len_in - 1]
+            elif type == 'out':
+                for ch in range(16):
+                    if self.outCh_bin[ch] == '0':
+                        sheet.write(14, ch + 3, '×', self.fail_style)
+                        self.outErrorInf += f'{ch+1}、'
+                    elif self.outCh_bin[ch] == '1':
+                        sheet.write(14, ch + 3, '√', self.pass_style)
+                len_out = len(self.outErrorInf)
+                if self.outErrorInf[len_out-1] == '、':
+                    self.outErrorInf = self.outErrorInf[:len_out-1]
+            else:
+                self.result_signal.emit('type参数传递错误。\n')
+        elif station == 2:
+            if type == 'in':
+                for ch in range(24):
+                    if ch < 16:
+                        sheet.write(10, ch+3, '未测试', self.warning_style)
+                    else:
+                        sheet.write(12, ch-16 + 3, '未测试', self.warning_style)
+            elif type == 'out':
+                for ch in range(16):
+                    sheet.write(14, ch+3, '未测试', self.warning_style)
+            else:
+                self.result_signal.emit('type参数传递错误。\n')
+        else:
+            self.result_Signal.emit('station传递错误。\n')

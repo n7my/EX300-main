@@ -554,7 +554,7 @@ class DIDOThread(QObject):
                      break
             # 清理接收缓存区
             self.clearList(self.m_receiveData)
-            bool_receive, self.m_can_obj = CAN_option.receiveCANbyID((0x180 + self.CANAddr_DI), self.TIME_OUT)
+            bool_receive, self.m_can_obj = CAN_option.receiveCANbyID((0x180 + self.CANAddr_DI), self.TIME_OUT,1)
             self.m_receiveData = self.m_can_obj.Data
             if bool_receive == False:
                 self.pauseOption()
@@ -1917,7 +1917,7 @@ class DIDOThread(QObject):
         all_row = 9 + 4 + 4 + 2 + 2  # CPU + DI + DO + AI + AO
         if self.isDIPassTest and self.testNum == 0:
             name_save = '合格'
-            sheet.write(self.generalTest_row + all_row + 1, 4, '■ 合格', pass_style)
+            sheet.write(self.generalTest_row + all_row + 2, 4, '■ 合格', pass_style)
             self.label_signal.emit(['pass', '全部通过'])
             self.print_signal.emit(
                 [f'/{name_save}{self.module_type}_{time.strftime("%Y%m%d%H%M%S")}', 'PASS', ''])
@@ -1925,8 +1925,8 @@ class DIDOThread(QObject):
             # self.label.setText('通过')
         if self.isDIPassTest and self.testNum > 0:
             name_save = '部分合格'
-            sheet.write(self.generalTest_row + all_row + 1, 4, '■ 部分合格', pass_style)
-            sheet.write(self.generalTest_row + all_row + 1, 6,
+            sheet.write(self.generalTest_row + all_row + 2, 4, '■ 部分合格', pass_style)
+            sheet.write(self.generalTest_row + all_row + 2, 6,
                         '------------------ 注意：有部分项目未测试！！！ ------------------', warning_style)
             self.label_signal.emit(['testing', '部分通过'])
             self.print_signal.emit(
@@ -1941,8 +1941,8 @@ class DIDOThread(QObject):
                 self.errorNum += 1
                 self.errorInf += f'\n{self.errorNum})偶数指示灯全亮时有问题 '
             name_save = '不合格'
-            sheet.write(self.generalTest_row + all_row + 2, 4, '■ 不合格', fail_style)
-            sheet.write(self.generalTest_row + all_row + 2, 6, f'不合格原因：{self.errorInf}', warning_style)
+            sheet.write(self.generalTest_row + all_row + 3, 4, '■ 不合格', fail_style)
+            sheet.write(self.generalTest_row + all_row + 3, 6, f'不合格原因：{self.errorInf}', warning_style)
             self.label_signal.emit(['fail', '未通过'])
             self.print_signal.emit(
                 [f'/{name_save}{self.module_type}_{time.strftime("%Y%m%d%H%M%S")}', 'FAIL', self.errorInf])
@@ -1953,6 +1953,7 @@ class DIDOThread(QObject):
 
     # @abstractmethod
     def fillInDOData(self, station, book, sheet):
+        self.generalTest_row = 4
         # 通过单元格样式
         # 为样式创建字体
         pass_font = xlwt.Font()
@@ -2085,12 +2086,6 @@ class DIDOThread(QObject):
         warning_style.font = warning_font
         warning_style.pattern = warning_pattern
 
-        # if station and self.testNum == 0:
-        #     name_save = '合格'
-        # if station and self.testNum != 0:
-        #     name_save = '部分合格'
-        # elif not station:
-        #     name_save = '不合格'
 
         if self.appearance:
             sheet.write(self.generalTest_row, 3, '√', pass_style)
@@ -2159,8 +2154,8 @@ class DIDOThread(QObject):
             # self.label.setText('通过')
         if self.isDOPassTest and self.testNum > 0:
             name_save = '部分合格'
-            sheet.write(self.generalTest_row + all_row + 1, 4, '■ 部分合格', pass_style)
-            sheet.write(self.generalTest_row + all_row + 1, 6,
+            sheet.write(self.generalTest_row + all_row + 2, 4, '■ 部分合格', pass_style)
+            sheet.write(self.generalTest_row + all_row + 2, 6,
                         '------------------ 注意：有部分项目未测试！！！ ------------------', warning_style)
             self.label_signal.emit(['testing', '部分通过'])
             self.print_signal.emit([f'/{name_save}{self.module_type}_{time.strftime("%Y%m%d%H%M%S")}', 'PASS', ''])
@@ -2174,8 +2169,8 @@ class DIDOThread(QObject):
                 self.errorNum += 1
                 self.errorInf += f'\n{self.errorNum})偶数指示灯全亮时有问题 '
             name_save = '不合格'
-            sheet.write(self.generalTest_row + all_row + 2, 4, '■ 不合格', fail_style)
-            sheet.write(self.generalTest_row + all_row + 2, 6, f'不合格原因：{self.errorInf}', fail_style)
+            sheet.write(self.generalTest_row + all_row + 3, 4, '■ 不合格', fail_style)
+            sheet.write(self.generalTest_row + all_row + 3, 6, f'不合格原因：{self.errorInf}', fail_style)
             self.label_signal.emit(['fail', '未通过'])
             self.print_signal.emit(
                 [f'/{name_save}{self.module_type}_{time.strftime("%Y%m%d%H%M%S")}', 'FAIL', self.errorInf])
