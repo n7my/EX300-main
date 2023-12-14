@@ -1310,6 +1310,9 @@ class CPUThread(QObject):
                                                                          0x00,0x00]
                                                             CAN_option.transmitCAN((0x600 + self.CANAddr5),
                                                                                    AQ_transmit,1)
+                                                            #等待一秒，等待输出稳定
+                                                            self.result_signal.emit('\n等待输出稳定……\n')
+                                                            time.sleep(1)
                                                             if not self.is_running:
                                                                 self.cancelAllTest()
                                                                 break
@@ -2969,7 +2972,7 @@ class CPUThread(QObject):
 
 
         if not isReceiveTrueData:
-            self.messageBox_signal.emit(['测试警告', '本体232测试不通过，是否取消后续测试？'])
+            self.messageBox_signal.emit(['测试警告', '数据接收失败，是否取消后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.Yes:
                 self.cancelAllTest()
@@ -3938,7 +3941,7 @@ class CPUThread(QObject):
             self.print_signal.emit([f'/{name_save}{self.module_type}_{time.strftime("%Y%m%d%H%M%S")}', 'PASS', ''])
         elif self.isPassAll and self.testNum > 0:
             name_save = '部分合格'
-            sheet.write(27, 4, '■ 部分合格', self.pass_style)
+            sheet.write(27, 4, '■ 部分合格', self.warning_style)
             sheet.write(27, 6,
                         '------------------ 注意：有部分项目未测试！！！ ------------------', self.warning_style)
             self.label_signal.emit(['testing', '部分通过'])

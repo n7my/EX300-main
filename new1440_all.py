@@ -2075,7 +2075,7 @@ class Ui_Form(object):
         self.checkBox_65.setText(_translate("Form", "15.RS-485"))
         self.checkBox_66.setText(_translate("Form", "16.右扩CAN"))
         self.checkBox_68.setText(_translate("Form", "生成报告"))
-        self.checkBox_67.setText(_translate("Form", "18.MA0202"))
+        self.checkBox_67.setText(_translate("Form", "18.选项板"))
         self.checkBox_50.setText(_translate("Form", "1.外观"))
         self.checkBox_54.setText(_translate("Form", "17.MAC/三码写入"))
         self.label_14.setText(_translate("Form", "默认IP:192.168.1.66"))
@@ -2453,7 +2453,7 @@ class Ui_Form(object):
         tabIndex = self.tabWidget.currentIndex()
         itemText_array = ["外观","型号","SRAM","FLASH","拨杆","MFK按键","掉电保存",
                           "RTC","FPGA","各指示灯","本体IN","本体OUT","以太网","RS-232C","RS-485","右扩CAN",
-                          "MAC/三码写入","MA0202"]
+                          "MAC/三码写入","选项板"]
         for i in range(29):
             item = QtWidgets.QTableWidgetItem()
             self.tableWidget_CPU.setItem(i, 0, item)
