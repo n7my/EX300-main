@@ -2648,7 +2648,7 @@ class CPUThread(QObject):
                 elif dataLen == 9:#读所有灯状态
                     if trueData[7] == 0x00 and trueData[8] == 0x00:
                         image = self.current_dir + f'/{LED_name}.png'
-                        self.messageBox_signal.emit(['操作提示', f'{LED_name}（除PWR灯以外）是否如图所示熄灭？',image])
+                        self.pic_messageBox_signal.emit(['操作提示', f'{LED_name}（除PWR灯以外）是否如图所示熄灭？',image])
                         reply = self.result_queue.get()
                         if reply == QMessageBox.AcceptRole:
                             self.isPassLED &= True
