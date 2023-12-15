@@ -548,7 +548,7 @@ class DIDOThread(QObject):
                     return False
                 self.messageBox_signal.emit(['警告', '检测到收发不一致！'])
                 reply = self.result_queue.get()
-                if reply == QMessageBox.Yes:
+                if reply == QMessageBox.AcceptRole:
                     break
                 else:
                      break
@@ -673,11 +673,11 @@ class DIDOThread(QObject):
         runTest_time = round(runEnd_time - runStart_time, 2)
         time.sleep(0.5)
         # reply = QMessageBox.question(None, '检测RUN &ERROR', 'RUN指示灯是否点亮？',
-        #                              QMessageBox.Yes | QMessageBox.No,
-        #                              QMessageBox.Yes)
+        #                              QMessageBox.AcceptRole | QMessageBox.RejectRole,
+        #                              QMessageBox.AcceptRole)
         self.messageBox_signal.emit(['检测RUN &ERROR', 'RUN指示灯是否点亮？'])
         reply = self.result_queue.get()
-        if reply == QMessageBox.Yes:
+        if reply == QMessageBox.AcceptRole:
             self.runLED = True
             # for i in range(4):
             #     item = mTable.item(1, i)
@@ -708,7 +708,7 @@ class DIDOThread(QObject):
             time.sleep(1)
             self.isLEDRunOK = True
             # self.result_signal.emit(f'self.isLEDRunOK:{self.isLEDRunOK}')
-        elif reply == QMessageBox.No:
+        elif reply == QMessageBox.RejectRole:
             self.runLED = False
             self.pauseOption()
             if not self.is_running:
@@ -764,9 +764,9 @@ class DIDOThread(QObject):
         self.messageBox_signal.emit(['检测RUN &ERROR', 'ERROR指示灯是否点亮？'])
         reply = self.result_queue.get()
         # reply = QMessageBox.question(None, '检测RUN &ERROR', 'ERROR指示灯是否点亮？',
-        #                              QMessageBox.Yes | QMessageBox.No,
-        #                              QMessageBox.Yes)
-        if reply == QMessageBox.Yes:
+        #                              QMessageBox.AcceptRole | QMessageBox.RejectRole,
+        #                              QMessageBox.AcceptRole)
+        if reply == QMessageBox.AcceptRole:
             self.errorLED = True
             # for i in range(4):
             #     item = mTable.item(2, i)
@@ -797,7 +797,7 @@ class DIDOThread(QObject):
             bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
             time.sleep(1)
             self.isLEDErrOK = True
-        elif reply == QMessageBox.No:
+        elif reply == QMessageBox.RejectRole:
             self.errorLED = False
             self.pauseOption()
             if not self.is_running:
@@ -823,15 +823,15 @@ class DIDOThread(QObject):
         isLEDCANRunOK = True
         isLEDCANErrOK = True
         # reply = QMessageBox.question(None, '检测CAN_RUN &CAN_ERROR', '是否开始进行CAN_RUN 和CAN_ERROR 检测？',
-        #                              QMessageBox.Yes | QMessageBox.No,
-        #                              QMessageBox.Yes)
+        #                              QMessageBox.AcceptRole | QMessageBox.RejectRole,
+        #                              QMessageBox.AcceptRole)
         # if self.tabIndex == 0:
         #     mTable = self.tableWidget_DIDO
         # elif self.tabIndex == 1:
         #     mTable = self.tableWidget_AI
         # elif self.tabIndex == 2:
         #     mTable = self.tableWidget_AO
-        # if reply == QMessageBox.Yes:
+        # if reply == QMessageBox.AcceptRole:
         CANRunStart_time = time.time()
         self.pauseOption()
         if not self.is_running:
@@ -879,9 +879,9 @@ class DIDOThread(QObject):
             self.messageBox_signal.emit(['检测RUN &ERROR', 'CAN_RUN指示灯是否点亮？'])
             reply = self.result_queue.get()
             # reply = QMessageBox.question(None, '检测CAN_RUN &CAN_ERROR', '指示灯是否点亮？',
-            #                              QMessageBox.Yes | QMessageBox.No,
-            #                              QMessageBox.Yes)
-            if reply == QMessageBox.Yes:
+            #                              QMessageBox.AcceptRole | QMessageBox.RejectRole,
+            #                              QMessageBox.AcceptRole)
+            if reply == QMessageBox.AcceptRole:
                 self.CAN_runLED = True
                 self.pauseOption()
                 if not self.is_running:
@@ -902,7 +902,7 @@ class DIDOThread(QObject):
                 bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
                 time.sleep(1)
                 isLEDCANRunOK = True
-            elif reply == QMessageBox.No:
+            elif reply == QMessageBox.RejectRole:
                 self.CAN_runLED = False
                 self.pauseOption()
                 if not self.is_running:
@@ -940,9 +940,9 @@ class DIDOThread(QObject):
             self.messageBox_signal.emit(['检测RUN &ERROR', 'CAN_ERROR指示灯是否点亮？'])
             reply = self.result_queue.get()
             # reply = QMessageBox.question(None, '检测CAN_RUN &CAN_ERROR', '指示灯是否点亮？',
-            #                              QMessageBox.Yes | QMessageBox.No,
-            #                              QMessageBox.Yes)
-            if reply == QMessageBox.Yes:
+            #                              QMessageBox.AcceptRole | QMessageBox.RejectRole,
+            #                              QMessageBox.AcceptRole)
+            if reply == QMessageBox.AcceptRole:
                 self.CAN_errorLED = True
                 self.pauseOption()
                 if not self.is_running:
@@ -963,7 +963,7 @@ class DIDOThread(QObject):
                 bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
                 time.sleep(1)
                 isLEDCANErrOK = True
-            elif reply == QMessageBox.No:
+            elif reply == QMessageBox.RejectRole:
                 self.CAN_errorLED = False
                 self.pauseOption()
                 if not self.is_running:

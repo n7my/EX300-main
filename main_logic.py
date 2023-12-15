@@ -1394,8 +1394,8 @@ class Ui_Control(QMainWindow,Ui_Form):
             #     QMessageBox.about(None, '通过', f'三码一致！\nPN:{code_list[0]}\nSN:{code_list[1]}\nREV:{code_list[2]}')
             # else:
             #     QMessageBox.critical(None, '警告', f'三码不一致！\nPN:{code_list[0]}\nSN:{code_list[1]}\nREV:{code_list[2]}',
-            #                          QMessageBox.Yes | QMessageBox.No,
-            #                          QMessageBox.Yes)
+            #                          QMessageBox.AcceptRole | QMessageBox.RejectRole,
+            #                          QMessageBox.AcceptRole)
             #     return False
 
 
@@ -1412,7 +1412,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                 if not mainThreadRunning():
                     return False
                 reply = QMessageBox.warning(None, '警告', '产品三码信息不全，请重新扫入！',
-                                            QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+                                            QMessageBox.AcceptRole | QMessageBox.RejectRole, QMessageBox.AcceptRole)
                 return False
 
             if self.tabWidget.currentIndex() == 0:
@@ -1592,6 +1592,8 @@ class Ui_Control(QMainWindow,Ui_Form):
                     # self.CPU_option.RunErr_signal.connect(self.testRunErr)
                     # self.CPU_option.CANRunErr_signal.connect(self.testCANRunErr)
                     self.CPU_option.messageBox_signal.connect(self.showMessageBox)
+                    self.CPU_option.pic_messageBox_signal.connect(self.CPU_MessageBox)
+                    self.CPU_option.moveToRow_signal.connect(self.CPU_moveToRow)
                     # self.CPU_option.excel_signal.connect(self.generateExcel)
                     self.CPU_option.allFinished_signal.connect(self.allFinished)
                     self.CPU_option.label_signal.connect(self.labelChange)
@@ -1603,7 +1605,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                     self.pushButton_resume.clicked.connect(self.CPU_option.resume_work)
 
                     self.CPU_option.moveToThread(self.CPU_thread)
-                    self.CPU_thread.started.connect(self.CPU_option.CPUOption)
+                    self.CPU_thread.started.connect(self.CPU_option.CPU_start)
                     self.CPU_thread.start()
 
 
@@ -1635,8 +1637,8 @@ class Ui_Control(QMainWindow,Ui_Form):
         if not mainThreadRunning():
             return False
         reply = QMessageBox.question(None, '外观检测', '产品外观是否完好?',
-                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-        if reply == QMessageBox.Yes:
+                                     QMessageBox.AcceptRole | QMessageBox.RejectRole, QMessageBox.AcceptRole)
+        if reply == QMessageBox.AcceptRole:
             self.appearance = True
             appearanceEnd_time = time.time()
             appearanceTest_time = round(appearanceEnd_time - appearanceStart_time, 2)
@@ -1644,7 +1646,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                 return False
             self.itemOperation(mTable, 0, 2, 1, appearanceTest_time)
 
-        elif reply == QMessageBox.No:
+        elif reply == QMessageBox.RejectRole:
             self.appearance = False
             appearanceEnd_time = time.time()
             appearanceTest_time = round(appearanceEnd_time - appearanceStart_time, 2)
@@ -1692,13 +1694,57 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.endOfTest()
 
     def showMessageBox(self,list):
-        # 在主线程中创建消息框并显示
-        reply = QMessageBox.question(None, list[0], list[1],
-                                     QMessageBox.Yes | QMessageBox.No,
-                                     QMessageBox.Yes)
+        # # 在主线程中创建消息框并显示
+        # reply = QMessageBox.question(None, list[0], list[1],
+        #                              QMessageBox.AcceptRole | QMessageBox.RejectRole,
+        #                              QMessageBox.AcceptRole)
+        #
+        # # 将弹窗结果放入队列
+        # self.result_queue.put(reply)
+        msg_box = QMessageBox()
+        # 设置消息
+        msg_box.setText(list[1])
+        # msg_box.setInformativeText(list[1])
+        msg_box.setWindowTitle(list[0])
+        # 设置样式表
+        msg_box.setStyleSheet('QLabel{font-size: 18px;}')
 
+        # 添加按钮
+        msg_box.addButton('确定', QMessageBox.AcceptRole)
+        msg_box.addButton('取消', QMessageBox.RejectRole)
+
+        # 显示消息框
+        reply = msg_box.exec_()
         # 将弹窗结果放入队列
         self.result_queue.put(reply)
+
+
+    def CPU_MessageBox(self, list):
+        msg_box = QMessageBox()
+
+        # 设置图标
+        icon = QIcon(list[2])
+        msg_box.setIconPixmap(icon.pixmap(300, 300))
+
+        # 设置消息
+        msg_box.setText(list[1])
+        # msg_box.setInformativeText(list[1])
+        msg_box.setWindowTitle(list[0])
+        # 设置样式表
+        msg_box.setStyleSheet('QLabel{font-size: 18px;}')
+
+        # 添加按钮
+        msg_box.addButton('确定', QMessageBox.AcceptRole)
+        msg_box.addButton('取消', QMessageBox.RejectRole)
+
+        # 显示消息框
+        reply = msg_box.exec_()
+        # 将弹窗结果放入队列
+        self.result_queue.put(reply)
+
+    def CPU_moveToRow(self,list):
+        self.tableWidget_CPU.setCurrentCell(list[0],list[1])
+
 
     def PassOrFail(self,isPass):
         if not isPass:
@@ -2377,7 +2423,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                 else:
                     self.itemOperation(mTable, i, 0, 0, '')
             self.inf_CPUlist = [self.inf_param,self.inf_product, self.inf_CANIPAdrr,
-                                self.inf_serialPort, self.inf_test]
+                                self.inf_serialPort, self.inf_test,self.current_dir]
         if self.tabIndex == 0 or self.tabIndex == 1 or self.tabIndex == 2:
             #三码转换
             self.asciiCode_pn = (strToASCII(self.lineEdit_PN.text()))
@@ -5192,8 +5238,8 @@ def get3codeFromPLC(addr):
 #                 if not mainThreadRunning():
 #                     return False
 #                 self.showInf(f'错误：总线初始化超时！' + self.HORIZONTAL_LINE)
-#                 QMessageBox.critical(None, '错误', '总线初始化超时！请检查CAN分析仪是否正确连接', QMessageBox.Yes |
-#                                      QMessageBox.No, QMessageBox.Yes)
+#                 QMessageBox.critical(None, '错误', '总线初始化超时！请检查CAN分析仪是否正确连接', QMessageBox.AcceptRole |
+#                                      QMessageBox.RejectRole, QMessageBox.AcceptRole)
 #                 self.endOfTest()
 #                 return False
 #             bool_online = self.isModulesOnline()
@@ -5207,8 +5253,8 @@ def get3codeFromPLC(addr):
 #                 if not mainThreadRunning():
 #                     return False
 #                 self.showInf(f'错误：总线初始化失败！再次尝试初始化。' + self.HORIZONTAL_LINE)
-#                 # QMessageBox.critical(None, '错误', '总线初始化失败！再次尝试初始化', QMessageBox.Yes |
-#                 #                  QMessageBox.No, QMessageBox.Yes)
+#                 # QMessageBox.critical(None, '错误', '总线初始化失败！再次尝试初始化', QMessageBox.AcceptRole |
+#                 #                  QMessageBox.RejectRole, QMessageBox.AcceptRole)
 #                 self.PassOrFail(False)
 #                 if not mainThreadRunning():
 #                     return False

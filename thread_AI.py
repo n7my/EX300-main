@@ -261,8 +261,8 @@ class AIThread(QObject):
                         break
                     self.result_signal.emit(f'错误：总线初始化超时！' + self.HORIZONTAL_LINE)
                     QMessageBox.critical(None, '错误', '总线初始化超时！请检查CAN分析仪或各设备是否正确连接',
-                                         QMessageBox.Yes |
-                                         QMessageBox.No, QMessageBox.Yes)
+                                         QMessageBox.AcceptRole |
+                                         QMessageBox.RejectRole, QMessageBox.AcceptRole)
                     # 后续测试全部取消
                     self.isTest = False
                     self.isCalibrate = False
@@ -1252,7 +1252,7 @@ class AIThread(QObject):
             if abs(usArrayHigh[i] - usArrayLow[i]) < 10 or abs(usArrayHigh[i] - usArrayLow[i] > maxRange):
                 self.messageBox_signal.emit(['警告', f'请检查通道{i+1}接线或者模块是否存在问题,并重新开始标定！'])
                 # reply = QMessageBox.warning(None, '警告', '请检查接线或者模块是否存在问题,并重新开始标定！',
-                #                             QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+                #                             QMessageBox.AcceptRole | QMessageBox.RejectRole, QMessageBox.AcceptRole)
                 #退出标定模式并进行通道归零
                 self.setAIChOutCalibrate()
                 self.pauseOption()
@@ -1831,11 +1831,11 @@ class AIThread(QObject):
         runTest_time = round(runEnd_time - runStart_time,2)
         time.sleep(0.5)
         # reply = QMessageBox.question(None, '检测RUN &ERROR', 'RUN指示灯是否点亮？',
-        #                              QMessageBox.Yes | QMessageBox.No,
-        #                              QMessageBox.Yes)
+        #                              QMessageBox.AcceptRole | QMessageBox.RejectRole,
+        #                              QMessageBox.AcceptRole)
         self.messageBox_signal.emit(['检测RUN &ERROR', 'RUN指示灯是否点亮？'])
         reply = self.result_queue.get()
-        if reply == QMessageBox.Yes:
+        if reply == QMessageBox.AcceptRole:
             self.runLED = True
             # for i in range(4):
             #     item = mTable.item(1, i)
@@ -1866,7 +1866,7 @@ class AIThread(QObject):
             time.sleep(1)
             self.isLEDRunOK = True
             # self.result_signal.emit(f'self.isLEDRunOK:{self.isLEDRunOK}')
-        elif reply == QMessageBox.No:
+        elif reply == QMessageBox.RejectRole:
             self.runLED = False
             self.pauseOption()
             if not self.is_running:
@@ -1922,9 +1922,9 @@ class AIThread(QObject):
         self.messageBox_signal.emit(['检测RUN &ERROR', 'ERROR指示灯是否点亮？'])
         reply = self.result_queue.get()
         # reply = QMessageBox.question(None, '检测RUN &ERROR', 'ERROR指示灯是否点亮？',
-        #                              QMessageBox.Yes | QMessageBox.No,
-        #                              QMessageBox.Yes)
-        if reply == QMessageBox.Yes:
+        #                              QMessageBox.AcceptRole | QMessageBox.RejectRole,
+        #                              QMessageBox.AcceptRole)
+        if reply == QMessageBox.AcceptRole:
             self.errorLED = True
             # for i in range(4):
             #     item = mTable.item(2, i)
@@ -1955,7 +1955,7 @@ class AIThread(QObject):
             bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
             time.sleep(1)
             self.isLEDErrOK = True
-        elif reply == QMessageBox.No:
+        elif reply == QMessageBox.RejectRole:
             self.errorLED = False
             self.pauseOption()
             if not self.is_running:
@@ -1983,15 +1983,15 @@ class AIThread(QObject):
         self.isLEDCANErrOK = True
         self.isLEDCANPass = True
         # reply = QMessageBox.question(None, '检测CAN_RUN &CAN_ERROR', '是否开始进行CAN_RUN 和CAN_ERROR 检测？',
-        #                              QMessageBox.Yes | QMessageBox.No,
-        #                              QMessageBox.Yes)
+        #                              QMessageBox.AcceptRole | QMessageBox.RejectRole,
+        #                              QMessageBox.AcceptRole)
         # if self.tabIndex == 0:
         #     mTable = self.tableWidget_DIDO
         # elif self.tabIndex == 1:
         #     mTable = self.tableWidget_AI
         # elif self.tabIndex == 2:
         #     mTable = self.tableWidget_AO
-        # if reply == QMessageBox.Yes:
+        # if reply == QMessageBox.AcceptRole:
         CANRunStart_time = time.time()
         self.pauseOption()
         if not self.is_running:
@@ -2016,9 +2016,9 @@ class AIThread(QObject):
         self.messageBox_signal.emit(['检测RUN &ERROR', 'CAN_RUN指示灯是否点亮？'])
         reply = self.result_queue.get()
         # reply = QMessageBox.question(None, '检测CAN_RUN &CAN_ERROR', '指示灯是否点亮？',
-        #                              QMessageBox.Yes | QMessageBox.No,
-        #                              QMessageBox.Yes)
-        if reply == QMessageBox.Yes:
+        #                              QMessageBox.AcceptRole | QMessageBox.RejectRole,
+        #                              QMessageBox.AcceptRole)
+        if reply == QMessageBox.AcceptRole:
             self.CAN_runLED = True
             self.pauseOption()
             if not self.is_running:
@@ -2039,7 +2039,7 @@ class AIThread(QObject):
             bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
             time.sleep(1)
             self.isLEDCANRunOK = True
-        elif reply == QMessageBox.No:
+        elif reply == QMessageBox.RejectRole:
             self.CAN_runLED = False
             self.pauseOption()
             if not self.is_running:
@@ -2078,9 +2078,9 @@ class AIThread(QObject):
         self.messageBox_signal.emit(['检测RUN &ERROR', 'CAN_ERROR指示灯是否点亮？'])
         reply = self.result_queue.get()
         # reply = QMessageBox.question(None, '检测CAN_RUN &CAN_ERROR', '指示灯是否点亮？',
-        #                              QMessageBox.Yes | QMessageBox.No,
-        #                              QMessageBox.Yes)
-        if reply == QMessageBox.Yes:
+        #                              QMessageBox.AcceptRole | QMessageBox.RejectRole,
+        #                              QMessageBox.AcceptRole)
+        if reply == QMessageBox.AcceptRole:
             self.CAN_errorLED = True
             self.pauseOption()
             if not self.is_running:
@@ -2101,7 +2101,7 @@ class AIThread(QObject):
             bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
             time.sleep(1)
             self.isLEDCANErrOK = True
-        elif reply == QMessageBox.No:
+        elif reply == QMessageBox.RejectRole:
             self.CAN_errorLED = False
             self.pauseOption()
             if not self.is_running:
