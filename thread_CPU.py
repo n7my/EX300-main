@@ -256,6 +256,9 @@ class CPUThread(QObject):
             #     # self.testSign = False
             #     self.result_signal.emit('模块在线检测结束！' + self.HORIZONTAL_LINE)
             ############################################################检测项目############################################################
+            #先测试一下远程CAN和DIP_SW
+            self.l_distanceCAN()
+            self.DIP_SW()
             for i in range(len(self.CPU_isTest)):
                 if self.isCancelAllTest:
                     break
@@ -2480,6 +2483,8 @@ class CPUThread(QObject):
                 self.result_signal.emit('未接收到正确数据，再次接收！\n')
                 continue
             if dataLen == 3:  # 指令出错
+                self.isPassRTC &= False
+                isThisPass = False
                 self.orderError(trueData[2])
                 break
             elif trueData[4] == 0x10: #写
@@ -2558,7 +2563,6 @@ class CPUThread(QObject):
             reply = self.result_queue.get()
             if reply == QMessageBox.AcceptRole:
                 self.cancelAllTest()
-
         # 关闭串口
         typeC_serial.close()
 
@@ -3746,6 +3750,149 @@ class CPUThread(QObject):
             # 关闭串口
             typeC_serial.close()
             return opType
+
+    def l_distanceCAN(self):
+        w_transmit = [0xac, 7,0x00,0x10,0x10,0x00,0x00,0x00]
+        baudRate = [0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07]
+        self.isPassLdCAN =True
+        for ld in range(1,8):
+            w_transmit[6] = ld
+            w_transmit[7] = self.getCheckNum(w_transmit[:7])
+            serial_transmitData = w_transmit
+            isThisPass = True
+            try:
+                # 打开串口
+                typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
+            except serial.SerialException as e:
+                self.messageBox_signal.emit(
+                    ['错误警告', f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'
+                                 f'Failed to open serial port: {e}'])
+                self.isPassLdCAN &= False
+                isThisPass = False
+                self.cancelAllTest()
+            loopStartTime = time.time()
+            while True:
+                if (time.time() - loopStartTime) * 1000 > self.waiting_time:
+                    self.isPassLdCAN &= False
+                    isThisPass = False
+                    break
+                now = datetime.datetime.now()
+                # 发送数据
+                typeC_serial.write(bytes(serial_transmitData))
+                # 等待0.5s后接收数据
+                time.sleep(1)
+                serial_receiveData = [0 for x in range(40)]
+                # 接收数组数据
+                data = typeC_serial.read(40)
+                serial_receiveData = [hex(i) for i in data]
+                for i in range(len(serial_receiveData)):
+                    serial_receiveData[i] = int(serial_receiveData[i], 16)
+                trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
+                if isSendAgain:
+                    self.result_signal.emit('未接收到正确数据，再次接收！\n')
+                    continue
+                if dataLen == 3:  # 指令出错
+                    self.orderError(trueData[2])
+                    self.isPassLdCAN &= False
+                    isThisPass = False
+                    break
+                elif trueData[4] == 0x10:
+                    if trueData[6] == 0x00:
+                        self.isPassLdCAN &= True
+                        isThisPass = True
+                    elif trueData[6] == 0x01:
+                        self.isPassLdCAN &= False
+                        isThisPass = False
+                    break
+                elif trueData[4] == 0x0E:
+                    if trueData[6] == 0x00:
+                        if trueData[7] == baudRate[ld]:
+                            self.isPassLdCAN &= True
+                            isThisPass = True
+                        else:
+                            self.isPassLdCAN &= False
+                            isThisPass = False
+                    elif trueData[6] == 0x01:
+                        self.isPassLdCAN &= False
+                        isThisPass = False
+                    break
+                else:
+                    continue
+            # 关闭串口
+            typeC_serial.close()
+        if not isThisPass:
+            self.messageBox_signal.emit(['测试警告', '远程CAN测试不通过，是否取消后续测试？'])
+            reply = self.result_queue.get()
+            if reply == QMessageBox.AcceptRole:
+                self.cancelAllTest()
+        else:
+            self.result_signal.emit('远程CAN测试通过。\n')
+
+
+    def DIP_SW(self):
+        r_transmit = [0xac,6, 0x00, 0x11, 0x0e, 0x00,self.getCheckNum([0xac,6, 0x00, 0x11, 0x0e, 0x00])]
+        serial_transmitData = r_transmit
+        isThisPass = True
+        self.isPassDIP = True
+        try:
+            # 打开串口
+            typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
+        except serial.SerialException as e:
+            self.messageBox_signal.emit(
+                ['错误警告', f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'
+                             f'Failed to open serial port: {e}'])
+            self.isPassDIP &= False
+            isThisPass = False
+            self.cancelAllTest()
+        loopStartTime = time.time()
+        while True:
+            if (time.time() - loopStartTime) * 1000 > self.waiting_time:
+                self.isPassDIP &= False
+                isThisPass = False
+                break
+            now = datetime.datetime.now()
+            # 发送数据
+            typeC_serial.write(bytes(serial_transmitData))
+            # 等待0.5s后接收数据
+            time.sleep(1)
+            serial_receiveData = [0 for x in range(40)]
+            # 接收数组数据
+            data = typeC_serial.read(40)
+            serial_receiveData = [hex(i) for i in data]
+            for i in range(len(serial_receiveData)):
+                serial_receiveData[i] = int(serial_receiveData[i], 16)
+            trueData, dataLen, isSendAgain = self.dataJudgement(serial_receiveData)
+            if isSendAgain:
+                self.result_signal.emit('未接收到正确数据，再次接收！\n')
+                continue
+            if dataLen == 3:  # 指令出错
+                self.orderError(trueData[2])
+                self.isPassDIP &= False
+                isThisPass = False
+                break
+            elif trueData[6] == 0x00:
+                self.isPassDIP &= True
+                isThisPass = True
+                if trueData[7] == 0x00:
+                    self.result_signal.emit('拨码未全OFF状态。\n')
+                elif trueData[7] == 0x01:
+                    self.result_signal.emit('拨码未全ON状态。\n')
+                break
+            elif trueData[6] == 0x01:
+                self.isPassDIP &= False
+                isThisPass = False
+                break
+            else:
+                continue
+        if not isThisPass:
+            self.messageBox_signal.emit(['测试警告', 'DIP_SW测试不通过，是否取消后续测试？'])
+            reply = self.result_queue.get()
+            if reply == QMessageBox.AcceptRole:
+                self.cancelAllTest()
+        else:
+            self.result_signal.emit('DIP_SW测试通过。\n')
+        # 关闭串口
+        typeC_serial.close()
 
         #判断接收的数据是否正确
     def dataJudgement(self,serial_receiveData:list):
