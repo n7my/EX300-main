@@ -257,8 +257,8 @@ class CPUThread(QObject):
             #     self.result_signal.emit('模块在线检测结束！' + self.HORIZONTAL_LINE)
             ############################################################检测项目############################################################
             #先测试一下远程CAN和DIP_SW
-            self.l_distanceCAN()
-            self.DIP_SW()
+            # self.l_distanceCAN()
+            # self.DIP_SW()
             for i in range(len(self.CPU_isTest)):
                 if self.isCancelAllTest:
                     break

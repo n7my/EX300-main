@@ -653,7 +653,8 @@ class Ui_Control(QMainWindow,Ui_Form):
 
 
         #CPU页面初始化
-        self.CPU_comboBox_array = [self.comboBox_20,self.comboBox_21,self.comboBox_22,self.comboBox_23]
+        self.CPU_comboBox_array = [self.comboBox_20,self.comboBox_21,self.comboBox_22,self.comboBox_23,
+                                   self.comboBox_24,self.comboBox_25,self.comboBox_26]
         for comboBox in self.CPU_comboBox_array:
             comboBox.currentIndexChanged.connect(self.saveConfig)
         for lineEdit in self.CPU_lineEdit_array:
@@ -663,7 +664,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.CPU_paramChanged()
         self.checkBox_71.stateChanged.connect(self.CPU_paramChanged)
         self.checkBox_73.stateChanged.connect(self.testAllorNot)
-        self.lineEdit_33.setText('00-E0-C0-4C-32-03-8B')
+        self.lineEdit_33.setText('11-22-33-44-55-66')
 
 
         # self.lineEdit_PN.setPlaceholderText('请输入PN码')
@@ -759,88 +760,94 @@ class Ui_Control(QMainWindow,Ui_Form):
         isMainRunning = True
 
     def generateDefaultConfigFile(self):
-        config_str = "{'savePath': 'D:/MyData/wujun89/Desktop/EX300_x64_python'," \
-                     "'currentIndex': 0," \
-                     "'AO_型号': 0," \
-                     "'AO_CAN_修改参数': False," \
-                     "'AO_CAN_工装': '1'," \
-                     "'AO_CAN_待检': '2'," \
-                     "'AO_CAN_继电器': '3'," \
-                     "'AO_附加_修改参数': False," \
-                     "'AO_附加_波特率': '1000'," \
-                     "'AO_附加_等待时间': '5000'," \
-                     "'AO_附加_接收次数': '8'," \
-                     "'AO_不标定': False," \
-                     "'AO_仅标定1': False," \
-                     "'AO_标定all': False," \
-                     "'AO_标定电压': False," \
-                     "'AO_标定电流': False," \
-                     "'AO_不检测': False," \
-                     "'AO_检测': False," \
-                     "'AO_检测电压': False," \
-                     "'AO_检测电流': False," \
-                     "'AO_检测CAN': False," \
-                     "'AO_检测run': False," \
-                     "'AI_型号': 0," \
-                     "'AI_CAN_修改参数': False," \
-                     "'AI_CAN_工装': '1'," \
-                     "'AI_CAN_待检': '2'," \
-                     "'AI_CAN_继电器': '3'," \
-                     "'AI_附加_修改参数': False," \
-                     "'AI_附加_波特率': '1000'," \
-                     "'AI_附加_等待时间': '5000'," \
-                     "'AI_附加_接收次数': '8'," \
-                     "'AI_不标定': False," \
-                     "'AI_仅标定1': False," \
-                     "'AI_标定all': False," \
-                     "'AI_标定电压': False," \
-                     "'AI_标定电流': False," \
-                     "'AI_不检测': False," \
-                     "'AI_检测': False," \
-                     "'AI_检测电压': False," \
-                     "'AI_检测电流': False," \
-                     "'AI_检测CAN': False," \
-                     "'AI_检测run': False," \
-                     "'DIDO_型号': 0," \
-                     "'DIDO_CAN_修改参数': False," \
-                     "'DIDO_CAN_工装': '1'," \
-                     "'DIDO_CAN_待检': '2'," \
-                     "'DIDO_附加_修改参数': False," \
-                     "'DIDO_附加_波特率': '1000'," \
-                     "'DIDO_附加_间隔时间': '5000'," \
-                     "'DIDO_附加_循环次数': '1'," \
-                     "'DIDO_检测CAN': False," \
-                     "'DIDO_检测run': False," \
-                     "'CPU_型号': 0," \
-                     "'CPU_IP': '192.168.1.55'," \
-                     "'CPU_232COM': 0," \
-                     "'CPU_485COM': 0," \
-                     "'CPU_typecCOM': 0," \
-                     "'型号检查': False," \
-                     "'SRAM': False," \
-                     "'FLASH': False," \
-                     "'MAC/三码写入': False," \
-                     "'FPGA': False," \
-                     "'拨杆测试': False," \
-                     "'MFK按键': False," \
-                     "'掉电保存': False," \
-                     "'RTC测试': False," \
-                     "'各指示灯': False," \
-                     "'本体IN': False," \
-                     "'本体OUT': False," \
-                     "'以太网': False," \
-                     "'RS-232C': False," \
-                     "'RS-485': False," \
-                     "'右扩CAN': False," \
-                     "'MA0202': False," \
-                     "'测试报告': False," \
-                     "'外观检测': False," \
-                     "'工装1': '1'," \
-                     "'工装2': '2'," \
-                     "'工装3': '3'," \
-                     "'工装4': '4'," \
-                     "'工装5': '5'," \
-                     "'修改参数': False}"
+        config_str = "{'savePath': 'D:/MyData/wujun89/Desktop/EX300_x64_python',\n" \
+                     "'currentIndex': 0,\n" \
+                     "'AO_型号': 0,\n" \
+                     "'AO_CAN_修改参数': False,\n" \
+                     "'AO_CAN_工装': '1',\n" \
+                     "'AO_CAN_待检': '2',\n" \
+                     "'AO_CAN_继电器': '3',\n" \
+                     "'AO_附加_修改参数': False,\n" \
+                     "'AO_附加_波特率': '1000',\n" \
+                     "'AO_附加_等待时间': '5000',\n" \
+                     "'AO_附加_接收次数': '8',\n" \
+                     "'AO_不标定': False,\n" \
+                     "'AO_仅标定1': False,\n" \
+                     "'AO_标定all': False,\n" \
+                     "'AO_标定电压': False,\n" \
+                     "'AO_标定电流': False,\n" \
+                     "'AO_不检测': False,\n" \
+                     "'AO_检测': False,\n" \
+                     "'AO_检测电压': False,\n" \
+                     "'AO_检测电流': False,\n" \
+                     "'AO_检测CAN': False,\n" \
+                     "'AO_检测run': False,\n" \
+                     "'AI_型号': 0,\n" \
+                     "'AI_CAN_修改参数': False,\n" \
+                     "'AI_CAN_工装': '1',\n" \
+                     "'AI_CAN_待检': '2',\n" \
+                     "'AI_CAN_继电器': '3',\n" \
+                     "'AI_附加_修改参数': False,\n" \
+                     "'AI_附加_波特率': '1000',\n" \
+                     "'AI_附加_等待时间': '5000',\n" \
+                     "'AI_附加_接收次数': '8',\n" \
+                     "'AI_不标定': False,\n" \
+                     "'AI_仅标定1': False,\n" \
+                     "'AI_标定all': False,\n" \
+                     "'AI_标定电压': False,\n" \
+                     "'AI_标定电流': False,\n" \
+                     "'AI_不检测': False,\n" \
+                     "'AI_检测': False,\n" \
+                     "'AI_检测电压': False,\n" \
+                     "'AI_检测电流': False,\n" \
+                     "'AI_检测CAN': False,\n" \
+                     "'AI_检测run': False,\n" \
+                     "'DIDO_型号': 0,\n" \
+                     "'DIDO_CAN_修改参数': False,\n" \
+                     "'DIDO_CAN_工装': '1',\n" \
+                     "'DIDO_CAN_待检': '2',\n" \
+                     "'DIDO_附加_修改参数': False,\n" \
+                     "'DIDO_附加_波特率': '1000',\n" \
+                     "'DIDO_附加_间隔时间': '5000',\n" \
+                     "'DIDO_附加_循环次数': '1',\n" \
+                     "'DIDO_检测CAN': False,\n" \
+                     "'DIDO_检测run': False,\n" \
+                     " 'CPU_型号': 0, \n" \
+                     " 'CPU_IP': '11-22-33-44-55-66', \n" \
+                     "'CPU_232COM': 5,\n" \
+                     "'CPU_485COM': 4,\n" \
+                     "'CPU_typecCOM': 3,\n" \
+                     "'工装1': '1',\n" \
+                    "'工装2': '2',\n" \
+                    "'工装3': '3',\n" \
+                    "'工装4': '4',\n" \
+                    "'工装5': '5',\n" \
+                     "'外观检测': False,\n" \
+                     "'型号检查': False,\n" \
+                     "'SRAM': False,\n" \
+                     "'FLASH': False,\n" \
+                     "'MAC/三码写入': False,\n" \
+                     "'FPGA': False,\n" \
+                     "'拨杆测试': False,\n" \
+                     "'MFK按键': False,\n" \
+                     "'RTC测试': False,\n" \
+                     "'掉电保存': False,\n" \
+                     "'各指示灯': True,\n" \
+                     "'本体IN': False,\n" \
+                     "'本体OUT': False,\n" \
+                     "'以太网': False,\n" \
+                     "'RS-232C': False,\n" \
+                     "'RS-485': False,\n" \
+                     "'右扩CAN': False,\n" \
+                     "'MA0202': False,\n" \
+                     "'测试报告': True,\n" \
+                     "'固件烧录': False,\n" \
+                     "'U盘读写': False,\n" \
+                     "'修改参数': False,\n" \
+                     "'全选': False,\n" \
+                    "'选项板232':0,\n" \
+                    "'选项板485':0,\n" \
+                    "'可编程电源':0}"
         self.configFile = open(f'{self.current_dir}/config.txt', 'w', encoding='utf-8')
         self.configFile.write(config_str)
         self.configFile.close()
@@ -850,7 +857,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                 config_content = file.read()
         except:
             self.showInf("配置文件不存在，初始化界面！"+self.HORIZONTAL_LINE)
-            self.generateConfigFile()
+            self.generateDefaultConfigFile()
             with open(f'{self.current_dir}/config.txt','r+',encoding='utf-8') as file:
                 config_content = file.read()
 
@@ -917,6 +924,10 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.comboBox_21.setCurrentIndex(self.config_param["CPU_232COM"])
         self.comboBox_22.setCurrentIndex(self.config_param["CPU_485COM"])
         self.comboBox_23.setCurrentIndex(self.config_param["CPU_typecCOM"])
+        self.comboBox_24.setCurrentIndex(self.config_param["选项板232"])
+        self.comboBox_25.setCurrentIndex(self.config_param["选项板485"])
+        self.comboBox_26.setCurrentIndex(self.config_param["可编程电源"])
+
 
         for i in range(len(self.CPU_lineEdit_array)):
             self.CPU_lineEdit_array[i].setText(self.config_param[self.CPU_lineEditName_array[i]])
@@ -990,6 +1001,9 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.config_param["CPU_232COM"] = self.comboBox_21.currentIndex()
         self.config_param["CPU_485COM"] = self.comboBox_22.currentIndex()
         self.config_param["CPU_typecCOM"] = self.comboBox_23.currentIndex()
+        self.config_param["选项板232"] = self.comboBox_24.currentIndex()
+        self.config_param["选项板485"] = self.comboBox_25.currentIndex()
+        self.config_param["可编程电源"] = self.comboBox_26.currentIndex()
         for i in range(len(self.CPU_checkBox_array)):
             self.config_param[self.CPU_checkBoxName_array[i]] = self.CPU_checkBox_array[i].isChecked()
 
@@ -1871,9 +1885,10 @@ class Ui_Control(QMainWindow,Ui_Form):
     def CPU_paramChanged(self):
         CPU_param_array=[ self.lineEdit_34, self.lineEdit_35, self.lineEdit_36,
                          self.lineEdit_37, self.lineEdit_38,self.comboBox_20,self.comboBox_21,
-                         self.comboBox_22,self.comboBox_23,self.label_59,self.label_60,
-                         self.label_64,self.label_66,self.label_67,self.label_68,self.label_69,
-                         self.label_70,self.label_71,self.label_90]
+                         self.comboBox_22,self.comboBox_23,self.comboBox_24,self.comboBox_25,
+                          self.comboBox_26,self.label_59,self.label_60,self.label_62,
+                         self.label_64,self.label_65,self.label_66,self.label_67,self.label_68,self.label_69,
+                         self.label_70,self.label_71,self.label_72,self.label_90]
         for Cparam in CPU_param_array:
             Cparam.setEnabled(self.checkBox_71.isChecked())
 
@@ -2526,6 +2541,9 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.comboBox_21.removeItem(i)
             self.comboBox_22.removeItem(i)
             self.comboBox_23.removeItem(i)
+            self.comboBox_24.removeItem(i)
+            self.comboBox_25.removeItem(i)
+            self.comboBox_26.removeItem(i)
         # 获取电脑上可用的串口列表
         ports = serial.tools.list_ports.comports()
 
@@ -2534,9 +2552,15 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.comboBox_21.addItem("")
             self.comboBox_22.addItem("")
             self.comboBox_23.addItem("")
+            self.comboBox_24.addItem("")
+            self.comboBox_25.addItem("")
+            self.comboBox_26.addItem("")
             self.comboBox_21.setItemText(i, ports[i].device)
             self.comboBox_22.setItemText(i, ports[i].device)
             self.comboBox_23.setItemText(i, ports[i].device)
+            self.comboBox_24.setItemText(i, ports[i].device)
+            self.comboBox_25.setItemText(i, ports[i].device)
+            self.comboBox_26.setItemText(i, ports[i].device)
             if num != 0:
                 if i ==0:
                     self.showInf(f'可用串口：\n')
@@ -2546,6 +2570,9 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.comboBox_21.removeItem(len(ports))
         self.comboBox_22.removeItem(len(ports))
         self.comboBox_23.removeItem(len(ports))
+        self.comboBox_24.removeItem(len(ports))
+        self.comboBox_25.removeItem(len(ports))
+        self.comboBox_26.removeItem(len(ports))
     def CANFail(self):
         self.endOfTest()
         self.initPara()
