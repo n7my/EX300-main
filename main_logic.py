@@ -2402,10 +2402,12 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.serialPort_485 = self.comboBox_22.currentText()
             self.serialPort_typeC = self.comboBox_23.currentText()
             self.saveDir = self.label_41.text()  # 保存路径
-            self.power = self.comboBox_26.currentText()
+            self.serialPort_power = self.comboBox_26.currentText()
             # # print(f'{self.module_type},{self.module_pn},{self.module_sn},{self.module_rev},{self.CANAddr_AI}')
             self.inf_serialPort = [self.serialPort_232, self.serialPort_485,
-                                   self.serialPort_typeC, self.saveDir]
+                                   self.serialPort_typeC, self.saveDir,
+                                   self.serialPort_power, self.serialPort_Op232,
+                                   self.serialPort_Op485]
             #获取检测信息
 
             self.CPU_test_array = [self.checkBox_50, self.checkBox_51, self.checkBox_52,self.checkBox_53,

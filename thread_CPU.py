@@ -151,6 +151,8 @@ class CPUThread(QObject):
         self.serialPort_typeC = inf_CPUlist[3][2]
         self.saveDir = inf_CPUlist[3][3]
         self.serialPort_power = inf_CPUlist[3][4]
+        self.serialPort_Op232 = inf_CPUlist[3][5]
+        self.serialPort_Op485 = inf_CPUlist[3][6]
 
         # 获取CPU检测信息
         self.CPU_isTest = inf_CPUlist[4][0]
