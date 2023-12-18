@@ -150,7 +150,7 @@ class CPUThread(QObject):
         self.serialPort_485 = inf_CPUlist[3][1]
         self.serialPort_typeC = inf_CPUlist[3][2]
         self.saveDir = inf_CPUlist[3][3]
-        # self.power = inf_CPUList[3][4]
+        self.serialPort_power = inf_CPUlist[3][4]
 
         # 获取CPU检测信息
         self.CPU_isTest = inf_CPUlist[4][0]
@@ -459,39 +459,62 @@ class CPUThread(QObject):
                                         self.CPU_isTest[7] = False
                                         self.result_signal.emit('RTC写入失败，取消后续RTC测试！\n\n')
                                 # 可编程电源开断电
-
-
-                                # 手动断电
-                                self.messageBox_signal.emit(['操作提示','请断开设备电源。'])
-                                reply= self.result_queue.get()
-                                if reply == QMessageBox.AcceptRole:
-                                    for t in range(3):
-                                        if t == 0:
-                                            self.result_signal.emit(f'等待3秒。\n')
-                                        self.result_signal.emit(f'剩余等待{3 - t}秒……\n')
+                                power_on = [0x01, 0x06, 0x00, 0x01, 0x00, 0x00, 0xD8, 0x0A]
+                                power_off = [0x01, 0x06, 0x00, 0x01, 0x00, 0x01, 0x19, 0xCA]
+                                vol_24v = [0x01,0x10,0x00,0x20,0x00,0x02,0x04,0x00,0x00,0x09,0x60,0xF7,0xCF]
+                                cur_2a = [0x01,0x10,0x00,0x22,0x00,0x02,0x04,0x00,0x00,0x00,0xC8,0x71,0xF8]
+                                self.powerControl( baudRate=9600,transmitData = power_off)
+                                if not self.isCancelAllTest:
+                                    self.result_signal.emit('设备已断电。等待3秒后自动重新上电。\n')
+                                    for dd in range(3):
+                                        self.result_signal.emit(f'剩余等待{3 - dd}秒……\n')
                                         time.sleep(1)
-                                    self.messageBox_signal.emit(['操作提示', '请接通设备电源。'])
-                                    reply = self.result_queue.get()
-                                    if reply == QMessageBox.AcceptRole:
-                                        for t in range(3):
-                                            if t == 0:
-                                                self.result_signal.emit(f'等待3秒。\n')
-                                            self.result_signal.emit(f'剩余等待{3 - t}秒……\n')
-                                            time.sleep(1)
-                                        # 数据检查
-                                        self.CPU_powerOffSaveTest(serial_transmitData=serial_transmitData1)
+                                    self.powerControl(baudRate=9600, transmitData=vol_24v)
+                                    if not self.isCancelAllTest:
+                                        self.result_signal.emit('设置电压为24V。\n')
+                                        self.powerControl(baudRate=9600, transmitData=cur_2a)
                                         if not self.isCancelAllTest:
-                                            # 数据清除
-                                            self.CPU_powerOffSaveTest(serial_transmitData=serial_transmitData2)
-                                    else:
-                                        self.messageBox_signal.emit(['测试警告', '未按提示接通设备电源，测试停止。'])
-                                        self.isPassPowerOffSave = False
-                                        self.cancelAllTest()
-
-                                else:
-                                    self.messageBox_signal.emit(['测试警告', '未按提示断开设备电源，测试停止。'])
-                                    self.isPassPowerOffSave = False
-                                    self.cancelAllTest()
+                                            self.result_signal.emit('设置电压为2A。\n')
+                                            self.powerControl(baudRate=9600, transmitData=power_on)
+                                            if not self.isCancelAllTest:
+                                                self.result_signal.emit('设备重新上电。\n')
+                                                if not self.isCancelAllTest:
+                                                    # 数据检查
+                                                    self.CPU_powerOffSaveTest(serial_transmitData=serial_transmitData1)
+                                                    if not self.isCancelAllTest:
+                                                        # 数据清除
+                                                        self.CPU_powerOffSaveTest(serial_transmitData=serial_transmitData2)
+                                # 手动开断电
+                                # self.messageBox_signal.emit(['操作提示','请断开设备电源。'])
+                                # reply= self.result_queue.get()
+                                # if reply == QMessageBox.AcceptRole:
+                                #     for t in range(3):
+                                #         if t == 0:
+                                #             self.result_signal.emit(f'等待3秒。\n')
+                                #         self.result_signal.emit(f'剩余等待{3 - t}秒……\n')
+                                #         time.sleep(1)
+                                #     self.messageBox_signal.emit(['操作提示', '请接通设备电源。'])
+                                #     reply = self.result_queue.get()
+                                #     if reply == QMessageBox.AcceptRole:
+                                #         for t in range(3):
+                                #             if t == 0:
+                                #                 self.result_signal.emit(f'等待3秒。\n')
+                                #             self.result_signal.emit(f'剩余等待{3 - t}秒……\n')
+                                #             time.sleep(1)
+                                #         # 数据检查
+                                #         self.CPU_powerOffSaveTest(serial_transmitData=serial_transmitData1)
+                                #         if not self.isCancelAllTest:
+                                #             # 数据清除
+                                #             self.CPU_powerOffSaveTest(serial_transmitData=serial_transmitData2)
+                                #     else:
+                                #         self.messageBox_signal.emit(['测试警告', '未按提示接通设备电源，测试停止。'])
+                                #         self.isPassPowerOffSave = False
+                                #         self.cancelAllTest()
+                                #
+                                # else:
+                                #     self.messageBox_signal.emit(['测试警告', '未按提示断开设备电源，测试停止。'])
+                                #     self.isPassPowerOffSave = False
+                                #     self.cancelAllTest()
 
                         except:
                             self.isPassPowerOffSave = False
@@ -3115,6 +3138,9 @@ class CPUThread(QObject):
             elif type =='485':
                 m_port = str(self.serialPort_485)
                 typeC_serial = serial.Serial(port=m_port, baudrate=baudRate, timeout=1)
+            elif type == 'power':
+                m_port = str(self.serialPort_power)
+                typeC_serial = serial.Serial(port=m_port, baudrate=baudRate, timeout=1)
         except serial.SerialException as e:
             self.messageBox_signal.emit(['错误警告',f'串口{m_port}打开失败，请检查该串口是否被占用。\n'
                                                     f'Failed to open serial port: {e}'])
@@ -3138,7 +3164,7 @@ class CPUThread(QObject):
             # 接收数组数据
             data = typeC_serial.read(len(transmitData))
             if len(data) == 0:
-                self.messageBox_signal.emit(['操作警告','未接收到信号，请检查232（485）接线是否断开。'])
+                self.messageBox_signal.emit(['操作警告','未接收到信号，请检查232（或485）接线是否断开。'])
                 reply = self.result_queue.get()
                 if reply == QMessageBox.AcceptRole:
                     isReceiveTrueData &= False
@@ -3168,8 +3194,64 @@ class CPUThread(QObject):
         typeC_serial.close()
         return isReceiveTrueData
 
+    def powerControl(self,baudRate:int,transmitData:list):
+        isReceiveTrueData:bool = True
+        try:
+            m_port = ' '
+            #打开串口
+            m_port = str(self.serialPort_power)
+            typeC_serial = serial.Serial(port=m_port, baudrate=baudRate, timeout=1)
+        except serial.SerialException as e:
+            self.messageBox_signal.emit(['错误警告', f'串口{m_port}打开失败，请检查该串口是否被占用。\n'
+                                                     f'Failed to open serial port: {e}'])
+            isReceiveTrueData &= False
+            # 关闭串口
+            typeC_serial.close()
+            return isReceiveTrueData
 
+        loopStartTime = time.time()
+        while True:
+            if (time.time() - loopStartTime) * 1000 > self.waiting_time:
+                isReceiveTrueData = False
+                break
+            # 发送数据
+            typeC_serial.write(bytes(transmitData))
+            hex_transmitData = [hex(ht) for ht in transmitData]
+            self.result_signal.emit(f'发送的数据：{hex_transmitData}')
+            # 等待0.5s后接收数据
+            time.sleep(0.3)
+            serial_receiveData = [0 for x in range(len(transmitData))]
+            # 接收数组数据
+            data = typeC_serial.read(len(transmitData))
+            if len(data) == 0:
+                self.messageBox_signal.emit(['操作警告', '未接收到信号，请检查可编程电源的通信线是否断开。'])
+                reply = self.result_queue.get()
+                if reply == QMessageBox.AcceptRole:
+                    isReceiveTrueData &= False
+                else:
+                    isReceiveTrueData &= False
+                break
+            serial_receiveData = [hex(i) for i in data]
+            # for i in range(len(serial_receiveData)):
+            #     serial_receiveData[i] = int(serial_receiveData[i], 16)
+            for tt in range(len(transmitData)):
+                if hex(transmitData[tt]) != serial_receiveData[tt]:
+                    isReceiveTrueData &= False
+                    self.result_signal.emit(f'接收的数据：{serial_receiveData}，错误。\n\n')
+                    break
+            if isReceiveTrueData:
+                self.result_signal.emit(f'接收的数据：{serial_receiveData}，正确。\n\n')
+                isReceiveTrueData &= True
+                break
 
+        if not isReceiveTrueData:
+            self.messageBox_signal.emit(['测试警告', '控制可编程电源失败，是否取消后续测试？'])
+            reply = self.result_queue.get()
+            if reply == QMessageBox.AcceptRole:
+                self.cancelAllTest()
+        # 关闭串口
+        typeC_serial.close()
+        # return isReceiveTrueData
 
     # 本体485测试
     def CPU_485Test(self, transmitData: list,baudRate:list):
