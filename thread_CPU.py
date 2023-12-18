@@ -405,18 +405,16 @@ class CPUThread(QObject):
                         self.item_signal.emit([i, 1, 0, ''])
                         self.result_signal.emit(f'----------------MFK测试----------------')
                         try:
-                            self.CPU_MFKTest(0,serial_transmitData = [0xAC, 6, 0x00, 0x06, 0x0E, 0x00,
-                                                                  self.getCheckNum([0xAC, 6, 0x00, 0x06, 0x0E, 0x00])])
-                            if not self.isCancelAllTest:
-                                self.messageBox_signal.emit(["操作提示", "请长按MKF按钮不要松开。\n（按住同时点确定）"])
-                                reply = self.result_queue.get()
-                                if reply == QMessageBox.AcceptRole or QMessageBox.RejectRole:
-                                    self.CPU_MFKTest(1,serial_transmitData = [0xAC, 6, 0x00, 0x06, 0x0E, 0x00,
-                                                                  self.getCheckNum([0xAC, 6, 0x00, 0x06, 0x0E, 0x00])])
-                                self.messageBox_signal.emit(["操作提示", "请松开MKF按钮。\n（请操作后点确定）"])
-                                reply = self.result_queue.get()
-                                if reply == QMessageBox.AcceptRole or QMessageBox.RejectRole:
-                                    pass
+                            self.messageBox_signal.emit(["操作提示", "请长按MKF按钮不要松开。\n（按住同时点确定）"])
+                            reply = self.result_queue.get()
+                            if reply == QMessageBox.AcceptRole or QMessageBox.RejectRole:
+                                self.CPU_MFKTest(1,serial_transmitData = [0xAC, 6, 0x00, 0x06, 0x0E, 0x00,
+                                                              self.getCheckNum([0xAC, 6, 0x00, 0x06, 0x0E, 0x00])])
+                            self.messageBox_signal.emit(["操作提示", "请松开MKF按钮。\n（请操作后点确定）"])
+                            reply = self.result_queue.get()
+                            if reply == QMessageBox.AcceptRole:
+                                self.CPU_MFKTest(0, serial_transmitData=[0xAC, 6, 0x00, 0x06, 0x0E, 0x00,
+                                                             self.getCheckNum([0xAC, 6, 0x00, 0x06, 0x0E, 0x00])])
                         except:
                             self.isPassMFK = False
                             self.showErrorInf('MFK按钮')
