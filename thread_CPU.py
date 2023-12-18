@@ -150,6 +150,7 @@ class CPUThread(QObject):
         self.serialPort_485 = inf_CPUlist[3][1]
         self.serialPort_typeC = inf_CPUlist[3][2]
         self.saveDir = inf_CPUlist[3][3]
+        # self.power = inf_CPUList[3][4]
 
         # 获取CPU检测信息
         self.CPU_isTest = inf_CPUlist[4][0]
@@ -457,6 +458,10 @@ class CPUThread(QObject):
                                     if not self.isPassRTC:
                                         self.CPU_isTest[7] = False
                                         self.result_signal.emit('RTC写入失败，取消后续RTC测试！\n\n')
+                                # 可编程电源开断电
+
+
+                                # 手动断电
                                 self.messageBox_signal.emit(['操作提示','请断开设备电源。'])
                                 reply= self.result_queue.get()
                                 if reply == QMessageBox.AcceptRole:
