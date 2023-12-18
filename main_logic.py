@@ -1392,10 +1392,10 @@ class Ui_Control(QMainWindow,Ui_Form):
                 if not self.configCANAddr(int(self.lineEdit_39.text()),int(self.lineEdit_41.text()),
                                           int(self.lineEdit_41.text())+1, int(self.lineEdit_40.text()), ''):
                     return False
-            elif self.tabIndex == 3:
-                if not self.configCANAddr(int(self.lineEdit_34.text()), int(self.lineEdit_35.text()),
-                                          int(self.lineEdit_36.text()), int(self.lineEdit_37.text()),
-                                          int(self.lineEdit_38.text())):
+            # elif self.tabIndex == 3:
+            #     if not self.configCANAddr(int(self.lineEdit_34.text()), int(self.lineEdit_35.text()),
+            #                               int(self.lineEdit_36.text()), int(self.lineEdit_37.text()),
+            #                               int(self.lineEdit_38.text())):
 
                     return False
 
@@ -2403,6 +2403,8 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.serialPort_typeC = self.comboBox_23.currentText()
             self.saveDir = self.label_41.text()  # 保存路径
             self.serialPort_power = self.comboBox_26.currentText()
+            self.serialPort_Op232 = self.comboBox_24.currentText()
+            self.serialPort_Op485 = self.comboBox_25.currentText()
             # # print(f'{self.module_type},{self.module_pn},{self.module_sn},{self.module_rev},{self.CANAddr_AI}')
             self.inf_serialPort = [self.serialPort_232, self.serialPort_485,
                                    self.serialPort_typeC, self.saveDir,
