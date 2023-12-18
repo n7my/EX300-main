@@ -1392,10 +1392,10 @@ class Ui_Control(QMainWindow,Ui_Form):
                 if not self.configCANAddr(int(self.lineEdit_39.text()),int(self.lineEdit_41.text()),
                                           int(self.lineEdit_41.text())+1, int(self.lineEdit_40.text()), ''):
                     return False
-            # elif self.tabIndex == 3:
-            #     if not self.configCANAddr(int(self.lineEdit_34.text()), int(self.lineEdit_35.text()),
-            #                               int(self.lineEdit_36.text()), int(self.lineEdit_37.text()),
-            #                               int(self.lineEdit_38.text())):
+            elif self.tabIndex == 3:
+                if not self.configCANAddr(int(self.lineEdit_34.text()), int(self.lineEdit_35.text()),
+                                          int(self.lineEdit_36.text()), int(self.lineEdit_37.text()),
+                                          int(self.lineEdit_38.text())):
 
                     return False
 
