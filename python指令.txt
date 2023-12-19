@@ -1,13 +1,15 @@
 1.".ui"文件转“.py”文件指令
 
-pyuic5 -o 1120.py new1440_all_1120.ui
+pyuic5 -o 1215.py new1440_all_1215.ui
 
 
 2.打包成python程序打包成exe文件
 
 pyinstaller -D -w main.py
-pyinstaller.exe -D -c --add-data "ControlCAN.dll;." --add-data "config.txt;." --add-data "取消全屏按钮.png;." --add-data "取消全屏按钮2.png;." --add-data "全屏按钮.png;." --add-data "全屏按钮2.png;." --add-data "logo.png;." --add-data "pass.png;." --add-data "fail.png;." --add-data "ControlCAN.lib;." --add-data "pushbutton.qrc;." --add-data "beast5.png;." main.py
-pyinstaller.exe -D -w --add-data "ControlCAN.dll;." --add-data "config.txt;." --add-data "取消全屏按钮.png;." --add-data "取消全屏按钮2.png;." --add-data "全屏按钮.png;." --add-data "全屏按钮2.png;." --add-data "logo.png;." --add-data "pass.png;." --add-data "fail.png;." --add-data "ControlCAN.lib;." --add-data "pushbutton.qrc;." --add-data "beast5.png;." main.py
+pyinstaller.exe -D -c --add-data "ControlCAN.dll;." --add-data "config.txt;." --add-data "取消全屏按钮.png;." --add-data "取消全屏按钮2.png;." --add-data "全屏按钮.png;." --add-data "全屏按钮2.png;." --add-data "logo.png;." --add-data "pass.png;." --add-data "fail.png;." --add-data "ControlCAN.lib;." --add-data "pushbutton.qrc;." --add-data "beast5.png;." --add-data "0000.png;." --add-data "485拨码.png;." --add-data "5555.png;." --add-data "AAAA.png;." --add-data "AE_00.png;." --add-data "AE_55.png;." --add-data "AE_aa.png;." --add-data "BAT_LOW灯.png;." --add-data "ERROR灯.png;." --add-data "HOST灯.png;." --add-data "PRG灯.png;." --add-data "RS-232C灯.png;." --add-data "RS-485灯.png;." --add-data "RUN灯.png;." --add-data "所有灯.png;." main.py
+pyinstaller.exe -D -w --add-data "ControlCAN.dll;." --add-data "config.txt;." --add-data "取消全屏按钮.png;." --add-data "取消全屏按钮2.png;." --add-data "全屏按钮.png;." --add-data "全屏按钮2.png;." --add-data "logo.png;." --add-data "pass.png;." --add-data "fail.png;." --add-data "ControlCAN.lib;." --add-data "pushbutton.qrc;." --add-data "beast5.png;." --add-data "0000.png;." --add-data "485拨码.png;." --add-data "5555.png;." --add-data "AAAA.png;." --add-data "AE_00.png;." --add-data "AE_55.png;." --add-data "AE_aa.png;." --add-data "BAT_LOW灯.png;." --add-data "ERROR灯.png;." --add-data "HOST灯.png;." --add-data "PRG灯.png;." --add-data "RS-232C灯.png;." --add-data "RS-485灯.png;." --add-data "RUN灯.png;." --add-data "所有灯.png;." main.py
+
+
 pyinstaller.exe -D -c --add-data "ControlCAN.dll;." --add-data "config.txt;." --add-data "取消全屏按钮.png;." --add-data "取消全屏按钮2.png;." --add-data "全屏按钮.png;." --add-data "全屏按钮2.png;." --add-data "logo.png;." --add-data "pass.png;." --add-data "fail.png;." --add-data "ControlCAN.lib;." --add-data "pushbutton.qrc;." main.spec
 注：-F，打包成一个EXE文件。
       -D，创建一个目录，包含EXE和所有依赖文件。
