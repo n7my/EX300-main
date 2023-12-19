@@ -1428,6 +1428,12 @@ class Ui_Control(QMainWindow,Ui_Form):
                                             QMessageBox.AcceptRole | QMessageBox.RejectRole, QMessageBox.AcceptRole)
                 return False
 
+            self.pushButton_pause.setEnabled(True)
+            self.pushButton_pause.setVisible(True)
+
+            self.pushButton_resume.setEnabled(False)
+            self.pushButton_resume.setVisible(False)
+
             if self.tabWidget.currentIndex() == 0:
                 self.testFlag = 'DIDO'
                 self.appearanceTest(self.testFlag)
@@ -2472,15 +2478,13 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.textBrowser_5.insertPlainText(f'产品信息下发成功，开始测试。' + self.HORIZONTAL_LINE)
 
 
-        self.pushButton_pause.setEnabled(True)
-        self.pushButton_pause.setVisible(True)
-
-        self.pushButton_resume.setEnabled(False)
-        self.pushButton_resume.setVisible(False)
+        # self.pushButton_pause.setEnabled(True)
+        # self.pushButton_pause.setVisible(True)
+        #
+        # self.pushButton_resume.setEnabled(False)
+        # self.pushButton_resume.setVisible(False)
         return True
-        # self.pushButton_4.setStyleSheet(self.topButton_qss['on'])
-        # self.pushButton_4.setEnabled(True)
-        # self.pushButton_4.setVisible(True)
+
 
     def clearList(self,array):
         for i in range(len(array)):
