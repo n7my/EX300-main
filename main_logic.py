@@ -1244,7 +1244,6 @@ class Ui_Control(QMainWindow,Ui_Form):
         # self.reInputPNSNREV()
 
     def start_button(self):
-
         self.label.setStyleSheet(self.testState_qss['testing'])
         self.label.setText('检测中……')
         self.pushButton_3.setEnabled(True)
@@ -1691,8 +1690,8 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.lineEdit_SN.clear()
         self.lineEdit_REV.clear()
         # self.lineEdit_PN.setReadOnly(False)
-        self.lineEdit_SN.setReadOnly(False)
-        self.lineEdit_REV.setReadOnly(False)
+        # self.lineEdit_SN.setReadOnly(False)
+        # self.lineEdit_REV.setReadOnly(False)
         if self.tabWidget.currentIndex() == 0:
             # self.lineEdit.clear()
             self.lineEdit_3.clear()
@@ -1854,6 +1853,9 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.textBrowser_5.append('进程停止出错。\n')
             QApplication.processEvents()
             time.sleep(0.1)
+        finally:
+            self.lineEdit_SN.setReadOnly(False)
+            self.lineEdit_REV.setReadOnly(False)
 
         
 
