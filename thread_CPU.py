@@ -4078,6 +4078,10 @@ class CPUThread(QObject):
         self.label_signal.emit(['fail', '测试停止'])
 
     def showErrorInf(self,Inf):
+        self.pauseOption()
+        if not self.is_running:
+            self.cancelAllTest()
+            return
         self.result_signal.emit(f"{Inf}程序出现问题\n")
         # 捕获异常并输出详细的错误信息
         self.result_signal.emit(f"ErrorInf:\n{traceback.format_exc()}\n")

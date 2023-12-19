@@ -756,7 +756,7 @@ class Ui_Control(QMainWindow,Ui_Form):
 
         #更新串口
         self.pushButton_renewSerial.clicked.connect(lambda:self.getSerialInf(1))
-        global isMainRunning
+        global isMainRunning# 程序运行标志
         isMainRunning = True
 
     def generateDefaultConfigFile(self):
@@ -1281,7 +1281,6 @@ class Ui_Control(QMainWindow,Ui_Form):
 
         if not self.startTest():
             self.PassOrFail(False)
-            self.showInf('检测已停止！\n\n')
 
 
 
@@ -1328,7 +1327,7 @@ class Ui_Control(QMainWindow,Ui_Form):
     def stop_button(self):
         # self.textBrowser_5.insertPlainText(self.HORIZONTAL_LINE + '停止测试\n' + self.HORIZONTAL_LINE)
         # self.move_to_end()
-        self.showInf(self.HORIZONTAL_LINE + '停止测试\n' + self.HORIZONTAL_LINE)
+        # self.showInf(self.HORIZONTAL_LINE + '停止测试\n' + self.HORIZONTAL_LINE)
         self.stop_signal.emit(True)
         self.pushButton_3.setEnabled(False)
         self.pushButton_3.setStyleSheet(self.topButton_qss['off'])
@@ -1715,46 +1714,50 @@ class Ui_Control(QMainWindow,Ui_Form):
         #
         # # 将弹窗结果放入队列
         # self.result_queue.put(reply)
-        msg_box = QMessageBox()
-        # 设置消息
-        msg_box.setText(list[1])
-        # msg_box.setInformativeText(list[1])
-        msg_box.setWindowTitle(list[0])
-        # 设置样式表
-        msg_box.setStyleSheet('QLabel{font-size: 18px;}')
+        global isMainRunning
+        if isMainRunning:
+            msg_box = QMessageBox()
+            # 设置消息
+            msg_box.setText(list[1])
+            # msg_box.setInformativeText(list[1])
+            msg_box.setWindowTitle(list[0])
+            # 设置样式表
+            msg_box.setStyleSheet('QLabel{font-size: 18px;}')
 
-        # 添加按钮
-        msg_box.addButton('确定', QMessageBox.AcceptRole)
-        msg_box.addButton('取消', QMessageBox.RejectRole)
+            # 添加按钮
+            msg_box.addButton('确定', QMessageBox.AcceptRole)
+            msg_box.addButton('取消', QMessageBox.RejectRole)
 
-        # 显示消息框
-        reply = msg_box.exec_()
-        # 将弹窗结果放入队列
-        self.result_queue.put(reply)
+            # 显示消息框
+            reply = msg_box.exec_()
+            # 将弹窗结果放入队列
+            self.result_queue.put(reply)
 
 
     def CPU_MessageBox(self, list):
-        msg_box = QMessageBox()
+        global isMainRunning
+        if isMainRunning:
+            msg_box = QMessageBox()
 
-        # 设置图标
-        icon = QIcon(list[2])
-        msg_box.setIconPixmap(icon.pixmap(300, 300))
+            # 设置图标
+            icon = QIcon(list[2])
+            msg_box.setIconPixmap(icon.pixmap(300, 300))
 
-        # 设置消息
-        msg_box.setText(list[1])
-        # msg_box.setInformativeText(list[1])
-        msg_box.setWindowTitle(list[0])
-        # 设置样式表
-        msg_box.setStyleSheet('QLabel{font-size: 18px;}')
+            # 设置消息
+            msg_box.setText(list[1])
+            # msg_box.setInformativeText(list[1])
+            msg_box.setWindowTitle(list[0])
+            # 设置样式表
+            msg_box.setStyleSheet('QLabel{font-size: 18px;}')
 
-        # 添加按钮
-        msg_box.addButton('确定', QMessageBox.AcceptRole)
-        msg_box.addButton('取消', QMessageBox.RejectRole)
+            # 添加按钮
+            msg_box.addButton('确定', QMessageBox.AcceptRole)
+            msg_box.addButton('取消', QMessageBox.RejectRole)
 
-        # 显示消息框
-        reply = msg_box.exec_()
-        # 将弹窗结果放入队列
-        self.result_queue.put(reply)
+            # 显示消息框
+            reply = msg_box.exec_()
+            # 将弹窗结果放入队列
+            self.result_queue.put(reply)
 
     def CPU_moveToRow(self,list):
         self.tableWidget_CPU.setCurrentCell(list[0],list[1])
@@ -1799,44 +1802,53 @@ class Ui_Control(QMainWindow,Ui_Form):
                                     """)
 
     def  stop_subThread(self):
-        if self.testFlag == 'AI':
-            if self.AI_thread and self.AI_thread.isRunning():
-                try:
-                    self.AI_thread.quit()
-                    self.AI_thread.wait()
-                    # self.showInf(f'结束AI子线程成功！' + self.HORIZONTAL_LINE)
-                except Exception as e:
-                    self.showInf(f'结束AI线程异常！' + self.HORIZONTAL_LINE)
-                    traceback.print_exc()
-        elif self.testFlag == 'AO':
-            if self.AO_thread and self.AO_thread.isRunning():
-                try:
-                    self.AO_thread.quit()
-                    self.AO_thread.wait()
-                except Exception as e:
-                    self.showInf(f'结束AO线程异常！' + self.HORIZONTAL_LINE)
-                    traceback.print_exc()
-        elif self.testFlag == 'DO' or self.testFlag == 'DI' or self.testFlag == 'DIDO':
-            if self.DIDO_thread and self.DIDO_thread.isRunning():
-                # self.showInf(f'结束DIDO子线程' + self.HORIZONTAL_LINE)
-                try:
-                    self.DIDO_thread.quit()
-                    self.DIDO_thread.wait()
-                except Exception as e:
-                    self.showInf(f'结束DIDO线程异常！' + self.HORIZONTAL_LINE)
-                    traceback.print_exc()
-        elif self.testFlag == 'CPU':
-            if self.CPU_thread and self.CPU_thread.isRunning():
-                try:
-                # self.showInf(f'结束CPU子线程' + self.HORIZONTAL_LINE)
-                    self.CPU_thread.quit()
-                    self.CPU_thread.wait()
-                except Exception as e:
-                    self.showInf(f'结束CPU线程异常！' + self.HORIZONTAL_LINE)
-                    traceback.print_exc()
-        else:
-            self.showInf(f'不存在运行的子线程' + self.HORIZONTAL_LINE)
-    
+        try:
+            if self.testFlag == 'AI':
+                if self.AI_thread and self.AI_thread.isRunning():
+                    try:
+                        self.AI_thread.quit()
+                        self.AI_thread.wait()
+                        # self.showInf(f'结束AI子线程成功！' + self.HORIZONTAL_LINE)
+                    except Exception as e:
+                        self.showInf(f'结束AI线程异常！' + self.HORIZONTAL_LINE)
+                        traceback.print_exc()
+            elif self.testFlag == 'AO':
+                if self.AO_thread and self.AO_thread.isRunning():
+                    try:
+                        self.AO_thread.quit()
+                        self.AO_thread.wait()
+                    except Exception as e:
+                        self.showInf(f'结束AO线程异常！' + self.HORIZONTAL_LINE)
+                        traceback.print_exc()
+            elif self.testFlag == 'DO' or self.testFlag == 'DI' or self.testFlag == 'DIDO':
+                if self.DIDO_thread and self.DIDO_thread.isRunning():
+                    # self.showInf(f'结束DIDO子线程' + self.HORIZONTAL_LINE)
+                    try:
+                        self.DIDO_thread.quit()
+                        self.DIDO_thread.wait()
+                    except Exception as e:
+                        self.showInf(f'结束DIDO线程异常！' + self.HORIZONTAL_LINE)
+                        traceback.print_exc()
+            elif self.testFlag == 'CPU':
+                if self.CPU_thread and self.CPU_thread.isRunning():
+                    try:
+                    # self.showInf(f'结束CPU子线程' + self.HORIZONTAL_LINE)
+                        self.CPU_thread.quit()
+                        self.CPU_thread.wait()
+                    except Exception as e:
+                        self.showInf(f'结束CPU线程异常！' + self.HORIZONTAL_LINE)
+                        traceback.print_exc()
+            else:
+                self.showInf(f'不存在运行的子线程' + self.HORIZONTAL_LINE)
+
+            self.textBrowser_5.append('进程已正确停止。\n')
+            QApplication.processEvents()
+            time.sleep(0.1)
+        except:
+            self.textBrowser_5.append('进程停止出错。\n')
+            QApplication.processEvents()
+            time.sleep(0.1)
+
         
 
     def DIDOCANAddr_stateChanged(self):
@@ -2968,11 +2980,17 @@ class Ui_Control(QMainWindow,Ui_Form):
   #       return recv
 
     def showInf(self,inf):
-        self.textBrowser_5.append(inf)
-        if inf[:8] =='本轮测试总时间：':
-            self.move_to_end()
-        QApplication.processEvents()
-        time.sleep(0.1)
+        global isMainRunning
+        if isMainRunning:
+            self.textBrowser_5.append(inf)
+            if inf[:8] =='本轮测试总时间：':
+                self.move_to_end()
+            QApplication.processEvents()
+            time.sleep(0.1)
+        else:
+            self.textBrowser_5.append('等待进程停止。\n')
+            QApplication.processEvents()
+            time.sleep(0.1)
 
         # self.isPause()
         # if self.work_thread.stopFlag.isSet():
