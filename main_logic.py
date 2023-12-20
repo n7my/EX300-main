@@ -1604,6 +1604,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                     self.CPU_thread = QThread()
                     from thread_CPU import CPUThread
                     self.CPU_option = CPUThread(self.inf_CPUlist, self.result_queue)
+                    self.pushButton_3.clicked.connect(self.CPU_option.cancelAllTest)
                     self.CPU_option.result_signal.connect(self.showInf)
                     self.CPU_option.item_signal.connect(self.CPU_itemOperation)
                     self.CPU_option.pass_signal.connect(self.PassOrFail)
@@ -1737,6 +1738,9 @@ class Ui_Control(QMainWindow,Ui_Form):
             reply = msg_box.exec_()
             # 将弹窗结果放入队列
             self.result_queue.put(reply)
+        else:
+            # 将弹窗结果放入队列
+            self.result_queue.put(QMessageBox.RejectRole)
 
 
     def CPU_MessageBox(self, list):
@@ -1763,6 +1767,9 @@ class Ui_Control(QMainWindow,Ui_Form):
             reply = msg_box.exec_()
             # 将弹窗结果放入队列
             self.result_queue.put(reply)
+        else:
+            # 将弹窗结果放入队列
+            self.result_queue.put(QMessageBox.RejectRole)
 
     def CPU_moveToRow(self,list):
         self.tableWidget_CPU.setCurrentCell(list[0],list[1])
