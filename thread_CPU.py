@@ -1142,6 +1142,10 @@ class CPUThread(QObject):
                         self.item_signal.emit([i, 1, 0, ''])
                         #写MAC
                         now_MAC = datetime.datetime.now()
+                        self.MAC_array = [(now_MAC.year-2000), now_MAC.month,
+                                 now_MAC.day, now_MAC.hour, now_MAC.minute,
+                                 now_MAC.second]
+                        self.result_signal.emit(f'时间：{self.MAC_array}\n')
                         w_MAC = [0xAC, 13, 0x00, 0x03, 0x10, 0x00,6,
                                  (now_MAC.year-2000), now_MAC.month,
                                  now_MAC.day, now_MAC.hour, now_MAC.minute,
@@ -3475,14 +3479,14 @@ class CPUThread(QObject):
                     if trueData[7] == 6:
                         MAC_int = ''
                         for MACNum in range(6):
-                            mac_stand = [0x11,0x22,0x33,0x44,0x55,0x66]
+                            mac_stand = self.MAC_array
                             if (hex(trueData[MACNum+8]) != hex(mac_stand[MACNum])):
                                 self.isPassConfig &= False
                                 isThisPass = False
                                 self.result_signal.emit('MAC读取失败\n')
                                 break
                             else:
-                                MAC_int += hex(trueData[MACNum+8])[2:]
+                                MAC_int += f'{int(trueData[MACNum+8])}'
                                 if MACNum<5:
                                     MAC_int +='-'
                                 if MACNum == 5:
