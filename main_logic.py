@@ -1349,14 +1349,6 @@ class Ui_Control(QMainWindow,Ui_Form):
     def startTest(self):
         try:
             # 启动CAN分析仪
-            # can_thread=threading.Thread(target = canInit_thread)
-            # can_thread.start()
-            # event_canInit.wait()
-            # list_canInit = q.get()
-            # if not list_canInit[0]:
-            #     self.showMessageBox(list_canInit[1])
-            #     self.CANFail()
-            #     return False
             list_canInit=CAN_init([1])
             if not list_canInit[0]:
                 self.showMessageBox(list_canInit[1])
