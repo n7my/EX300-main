@@ -1900,7 +1900,7 @@ border: none;</string>
        <rect>
         <x>425</x>
         <y>85</y>
-        <width>101</width>
+        <width>104</width>
         <height>30</height>
        </rect>
       </property>
@@ -2233,7 +2233,7 @@ border: none;</string>
        <rect>
         <x>10</x>
         <y>130</y>
-        <width>121</width>
+        <width>122</width>
         <height>30</height>
        </rect>
       </property>
@@ -2264,7 +2264,7 @@ border: none;</string>
        <rect>
         <x>140</x>
         <y>130</y>
-        <width>115</width>
+        <width>122</width>
         <height>30</height>
        </rect>
       </property>
@@ -2295,7 +2295,7 @@ border: none;</string>
        <rect>
         <x>270</x>
         <y>130</y>
-        <width>121</width>
+        <width>128</width>
         <height>30</height>
        </rect>
       </property>
@@ -3536,9 +3536,9 @@ background-color: rgb(76, 165, 132);</string>
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>658</y>
+     <y>680</y>
      <width>711</width>
-     <height>181</height>
+     <height>161</height>
     </rect>
    </property>
    <property name="maximumSize">

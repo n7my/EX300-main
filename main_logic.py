@@ -218,7 +218,7 @@ class Ui_Control(QMainWindow,Ui_Form):
     def __init__(self,parent = None):
         super(Ui_Control,self).__init__(parent)
         self.setupUi(self)
-        self.pushButton_13.setVisible(False)
+        # self.pushButton_13.setVisible(False)
         self.label_11.setPixmap(QtGui.QPixmap(f"{current_dir}/beast5.png"))
         # CPU页面参数配置
         self.CPU_lineEdit_array = [self.lineEdit_33, self.lineEdit_34, self.lineEdit_35, self.lineEdit_36,
@@ -1729,7 +1729,6 @@ class Ui_Control(QMainWindow,Ui_Form):
             msg_box.setWindowTitle(list[0])
             # 设置样式表
             msg_box.setStyleSheet('QLabel{font-size: 18px;}')
-
             # 添加按钮
             msg_box.addButton('确定', QMessageBox.AcceptRole)
             msg_box.addButton('取消', QMessageBox.RejectRole)

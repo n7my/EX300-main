@@ -408,12 +408,12 @@ class CPUThread(QObject):
                             self.CPU_MFKTest(0,serial_transmitData = [0xAC, 6, 0x00, 0x06, 0x0E, 0x00,
                                                                   self.getCheckNum([0xAC, 6, 0x00, 0x06, 0x0E, 0x00])])
                             if not self.isCancelAllTest:
-                                self.messageBox_signal.emit(["操作提示", "请长按MKF按钮不要松开。\n（按住同时点确定）"])
+                                self.messageBox_signal.emit(["操作提示", "请长按MFK按钮不要松开。\n（按住同时点确定）"])
                                 reply = self.result_queue.get()
                                 if reply == QMessageBox.AcceptRole or QMessageBox.RejectRole:
                                     self.CPU_MFKTest(1,serial_transmitData = [0xAC, 6, 0x00, 0x06, 0x0E, 0x00,
                                                                   self.getCheckNum([0xAC, 6, 0x00, 0x06, 0x0E, 0x00])])
-                                self.messageBox_signal.emit(["操作提示", "请松开MKF按钮。\n（请操作后点确定）"])
+                                self.messageBox_signal.emit(["操作提示", "请松开MFK按钮。\n（请操作后点确定）"])
                                 reply = self.result_queue.get()
                                 if reply == QMessageBox.AcceptRole or QMessageBox.RejectRole:
                                     pass
@@ -461,10 +461,10 @@ class CPUThread(QObject):
                                         self.CPU_isTest[7] = False
                                         self.result_signal.emit('RTC写入失败，取消后续RTC测试！\n\n')
                                 # 可编程电源开断电
-                                power_on = [0x01, 0x06, 0x00, 0x01, 0x00, 0x00, 0xD8, 0x0A]
-                                power_off = [0x01, 0x06, 0x00, 0x01, 0x00, 0x01, 0x19, 0xCA]
-                                vol_24v = [0x01,0x10,0x00,0x20,0x00,0x02,0x04,0x00,0x00,0x09,0x60,0xF7,0xCF]
-                                cur_2a = [0x01,0x10,0x00,0x22,0x00,0x02,0x04,0x00,0x00,0x00,0xC8,0x71,0xF8]
+                                power_off = [0x01, 0x06, 0x00, 0x01, 0x00, 0x00, 0xD8, 0x0A]
+                                power_on = [0x01, 0x06, 0x00, 0x01, 0x00, 0x01, 0x19, 0xCA]
+                                vol_24v = [0x01,0x10,0x00,0x20,0x00,0x02,0x04,0x00,0x00,0x5D,0xC0,0xC9,0x77]
+                                cur_2a = [0x01,0x10,0x00,0x22,0x00,0x02,0x04,0x00,0x00,0x4E,0x20,0x44,0x16]
                                 self.powerControl( baudRate=9600,transmitData = power_off)
                                 if not self.isCancelAllTest:
                                     self.result_signal.emit('设备已断电。等待3秒后自动重新上电。\n')
@@ -1141,8 +1141,11 @@ class CPUThread(QObject):
                         testStartTime = time.time()
                         self.item_signal.emit([i, 1, 0, ''])
                         #写MAC
+                        now_MAC = datetime.datetime.now()
                         w_MAC = [0xAC, 13, 0x00, 0x03, 0x10, 0x00,6,
-                                 0x11, 0x22, 0x33, 0x44, 0x55, 0x66,
+                                 (now_MAC.year-2000), now_MAC.month,
+                                 now_MAC.day, now_MAC.hour, now_MAC.minute,
+                                 now_MAC.second,
                                  0x00]
                         # for mac in range(len(self.module_MAC)):
                         #     w_MAC[7+mac] = ord(self.module_MAC[mac])
