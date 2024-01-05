@@ -1869,7 +1869,7 @@ class Ui_Form(object):
         self.textBrowser_5.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.textBrowser_5.setObjectName("textBrowser_5")
         self.label = QtWidgets.QLabel(Form)
-        self.label.setGeometry(QtCore.QRect(120, 40, 600, 100))
+        self.label.setGeometry(QtCore.QRect(10, 40, 711, 100))
         font = QtGui.QFont()
         font.setFamily("Arial")
         font.setPointSize(72)
