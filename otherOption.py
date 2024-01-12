@@ -166,7 +166,7 @@ def generateExcel(code_array:list,station_array:list=[False,False,False],
         # sheet.write(i, 3, u'边框', style3)
 
         # 合并单元格，合并第1行到第2行的第1列到第19列
-        sheet.write_merge(0, 1, 0, 18, u'整机检验记录单V1.1', title_style)
+        sheet.write_merge(0, 1, 0, 18, u'测试报告V1.1', title_style)
 
         # row3
         # 为样式创建字体

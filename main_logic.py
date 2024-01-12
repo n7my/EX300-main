@@ -674,7 +674,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.lineEdit_REV.setPlaceholderText('请输入REV码')
         self.lineEdit_REV.setReadOnly(True)
         self.lineEdit_MAC.setPlaceholderText('请输入MAC地址')
-        self.lineEdit_MAC.setReadOnly(True)
+        self.lineEdit_MAC.setReadOnly(False)
         # self.lineEdit_PN.setFocus()
         # self.lineEdit_PN.editingFinished.connect(self.inputPN)
         self.lineEdit_SN.setFocus()
@@ -1164,6 +1164,10 @@ class Ui_Control(QMainWindow,Ui_Form):
 
     def inputREV(self):
         if len(self.lineEdit_REV.text()) == 2:
+            # reply = QMessageBox.warning(None, '操作警告', '扫入的REV码与设备中存储的REV不一致，\n取消该模块测试！',
+            #                             QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+            # if reply == QMessageBox.Yes or QMessageBox.No:
+            #     self.reInputPNSNREV()
             # self.showInf('三码完成输入')
             self.lineEdit_REV.setReadOnly(True)
             self.pushButton_4.setEnabled(True)
@@ -1417,7 +1421,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                 if not mainThreadRunning():
                     return False
                 reply = QMessageBox.warning(None, '警告', '产品三码信息不全，请重新扫入！',
-                                            QMessageBox.AcceptRole | QMessageBox.RejectRole, QMessageBox.AcceptRole)
+                                            QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
                 return False
 
             self.pushButton_pause.setEnabled(True)
@@ -1447,11 +1451,12 @@ class Ui_Control(QMainWindow,Ui_Form):
                 # self.DIDO_option.RunErr_signal.connect(self.testRunErr)
                 # self.DIDO_option.CANRunErr_signal.connect(self.testCANRunErr)
                 self.DIDO_option.messageBox_signal.connect(self.showMessageBox)
+                self.DIDO_option.pic_messageBox_signal.connect(self.pic_MessageBox)
                 # self.DIDO_option.excel_signal.connect(self.generateExcel)
                 self.DIDO_option.allFinished_signal.connect(self.allFinished)
                 self.DIDO_option.label_signal.connect(self.labelChange)
                 self.DIDO_option.saveExcel_signal.connect(self.saveExcel)
-                # self.DIDO_option.print_signal.connect(self.printResult)
+                self.DIDO_option.print_signal.connect(self.printResult)
 
                 self.pushButton_3.clicked.connect(self.DIDO_option.stop_work)
                 self.pushButton_pause.clicked.connect(self.DIDO_option.pause_work)
@@ -1533,6 +1538,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                     # self.AI_option.RunErr_signal.connect(self.testRunErr)
                     # self.AI_option.CANRunErr_signal.connect(self.testCANRunErr)
                     self.AI_option.messageBox_signal.connect(self.showMessageBox)
+                    self.AI_option.pic_messageBox_signal.connect(self.pic_MessageBox)
                     # self.AI_option.excel_signal.connect(self.generateExcel)
                     self.AI_option.allFinished_signal.connect(self.allFinished)
                     self.AI_option.label_signal.connect(self.labelChange)
@@ -1569,6 +1575,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                     # self.AO_option.RunErr_signal.connect(self.testRunErr)
                     # self.AO_option.CANRunErr_signal.connect(self.testCANRunErr)
                     self.AO_option.messageBox_signal.connect(self.showMessageBox)
+                    self.AO_option.pic_messageBox_signal.connect(self.pic_MessageBox)
                     # self.AO_option.excel_signal.connect(self.generateExcel)
                     self.AO_option.allFinished_signal.connect(self.allFinished)
                     self.AO_option.label_signal.connect(self.labelChange)
@@ -1604,7 +1611,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                     # self.CPU_option.RunErr_signal.connect(self.testRunErr)
                     # self.CPU_option.CANRunErr_signal.connect(self.testCANRunErr)
                     self.CPU_option.messageBox_signal.connect(self.showMessageBox)
-                    self.CPU_option.pic_messageBox_signal.connect(self.CPU_MessageBox)
+                    self.CPU_option.pic_messageBox_signal.connect(self.pic_MessageBox)
                     self.CPU_option.moveToRow_signal.connect(self.CPU_moveToRow)
                     # self.CPU_option.excel_signal.connect(self.generateExcel)
                     self.CPU_option.allFinished_signal.connect(self.allFinished)
@@ -1648,9 +1655,9 @@ class Ui_Control(QMainWindow,Ui_Form):
 
         if not mainThreadRunning():
             return False
-        reply = QMessageBox.question(None, '外观检测', '产品外观是否完好?',
-                                     QMessageBox.AcceptRole | QMessageBox.RejectRole, QMessageBox.AcceptRole)
-        if reply == QMessageBox.AcceptRole:
+        reply = QMessageBox.question(None, '外观检测', '请检查：\n（1）外壳字体是否清晰?\n（2）型号是否正确？\n（3）外壳是否完好？',
+                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+        if reply == QMessageBox.Yes:
             self.appearance = True
             appearanceEnd_time = time.time()
             appearanceTest_time = round(appearanceEnd_time - appearanceStart_time, 2)
@@ -1658,7 +1665,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                 return False
             self.itemOperation(mTable, 0, 2, 1, appearanceTest_time)
 
-        elif reply == QMessageBox.RejectRole:
+        elif reply == QMessageBox.No:
             self.appearance = False
             appearanceEnd_time = time.time()
             appearanceTest_time = round(appearanceEnd_time - appearanceStart_time, 2)
@@ -1723,8 +1730,8 @@ class Ui_Control(QMainWindow,Ui_Form):
             # 设置样式表
             msg_box.setStyleSheet('QLabel{font-size: 18px;}')
             # 添加按钮
-            msg_box.addButton('确定', QMessageBox.AcceptRole)
-            msg_box.addButton('取消', QMessageBox.RejectRole)
+            msg_box.addButton('是', QMessageBox.AcceptRole)
+            msg_box.addButton('否', QMessageBox.RejectRole)
 
             # 显示消息框
             reply = msg_box.exec_()
@@ -1735,7 +1742,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.result_queue.put(QMessageBox.RejectRole)
 
 
-    def CPU_MessageBox(self, list):
+    def pic_MessageBox(self, list):
         global isMainRunning
         if isMainRunning:
             msg_box = QMessageBox()
@@ -1752,8 +1759,8 @@ class Ui_Control(QMainWindow,Ui_Form):
             msg_box.setStyleSheet('QLabel{font-size: 18px;}')
 
             # 添加按钮
-            msg_box.addButton('确定', QMessageBox.AcceptRole)
-            msg_box.addButton('取消', QMessageBox.RejectRole)
+            msg_box.addButton('是', QMessageBox.AcceptRole)
+            msg_box.addButton('否', QMessageBox.RejectRole)
 
             # 显示消息框
             reply = msg_box.exec_()
@@ -2069,7 +2076,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             mTable = self.tableWidget_DIDO
             # print(f'tabIndex={self.tabIndex}')
 
-            self.testNum = 3#外观检测 + CAN_RunErr检测 + RunErr检测 + 通道检测
+            self.testNum = 2#外观检测 + CAN_RunErr检测 + RunErr检测 + 通道检测
             # 获取产品信息
             self.module_type = self.comboBox.currentText()
             if self.module_type == 'ET0800' or self.module_type == 'ET1600' or \
@@ -2518,9 +2525,9 @@ class Ui_Control(QMainWindow,Ui_Form):
         if self.check_heartbeat(self.CAN2, self.module_2, self.waiting_time) == False:
             return False
         if self.tabIndex !=0:
-            if self.check_heartbeat(self.CANAddr_relay, '继电器1', self.waiting_time) == False:
+            if self.check_heartbeat(self.CANAddr_relay, '继电器QR0016#1', self.waiting_time) == False:
                 return False
-            if self.check_heartbeat(self.CANAddr_relay+1, '继电器2', self.waiting_time) == False:
+            if self.check_heartbeat(self.CANAddr_relay+1, '继电器QR0016#2', self.waiting_time) == False:
                 return False
 
         return True

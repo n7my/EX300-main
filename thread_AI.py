@@ -19,6 +19,7 @@ class AIThread(QObject):
     # CANRunErr_signal = pyqtSignal(int)
     #messageBox_signal：显示对话框信号
     messageBox_signal= pyqtSignal(list)
+    pic_messageBox_signal = pyqtSignal(list)
     #allFinished_signal：所有测试结束信号
     allFinished_signal = pyqtSignal()
     label_signal = pyqtSignal(list)
@@ -243,6 +244,8 @@ class AIThread(QObject):
         self.pause_num = 1
         errorNum = 0
 
+        self.current_dir = os.getcwd().replace('\\', '/') + "/_internal"
+
 
     def AIOption(self):
         self.isExcel = True
@@ -269,7 +272,7 @@ class AIThread(QObject):
                     self.isExcel = False
                     break
                 CANAddr_array = [self.CANAddr_AO, self.CANAddr_AI, self.CANAddr_relay, self.CANAddr_relay + 1]
-                module_array = [self.module_1, self.module_2, '继电器1', '继电器2']
+                module_array = [self.module_1, self.module_2, 'QR0016#1', 'QR0016#2']
                 bool_online, eID = otherOption.isModulesOnline(CANAddr_array,module_array,self.waiting_time)
                 if bool_online:
                     self.pauseOption()
@@ -1049,8 +1052,8 @@ class AIThread(QObject):
                 self.pauseOption()
                 if not self.is_running:
                     return False
-                self.messageBox_signal.emit(['错误提示', '继电器2切换错误，请停止检查设备！'])
-                # self.result_signal.emit('继电器2切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
+                # self.messageBox_signal.emit(['错误提示', '继电器2切换错误，请停止检查设备！'])
+                self.result_signal.emit('继电器2切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
                 return False
             time.sleep(0.3)
 
@@ -1437,7 +1440,7 @@ class AIThread(QObject):
                 if not self.is_running:
                     return False, 0
                 if (abs(usTmpValue[0]-self.standardValue)>200 or abs(usTmpValue[1]-self.standardValue)>200
-                        or abs(usTmpValue[2]-self.standardValue)>200 or abs(usTmpValue[3]-self.standardValue)>200):
+                        or abs(usTmpValue[2]-self.standardValue)>400 or abs(usTmpValue[3]-self.standardValue)>200):
                     self.result_signal.emit(f'{i + 1}.第{i + 1}次数据：{usTmpValue}，误差过大！排除该次数据！\n\n')
                     valReceive_num = valReceive_num - 1
                     continue
@@ -1833,7 +1836,8 @@ class AIThread(QObject):
         # reply = QMessageBox.question(None, '检测RUN &ERROR', 'RUN指示灯是否点亮？',
         #                              QMessageBox.AcceptRole | QMessageBox.RejectRole,
         #                              QMessageBox.AcceptRole)
-        self.messageBox_signal.emit(['检测RUN &ERROR', 'RUN指示灯是否点亮？'])
+        image_RUN = self.current_dir + '/AE_RUN.png'
+        self.pic_messageBox_signal.emit(['检测RUN &ERROR', 'RUN指示灯是否如图所示点亮(绿灯)？', image_RUN])
         reply = self.result_queue.get()
         if reply == QMessageBox.AcceptRole:
             self.runLED = True
@@ -1919,7 +1923,8 @@ class AIThread(QObject):
         errorEnd_time = time.time()
         errorTest_time = round(errorEnd_time-errorStart_time,2)
         time.sleep(0.5)
-        self.messageBox_signal.emit(['检测RUN &ERROR', 'ERROR指示灯是否点亮？'])
+        image_ERR = self.current_dir + '/AE_ERROR.png'
+        self.pic_messageBox_signal.emit(['检测RUN &ERROR', 'ERROR指示灯是否如图所示点亮（红灯）？', image_ERR])
         reply = self.result_queue.get()
         # reply = QMessageBox.question(None, '检测RUN &ERROR', 'ERROR指示灯是否点亮？',
         #                              QMessageBox.AcceptRole | QMessageBox.RejectRole,
@@ -2013,7 +2018,7 @@ class AIThread(QObject):
         CANRunEnd_time = time.time()
         CANRunTest_time = round(CANRunEnd_time - CANRunStart_time,2)
         time.sleep(0.5)
-        self.messageBox_signal.emit(['检测RUN &ERROR', 'CAN_RUN指示灯是否点亮？'])
+        self.messageBox_signal.emit(['检测CAN_RUN &CAN_ERROR', 'CAN_RUN指示灯是否点亮（绿灯）？'])
         reply = self.result_queue.get()
         # reply = QMessageBox.question(None, '检测CAN_RUN &CAN_ERROR', '指示灯是否点亮？',
         #                              QMessageBox.AcceptRole | QMessageBox.RejectRole,
@@ -2075,7 +2080,7 @@ class AIThread(QObject):
         CANErrEnd_time = time.time()
         CANErrTest_time = round(CANErrEnd_time - CANErrStart_time,2)
         time.sleep(0.5)
-        self.messageBox_signal.emit(['检测RUN &ERROR', 'CAN_ERROR指示灯是否点亮？'])
+        self.messageBox_signal.emit(['检测CAN_RUN &CAN_ERROR', 'CAN_ERROR指示灯是否点亮（红灯）？'])
         reply = self.result_queue.get()
         # reply = QMessageBox.question(None, '检测CAN_RUN &CAN_ERROR', '指示灯是否点亮？',
         #                              QMessageBox.AcceptRole | QMessageBox.RejectRole,

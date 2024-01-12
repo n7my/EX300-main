@@ -21,6 +21,7 @@ class DIDOThread(QObject):
     label_signal = pyqtSignal(list)
     saveExcel_signal = pyqtSignal(list)
     print_signal = pyqtSignal(list)
+    pic_messageBox_signal = pyqtSignal(list)
 
     HORIZONTAL_LINE = "\n------------------------------------------------------------------------------------------------------------\n\n"
     m_arrayTestData = [[0x01, 0x00, 0x00, 0x00], [0x02, 0x00, 0x00, 0x00], [0x04, 0x00, 0x00, 0x00],
@@ -34,9 +35,10 @@ class DIDOThread(QObject):
                        [0x00, 0x00, 0x40, 0x00], [0x00, 0x00, 0x80, 0x00], [0x00, 0x00, 0x00, 0x01],
                        [0x00, 0x00, 0x00, 0x02], [0x00, 0x00, 0x00, 0x04], [0x00, 0x00, 0x00, 0x08],
                        [0x00, 0x00, 0x00, 0x10], [0x00, 0x00, 0x00, 0x20], [0x00, 0x00, 0x00, 0x40],
-                       [0x00, 0x00, 0x00, 0x80], [0xff, 0xff, 0xff, 0xff], [0x00, 0x00, 0x00, 0x00],
-                       [0xaa, 0xaa, 0xaa, 0xaa],[0x55, 0x55, 0x55, 0x55]
+                       [0x00, 0x00, 0x00, 0x80], [0xff, 0xff, 0xff, 0xff], [0x00, 0x00, 0x00, 0x00]
                        ]
+    # ,
+    # [0xaa, 0xaa, 0xaa, 0xaa], [0x55, 0x55, 0x55, 0x55]
 
     # 接收的数据
     ubyte_array_receive = c_ubyte * 8
@@ -174,6 +176,9 @@ class DIDOThread(QObject):
         self.isDOPassTest = True
         self.isPassOdd = True
         self.isPassEven = True
+        self.led_channel = {0: '00', 1: '01', 2: '02', 3: '03', 4: '04', 5: '05', 6: '06', 7: '07',
+                       8: '10', 9: '11', 10: '12', 11: '13', 12: '14', 13: '15', 14: '16', 15: '17'}
+        self.current_dir = os.getcwd().replace('\\','/')+"/_internal"
     def DIDOOption(self):
         isExcel = True
         if self.testFlage == 'DI':
@@ -253,7 +258,7 @@ class DIDOThread(QObject):
                 #print("-----------进入 LED TEST 模式成功-----------" + self.HORIZONTAL_LINE)
 
                 if self.isTestRunErr:
-                    if not self.testRunErr(int(self.CANAddr_DI)):
+                    if not self.testRunErr(int(self.CANAddr_DI),'DI'):
                         self.pass_signal.emit(False)
                 if self.isTestCANRunErr:
                     if not self.testCANRunErr(int(self.CANAddr_DI)):
@@ -301,38 +306,69 @@ class DIDOThread(QObject):
             if not self.is_running:
                 return False
             # 通道全亮
-            if not self.testByIndex(32,'DI'):
+            if self.testByIndex(32,'DI'):
+                image_ET1600_LED = self.current_dir + '/ET1600_FF.png'
+                self.pic_messageBox_signal.emit(['ET1600通道检测', 'ET1600通道指示灯是否如图所示全亮？', image_ET1600_LED])
+                reply = self.result_queue.get()
+                if reply == QMessageBox.AcceptRole:
+                    self.isDIPassTest &= True
+                else:
+                    self.isDIPassTest &= False
+                time.sleep(self.interval / 1000)
+            else:
                 return False
-            time.sleep(self.interval / 1000)
-            self.pauseOption()
-            if not self.is_running:
-                return False
+            # self.pauseOption()
+            # if not self.is_running:
+            #     return False
             # 偶数通道全亮
-            if not self.testByIndex(34,'DI'):
-                return False
-            time.sleep(self.interval / 1000)
-            self.pauseOption()
-            if not self.is_running:
-                return False
+            # if not self.testByIndex(34,'DI'):
+            #     return False
+            # time.sleep(self.interval / 1000)
+            # self.pauseOption()
+            # if not self.is_running:
+            #     return False
             # 奇数通道全亮
-            if not self.testByIndex(35,'DI'):
-                return False
-            time.sleep(self.interval / 1000)
+            # if not self.testByIndex(35,'DI'):
+            #     return False
+            # time.sleep(self.interval / 1000)
+
             for j in range(self.m_Channels):
                 self.pauseOption()
                 if not self.is_running:
                     return False
-                self.testByIndex(j,'DI')
-                self.DI_channelData |= self.m_receiveData[0]
-                self.DI_channelData |= self.m_receiveData[1] << 8
-                self.DI_channelData |= self.m_receiveData[2] << 16
-                self.DI_channelData |= self.m_receiveData[3] << 24
-                time.sleep(self.interval / 1000)
+                if self.testByIndex(j,'DI'):
+                    self.DI_channelData |= self.m_receiveData[0]
+                    self.DI_channelData |= self.m_receiveData[1] << 8
+                    self.DI_channelData |= self.m_receiveData[2] << 16
+                    self.DI_channelData |= self.m_receiveData[3] << 24
+                    image_ET1600_LED = self.current_dir + f'/ET1600_{j}.png'
+                    self.pic_messageBox_signal.emit(
+                        ['ET1600通道检测', f'ET1600通道{self.led_channel[j]}的指示灯是否如图所示点亮？', image_ET1600_LED])
+                    reply = self.result_queue.get()
+                    if reply == QMessageBox.AcceptRole:
+                        self.isDIPassTest &= True
+                        self.DIDataCheck[j] &= True
+                    else:
+                        self.isDIPassTest &= False
+                        self.DIDataCheck[j] &= False
+                    time.sleep(self.interval / 1000)
+                else:
+                    self.isDIPassTest &= False
             self.pauseOption()
             if not self.is_running:
                 return False
             #通道全灭
-            if not self.testByIndex(33,'DI'):
+            if self.testByIndex(33,'DI'):
+                image_ET1600_LED = self.current_dir + '/ET1600_RUN.png'
+                self.pic_messageBox_signal.emit(
+                    ['ET1600通道检测', 'ET1600通道指示灯是否如图所示全灭？', image_ET1600_LED])
+                reply = self.result_queue.get()
+                if reply == QMessageBox.AcceptRole:
+                    self.isDIPassTest &= True
+                else:
+                    self.isDIPassTest &= False
+                time.sleep(self.interval / 1000)
+            else:
                 return False
         DI_endTime = time.time()
         DI_testTime = round((DI_endTime - DI_startTime),3)
@@ -340,21 +376,21 @@ class DIDOThread(QObject):
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.messageBox_signal.emit(['DI通道指示灯结果', f'DI通道指示灯未全部正常显示！'])
+            self.messageBox_signal.emit(['DI通道指示灯结果', 'DI通道测试未通过！'])
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.result_signal.emit(self.HORIZONTAL_LINE + 'DI通道指示灯测试未通过\n' + self.HORIZONTAL_LINE)
+            self.result_signal.emit(self.HORIZONTAL_LINE + 'DI通道测试未通过！\n' + self.HORIZONTAL_LINE)
             self.item_signal.emit([5,2,2,f'{DI_testTime}'])
         elif self.isDIPassTest == True:
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.messageBox_signal.emit(['DI通道指示灯结果', f'DI通道指示灯全部正常显示！'])
+            self.messageBox_signal.emit(['DI通道指示灯结果', 'DI通道测试全部通过！'])
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.result_signal.emit(self.HORIZONTAL_LINE + 'DI通道指示灯测试全通过\n' + self.HORIZONTAL_LINE)
+            self.result_signal.emit(self.HORIZONTAL_LINE + 'DI通道测试全部通过！\n' + self.HORIZONTAL_LINE)
             self.item_signal.emit([5, 2, 1, f'{DI_testTime}'])
         
         return True
@@ -386,7 +422,7 @@ class DIDOThread(QObject):
                 #print("-----------进入 LED TEST 模式成功-----------" + self.HORIZONTAL_LINE)
 
                 if self.isTestRunErr:
-                    if not self.testRunErr(int(self.CANAddr_DO)):
+                    if not self.testRunErr(int(self.CANAddr_DO),'DO'):
                         self.pass_signal.emit(False)
                 if self.isTestCANRunErr:
                     if not self.testCANRunErr(int(self.CANAddr_DO)):
@@ -426,44 +462,79 @@ class DIDOThread(QObject):
             self.pauseOption()
             if not self.is_running:
                 return False
+            self.result_signal.emit(f"第{i + 1}次循环" + self.HORIZONTAL_LINE)
             CAN_option.Can_DLL.VCI_ClearBuffer(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_option.CAN_INDEX)
             time.sleep(self.interval / 1000)
             self.pauseOption()
             if not self.is_running:
                 return False
             # 通道全亮
-            if not self.testByIndex(32,'DO'):
+            if self.testByIndex(32,'DO'):
+                image_DO_LED = self.current_dir + '/DO_FF.png'
+                self.pic_messageBox_signal.emit(
+                    [f'{self.module_type}通道检测', f'{self.module_type}通道指示灯是否如图所示全亮？', image_DO_LED])
+                reply = self.result_queue.get()
+                if reply == QMessageBox.AcceptRole:
+                    self.isDOPassTest &= True
+                else:
+                    self.isDOPassTest &= False
+                time.sleep(self.interval / 1000)
+            else:
                 return False
-            time.sleep(self.interval / 1000)
-            self.pauseOption()
-            if not self.is_running:
-                return False
-            # 偶数通道全亮
-            if not self.testByIndex(34,'DO'):
-                return False
-            time.sleep(self.interval / 1000)
-            self.pauseOption()
-            if not self.is_running:
-                return False
-            # 奇数通道全亮
-            if not self.testByIndex(35,'DO'):
-                return False
-            time.sleep(self.interval / 1000)
+            # self.pauseOption()
+            # if not self.is_running:
+            #     return False
+            # # 偶数通道全亮
+            # if not self.testByIndex(34,'DO'):
+            #     return False
+            # time.sleep(self.interval / 1000)
+            # self.pauseOption()
+            # if not self.is_running:
+            #     return False
+            # # 奇数通道全亮
+            # if not self.testByIndex(35,'DO'):
+            #     return False
+            # time.sleep(self.interval / 1000)
             for j in range(self.m_Channels):
                 self.pauseOption()
                 if not self.is_running:
                     return False
-                if not self.testByIndex(j,'DO'):
-                    return False
-                self.DO_channelData |= self.m_receiveData[0]
-                self.DO_channelData |= self.m_receiveData[1] << 8
-                self.DO_channelData |= self.m_receiveData[2] << 16
-                self.DO_channelData |= self.m_receiveData[3] << 24
-                time.sleep(self.interval / 1000)
+                if self.testByIndex(j,'DO'):
+
+                    self.DO_channelData |= self.m_receiveData[0]
+                    self.DO_channelData |= self.m_receiveData[1] << 8
+                    self.DO_channelData |= self.m_receiveData[2] << 16
+                    self.DO_channelData |= self.m_receiveData[3] << 24
+                    image_DO_LED = self.current_dir + f'/DO_{j}.png'
+                    self.pic_messageBox_signal.emit(
+                        [f'{self.module_type}通道检测',
+                         f'{self.module_type}通道{self.led_channel[j]}的指示灯是否如图所示点亮？', image_DO_LED])
+                    reply = self.result_queue.get()
+                    if reply == QMessageBox.AcceptRole:
+                        self.isDOPassTest &= True
+                        self.DODataCheck[j] &= True
+                    else:
+                        self.isDOPassTest &= False
+                        self.DODataCheck[j] &= False
+                    time.sleep(self.interval / 1000)
+                else:
+                    self.isDOPassTest &= False
+                    # return False
             self.pauseOption()
             if not self.is_running:
                 return False
-            if not self.testByIndex(33,'DO'):
+            # 通道全灭
+            if self.testByIndex(33,'DO'):
+                image_DO_LED = self.current_dir + '/DO_RUN.png'
+                self.pic_messageBox_signal.emit(
+                    [f'{self.module_type}通道检测',
+                     f'{self.module_type}通道指示灯是否如图所示全灭？', image_DO_LED])
+                reply = self.result_queue.get()
+                if reply == QMessageBox.AcceptRole:
+                    self.isDOPassTest &= True
+                else:
+                    self.isDOPassTest &= False
+            else:
                 return False
         DO_endTime = time.time()
         DO_testTime = round((DO_endTime - DO_startTime), 3)
@@ -471,21 +542,21 @@ class DIDOThread(QObject):
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.messageBox_signal.emit(['DO通道指示灯结果', f'DO通道指示灯未全部正常显示！'])
+            self.messageBox_signal.emit(['DO通道指示灯结果', f'DO通道测试未通过！'])
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.result_signal.emit(self.HORIZONTAL_LINE + 'DO通道指示灯测试未通过\n' + self.HORIZONTAL_LINE)
+            self.result_signal.emit(self.HORIZONTAL_LINE + 'DO通道测试未通过！\n' + self.HORIZONTAL_LINE)
             self.item_signal.emit([5, 2, 2, f'{DO_testTime}'])
         elif self.isDOPassTest == True:
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.messageBox_signal.emit(['DO通道指示灯结果', f'DO通道指示灯全部正常显示！'])
+            self.messageBox_signal.emit(['DO通道指示灯结果', f'DO通道测试全部通过！'])
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.result_signal.emit(self.HORIZONTAL_LINE + 'DO通道指示灯测试全通过\n' + self.HORIZONTAL_LINE)
+            self.result_signal.emit(self.HORIZONTAL_LINE + 'DO通道测试全部通过！\n' + self.HORIZONTAL_LINE)
             self.item_signal.emit([5, 2, 1, f'{DO_testTime}'])
 
         return True
@@ -641,7 +712,7 @@ class DIDOThread(QObject):
             self.m_transmitData[3] = self.m_arrayTestData[index][3]
         CAN_option.transmitCAN(0x200 + self.CANAddr_DO, self.m_transmitData,1)
 
-    def testRunErr(self, addr):
+    def testRunErr(self, addr,type):
         self.testNum -= 1
 
         self.isLEDRunOK = True
@@ -675,7 +746,12 @@ class DIDOThread(QObject):
         # reply = QMessageBox.question(None, '检测RUN &ERROR', 'RUN指示灯是否点亮？',
         #                              QMessageBox.AcceptRole | QMessageBox.RejectRole,
         #                              QMessageBox.AcceptRole)
-        self.messageBox_signal.emit(['检测RUN &ERROR', 'RUN指示灯是否点亮？'])
+        if type =='DI':
+            image_RUN = self.current_dir+'/ET1600_RUN.png'
+        elif type =='DO':
+            image_RUN = self.current_dir + '/DO_RUN.png'
+        self.pic_messageBox_signal.emit(['检测RUN &ERROR', 'RUN指示灯是否如图所示点亮？', image_RUN])
+        # self.messageBox_signal.emit(['检测RUN &ERROR', 'RUN指示灯是否点亮？'])
         reply = self.result_queue.get()
         if reply == QMessageBox.AcceptRole:
             self.runLED = True
@@ -761,7 +837,13 @@ class DIDOThread(QObject):
         errorEnd_time = time.time()
         errorTest_time = round(errorEnd_time - errorStart_time, 2)
         time.sleep(0.5)
-        self.messageBox_signal.emit(['检测RUN &ERROR', 'ERROR指示灯是否点亮？'])
+        if type =='DI':
+            image_ERROR = self.current_dir+'/ET1600_ERROR.png'
+        elif type =='DO':
+            image_ERROR = self.current_dir + '/DO_ERROR.png'
+        image_ET1600_ERROR = self.current_dir + '/ET1600_ERROR.png'
+        self.pic_messageBox_signal.emit(['检测RUN &ERROR', 'ERROR指示灯是否如图所示点亮？', image_ERROR])
+        # self.messageBox_signal.emit(['检测RUN &ERROR', 'ERROR指示灯是否点亮？'])
         reply = self.result_queue.get()
         # reply = QMessageBox.question(None, '检测RUN &ERROR', 'ERROR指示灯是否点亮？',
         #                              QMessageBox.AcceptRole | QMessageBox.RejectRole,
@@ -876,7 +958,7 @@ class DIDOThread(QObject):
             CANRunEnd_time = time.time()
             CANRunTest_time = round(CANRunEnd_time - CANRunStart_time, 2)
             time.sleep(0.5)
-            self.messageBox_signal.emit(['检测RUN &ERROR', 'CAN_RUN指示灯是否点亮？'])
+            self.messageBox_signal.emit(['检测RUN &ERROR', 'CAN_RUN指示灯是否点亮（绿色）？'])
             reply = self.result_queue.get()
             # reply = QMessageBox.question(None, '检测CAN_RUN &CAN_ERROR', '指示灯是否点亮？',
             #                              QMessageBox.AcceptRole | QMessageBox.RejectRole,
@@ -937,7 +1019,7 @@ class DIDOThread(QObject):
             CANErrEnd_time = time.time()
             CANErrTest_time = round(CANErrEnd_time - CANErrStart_time, 2)
             time.sleep(0.5)
-            self.messageBox_signal.emit(['检测RUN &ERROR', 'CAN_ERROR指示灯是否点亮？'])
+            self.messageBox_signal.emit(['检测RUN &ERROR', 'CAN_ERROR指示灯是否点亮(红色)？'])
             reply = self.result_queue.get()
             # reply = QMessageBox.question(None, '检测CAN_RUN &CAN_ERROR', '指示灯是否点亮？',
             #                              QMessageBox.AcceptRole | QMessageBox.RejectRole,
