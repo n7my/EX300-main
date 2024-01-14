@@ -283,6 +283,13 @@ class AIThread(QObject):
                         self.isExcel = False
                         break
                     self.result_signal.emit(f'总线初始化成功！' + self.HORIZONTAL_LINE)
+                    # 点亮右扩IO设备的RUN灯
+                    self.clearList(self.m_transmitData)
+                    self.m_transmitData[0] = 0x52
+                    self.m_transmitData[2] = 0x01
+                    for led_run in range(2, 4):
+                        self.m_transmitData[1] = led_run
+                        bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x000, self.m_transmitData, 1)
                     break
                 else:
                     self.pauseOption()

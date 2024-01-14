@@ -2403,7 +2403,7 @@ class CPUThread(QObject):
             else:
                 continue
         if not isThisPass:
-            self.messageBox_signal.emit(['测试警告', 'MFK测试不通过，是否取消后续测试？'])
+            self.messageBox_signal.emit(['测试警告', 'MFK测试未通过，是否取消后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.AcceptRole:
                 self.cancelAllTest()

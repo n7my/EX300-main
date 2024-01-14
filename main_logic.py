@@ -219,8 +219,8 @@ class Ui_Control(QMainWindow,Ui_Form):
         super(Ui_Control,self).__init__(parent)
         self.setupUi(self)
         self.pushButton_13.setVisible(False)
-        self.label_11.setPixmap(QtGui.QPixmap(f"{current_dir}/beast5.png"))
-        self.label_11.setVisible(False)
+        # self.label_11.setPixmap(QtGui.QPixmap(f"{current_dir}/beast5.png"))
+        # self.label_11.setVisible(False)
         # CPU页面参数配置
         self.CPU_lineEdit_array = [self.lineEdit_33, self.lineEdit_34, self.lineEdit_35, self.lineEdit_36,
                                    self.lineEdit_37, self.lineEdit_38]
