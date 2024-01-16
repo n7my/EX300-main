@@ -1,8 +1,8 @@
 import os
 import sys
 import threading
-import win32api
-import win32print
+# import win32api
+# import win32print
 import CAN_option
 # from main_ui import Ui_Form
 from ctypes import *
