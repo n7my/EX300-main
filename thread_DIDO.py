@@ -383,10 +383,10 @@ class DIDOThread(QObject):
             self.result_signal.emit(self.HORIZONTAL_LINE + 'DI通道测试未通过！\n' + self.HORIZONTAL_LINE)
             self.item_signal.emit([5,2,2,f'{DI_testTime}'])
         elif self.isDIPassTest == True:
-            self.pauseOption()
-            if not self.is_running:
-                return False
-            self.messageBox_signal.emit(['DI通道指示灯结果', 'DI通道测试全部通过！'])
+            # self.pauseOption()
+            # if not self.is_running:
+            #     return False
+            # self.messageBox_signal.emit(['DI通道指示灯结果', 'DI通道测试全部通过！'])
             self.pauseOption()
             if not self.is_running:
                 return False
@@ -549,10 +549,10 @@ class DIDOThread(QObject):
             self.result_signal.emit(self.HORIZONTAL_LINE + 'DO通道测试未通过！\n' + self.HORIZONTAL_LINE)
             self.item_signal.emit([5, 2, 2, f'{DO_testTime}'])
         elif self.isDOPassTest == True:
-            self.pauseOption()
-            if not self.is_running:
-                return False
-            self.messageBox_signal.emit(['DO通道指示灯结果', f'DO通道测试全部通过！'])
+            # self.pauseOption()
+            # if not self.is_running:
+            #     return False
+            # self.messageBox_signal.emit(['DO通道指示灯结果', f'DO通道测试全部通过！'])
             self.pauseOption()
             if not self.is_running:
                 return False
