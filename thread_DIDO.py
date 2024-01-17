@@ -314,7 +314,7 @@ class DIDOThread(QObject):
                     self.isDIPassTest &= True
                 else:
                     self.isDIPassTest &= False
-                time.sleep(self.interval / 1000)
+                time.sleep(0.2)
             else:
                 return False
             # self.pauseOption()
@@ -323,14 +323,14 @@ class DIDOThread(QObject):
             # 偶数通道全亮
             # if not self.testByIndex(34,'DI'):
             #     return False
-            # time.sleep(self.interval / 1000)
+            # time.sleep(0.2)
             # self.pauseOption()
             # if not self.is_running:
             #     return False
             # 奇数通道全亮
             # if not self.testByIndex(35,'DI'):
             #     return False
-            # time.sleep(self.interval / 1000)
+            # time.sleep(0.2)
 
             for j in range(self.m_Channels):
                 self.pauseOption()
@@ -351,7 +351,7 @@ class DIDOThread(QObject):
                     else:
                         self.isDIPassTest &= False
                         self.DIDataCheck[j] &= False
-                    time.sleep(self.interval / 1000)
+                    time.sleep(0.2)
                 else:
                     self.isDIPassTest &= False
             self.pauseOption()
@@ -367,7 +367,7 @@ class DIDOThread(QObject):
                     self.isDIPassTest &= True
                 else:
                     self.isDIPassTest &= False
-                time.sleep(self.interval / 1000)
+                time.sleep(0.2)
             else:
                 return False
         DI_endTime = time.time()
@@ -464,7 +464,7 @@ class DIDOThread(QObject):
                 return False
             self.result_signal.emit(f"第{i + 1}次循环" + self.HORIZONTAL_LINE)
             CAN_option.Can_DLL.VCI_ClearBuffer(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_option.CAN_INDEX)
-            time.sleep(self.interval / 1000)
+            time.sleep(0.2)
             self.pauseOption()
             if not self.is_running:
                 return False
@@ -478,7 +478,7 @@ class DIDOThread(QObject):
                     self.isDOPassTest &= True
                 else:
                     self.isDOPassTest &= False
-                time.sleep(self.interval / 1000)
+                time.sleep(0.2)
             else:
                 return False
             # self.pauseOption()
@@ -487,14 +487,14 @@ class DIDOThread(QObject):
             # # 偶数通道全亮
             # if not self.testByIndex(34,'DO'):
             #     return False
-            # time.sleep(self.interval / 1000)
+            # time.sleep(0.2)
             # self.pauseOption()
             # if not self.is_running:
             #     return False
             # # 奇数通道全亮
             # if not self.testByIndex(35,'DO'):
             #     return False
-            # time.sleep(self.interval / 1000)
+            # time.sleep(0.2)
             for j in range(self.m_Channels):
                 self.pauseOption()
                 if not self.is_running:
@@ -516,7 +516,7 @@ class DIDOThread(QObject):
                     else:
                         self.isDOPassTest &= False
                         self.DODataCheck[j] &= False
-                    time.sleep(self.interval / 1000)
+                    time.sleep(0.2)
                 else:
                     self.isDOPassTest &= False
                     # return False
