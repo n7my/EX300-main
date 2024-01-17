@@ -2881,14 +2881,14 @@ class CPUThread(QObject):
                             (hex(self.m_receiveData[0]) == '0x0' and hex(self.m_receiveData[1]) == '0x0'):
                         if hex(self.m_receiveData[0]) == '0xaa':
                             image_aa = self.current_dir + '/AE_aa.png'
-                            self.pic_messageBox_signal.emit(['操作提示','ET1600的通道指示灯是否如图所示点亮？',image_aa])
+                            self.pic_messageBox_signal.emit(['操作提示','模块ET1600的通道指示灯是否如图所示点亮？',image_aa])
                         if hex(self.m_receiveData[0]) == '0x55':
                             image_55 = self.current_dir + '/AE_55.png'
-                            self.pic_messageBox_signal.emit(['操作提示','ET1600的通道指示灯是否如图所示点亮？',image_55])
+                            self.pic_messageBox_signal.emit(['操作提示','模块ET1600的通道指示灯是否如图所示点亮？',image_55])
                         elif hex(self.m_receiveData[0]) == '0x0':
                             image_00 = self.current_dir + '/AE_00.png'
                             self.pic_messageBox_signal.emit(
-                                ['操作提示', 'ET1600的通道指示灯是否如图所示全部熄灭？', image_00])
+                                ['操作提示', '模块ET1600的通道指示灯是否如图所示全部熄灭？', image_00])
                         reply = self.result_queue.get()
                         if reply == QMessageBox.AcceptRole:
                             self.isPassOut &= True
@@ -2942,7 +2942,7 @@ class CPUThread(QObject):
 
             for i in range(100):
                 # 发送数据
-                message = f'不要返航,这里不是家。前进，前进，不择手段地前进!'
+                message = f'------TCP收发测试------TCP收发测试------TCP收发测试------'
                 client_socket.send(message.encode())
                 if i== 99:
                     self.result_signal.emit(f'TCP发送的数据：{message}')
@@ -2962,7 +2962,7 @@ class CPUThread(QObject):
             for i in range(100):
                 # 发送数据
                 server_address = ('192.168.1.66', 1025)
-                message = f'不要返航,这里不是家。前进，前进，不择手段地前进!'
+                message = f'------UDP收发测试------UDP收发测试------UDP收发测试------'
                 client_socket.sendto(message.encode(), server_address)
                 if i == 99:
                     self.result_signal.emit(f'UDP发送的数据：{message}')
