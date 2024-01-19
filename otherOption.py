@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import CAN_option
-import win32print
+# import win32print
 from ctypes import Array, c_ubyte
 import time
 import xlwt

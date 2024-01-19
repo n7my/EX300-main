@@ -488,14 +488,14 @@ class AIThread(QObject):
 
             bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay, self.m_transmitData,1)
             if not bool_transmit:
-                self.result_signal.emit('继电器1切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
-                # print('继电器1切换错误，请停止检查设备！')
+                self.result_signal.emit('QR0016#1切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
+                # print('QR0016#1切换错误，请停止检查设备！')
                 return False
 
             bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay + 1, self.m_transmitData,1)
             if not bool_transmit:
-                self.result_signal.emit('继电器2切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
-                # print('继电器2切换错误，请停止检查设备！')
+                self.result_signal.emit('QR0016#2切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
+                # print('QR0016#2切换错误，请停止检查设备！')
                 return False
             time.sleep(0.3)
             #3-1.测试程序
@@ -508,8 +508,8 @@ class AIThread(QObject):
                 self.pauseOption()
                 if not self.is_running:
                     return False
-                self.result_signal.emit('继电器1切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
-                # print('继电器1切换错误，请停止检查设备！')
+                self.result_signal.emit('QR0016#1切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
+                # print('QR0016#1切换错误，请停止检查设备！')
                 return False
 
             bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay + 1,
@@ -518,8 +518,8 @@ class AIThread(QObject):
                 self.pauseOption()
                 if not self.is_running:
                     return False
-                self.result_signal.emit('继电器2切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
-                # print('继电器2切换错误，请停止检查设备！')
+                self.result_signal.emit('QR0016#2切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
+                # print('QR0016#2切换错误，请停止检查设备！')
                 return False
             time.sleep(0.3)
 
@@ -541,8 +541,8 @@ class AIThread(QObject):
                 self.pauseOption()
                 if not self.is_running:
                     return False
-                self.result_signal.emit('继电器1切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
-                # print('继电器1切换错误，请停止检查设备！')
+                self.result_signal.emit('QR0016#1切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
+                # print('QR0016#1切换错误，请停止检查设备！')
                 return False
 
             bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay + 1,
@@ -551,8 +551,8 @@ class AIThread(QObject):
                 self.pauseOption()
                 if not self.is_running:
                     return False
-                self.result_signal.emit('继电器2切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
-                # print('继电器2切换错误，请停止检查设备！')
+                self.result_signal.emit('QR0016#2切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
+                # print('QR0016#2切换错误，请停止检查设备！')
                 return False
             time.sleep(0.3)
 
@@ -565,8 +565,8 @@ class AIThread(QObject):
                 self.pauseOption()
                 if not self.is_running:
                     return False
-                self.result_signal.emit('继电器切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
-                # print('继电器切换错误，请停止检查设备！')
+                self.result_signal.emit('QR0016#1切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
+                # print('QR0016#切换错误，请停止检查设备！')
                 return False
 
             bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay + 1,
@@ -575,8 +575,8 @@ class AIThread(QObject):
                 self.pauseOption()
                 if not self.is_running:
                     return False
-                self.result_signal.emit('继电器2切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
-                # print('继电器2切换错误，请停止检查设备！')
+                self.result_signal.emit('QR0016#2切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
+                # print('QR0016#2切换错误，请停止检查设备！')
                 return False
             time.sleep(0.3)
 
@@ -948,7 +948,7 @@ class AIThread(QObject):
                 if not bool_transmit:
                     return False
             except:
-                self.messageBox_signal.emit(['错误提示', '继电器1切换错误，请停止检查设备！'])
+                self.messageBox_signal.emit(['错误提示', 'QR0016#1切换错误，请停止检查设备！'])
                 # QMessageBox(QMessageBox.Critical, '错误提示', '继电器切换错误，请停止检查设备！').exec_()
                 return False
 
@@ -958,7 +958,7 @@ class AIThread(QObject):
                 if not bool_transmit:
                     return False
             except:
-                self.messageBox_signal.emit(['错误提示', '继电器2切换错误，请停止检查设备！'])
+                self.messageBox_signal.emit(['错误提示', 'QR0016#2切换错误，请停止检查设备！'])
                 # QMessageBox(QMessageBox.Critical, '错误提示', '继电器切换错误，请停止检查设备！').exec_()
                 return False
             time.sleep(0.3)
@@ -1000,7 +1000,7 @@ class AIThread(QObject):
                 self.pauseOption()
                 if not self.is_running:
                     return False
-                self.result_signal.emit('继电器1切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
+                self.result_signal.emit('QR0016#1切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
                 # print('继电器1切换错误，请停止检查设备！')
                 # self.work_thread.stopFlag.isSet()
                 # self.isStop()
@@ -1011,7 +1011,7 @@ class AIThread(QObject):
                 self.pauseOption()
                 if not self.is_running:
                     return False
-                self.result_signal.emit('继电器2切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
+                self.result_signal.emit('QR0016#2切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
                 # print('继电器2切换错误，请停止检查设备！')
                 # self.work_thread.stopFlag.isSet()
                 # self.isStop()
@@ -1045,8 +1045,8 @@ class AIThread(QObject):
                 self.pauseOption()
                 if not self.is_running:
                     return False
-                self.messageBox_signal.emit(['错误提示', '继电器1切换错误，请停止检查设备！'])
-                # self.result_signal.emit('继电器1切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
+                self.messageBox_signal.emit(['错误提示', 'QR0016#1切换错误，请停止检查设备！'])
+                # self.result_signal.emit('QR0016#1切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
                 return False
             try:
                 bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay + 1,
@@ -1059,8 +1059,8 @@ class AIThread(QObject):
                 self.pauseOption()
                 if not self.is_running:
                     return False
-                # self.messageBox_signal.emit(['错误提示', '继电器2切换错误，请停止检查设备！'])
-                self.result_signal.emit('继电器2切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
+                # self.messageBox_signal.emit(['错误提示', 'QR0016#2切换错误，请停止检查设备！'])
+                self.result_signal.emit('QR0016#2切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
                 return False
             time.sleep(0.3)
 
@@ -1098,8 +1098,8 @@ class AIThread(QObject):
                 self.pauseOption()
                 if not self.is_running:
                     return False
-                self.result_signal.emit('继电器1切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
-                # print('继电器1切换错误，请停止检查设备！')
+                self.result_signal.emit('QR0016#1切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
+                # print('QR0016#1切换错误，请停止检查设备！')
                 return False
 
             bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay+1, self.m_transmitData,1)
@@ -1107,8 +1107,8 @@ class AIThread(QObject):
                 self.pauseOption()
                 if not self.is_running:
                     return False
-                self.result_signal.emit('继电器2切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
-                # print('继电器2切换错误，请停止检查设备！')
+                self.result_signal.emit('QR0016#2切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
+                # print('QR0016#2切换错误，请停止检查设备！')
                 return False
             time.sleep(0.3)
 
