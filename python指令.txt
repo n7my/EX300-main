@@ -22,3 +22,29 @@ conda activate EX300_env_py38
 D:
 
 
+
+
+如何创建python虚拟环境
+要在Python中创建虚拟环境，可以按照以下步骤进行操作：
+
+首先确保已经安装了Python的包管理工具pip。如果没有安装，可以通过官网（https://www.python.org/downloads/）下载并安装最新版本的Python。
+
+打开命令提示符或者终端，输入以下命令来安装virtualenv库：pip install virtualenv。这将会使用pip自动从PyPI上下载并安装virtualenv库。
+
+接下来，选择一个合适的目录来存放虚拟环境文件夹。比如我们选择在当前目录下创建名为"my_venv"的虚拟环境。
+
+运行以下命令来创建虚拟环境：virtualenv my_venv。这将会在指定的目录下创建一个名为"my_venv"的文件夹，其中包含了所需的Python解释器、标准库等。
+
+完成后，可以切换到虚拟环境。对于Windows系统，运行以下命令：.\my_venv\Scripts\activate；对于MacOS或Linux系统，运行以下命令：source ./my_venv/bin/activate。此时命令提示符或终端的前面应该显示(my_venv)字样，表明已经成功激活虚拟环境。
+
+现在就可以在虚拟环境中安装任意第三方库或项目依赖了。只需使用常规的pip命令即可，例如 pip install package-name。
+
+若想退出虚拟环境，可以运行以下命令：deactivate。
+
+删除虚拟环境也非常简单，只需删除相关的文件夹即可。注意不要直接删除全局Python环境中的文件夹，否则可能导致系统错误。
+
+希望以上信息对您有所帮助！
+
+python虚拟环境激活报错的解决方法：https://blog.csdn.net/Protinx/article/details/121048100
+
+
