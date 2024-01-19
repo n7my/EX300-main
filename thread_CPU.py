@@ -1413,6 +1413,7 @@ class CPUThread(QObject):
                                                             # 修改AQ量程为0-20mA
                                                             AQ_transmit = [0x2b, 0x10, 0x63, 1,
                                                                            0xeb, 0x03, 0x00, 0x00]
+
                                                             bool_range1 = CAN_option.transmitCAN((0x600 + self.CANAddr5),
                                                                                                 AQ_transmit, 1)[0]
                                                             AQ_transmit = [0x2b, 0x10, 0x63, 2,
@@ -1442,8 +1443,10 @@ class CPUThread(QObject):
                                                                          (currentTheory_0020[va] & 0xff),
                                                                          ((currentTheory_0020[va] >> 8)& 0xff),
                                                                          0x00,0x00]
-                                                            CAN_option.transmitCAN((0x600 + self.CANAddr5),
-                                                                                   AQ_transmit,1)
+                                                            for asd in range(10):
+                                                                CAN_option.transmitCAN((0x600 + self.CANAddr5),
+                                                                                       AQ_transmit,1)
+                                                                # time.sleep(0.1)
                                                             #等待一秒，等待输出稳定
                                                             self.result_signal.emit('\n等待输出稳定……\n')
                                                             time.sleep(1)
