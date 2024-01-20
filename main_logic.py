@@ -1,8 +1,8 @@
 import os
 import sys
 import threading
-# import win32api
-# import win32print
+import win32api
+import win32print
 import CAN_option
 # from main_ui import Ui_Form
 from ctypes import *
@@ -2626,33 +2626,34 @@ class Ui_Control(QMainWindow,Ui_Form):
         saveList[0].save(str(self.label_41.text()) + saveList[1])
         # book.save(self.label_41.text() + saveDir)
 
-    # def printResult(self,list):
-        # try:
-        #     self.generateLabel(list)
-        #     content = list[1]
-        #     file_name = f'{self.label_41.text()}{list[0]}_label.docx'
-        #     # if list[1] == 'FAIL':
-        #     #     content += f'\n\n{list[2]}'
-        #     #
-        #     # with open(file_name, "w") as f:
-        #     #     for line in content.splitlines():
-        #     #         f.write(line + "\n")
-        #
-        #     win32api.ShellExecute(
-        #         0,
-        #         "print",
-        #         file_name,
-        #         #
-        #         # If this is None, the default printer will
-        #         # be used anyway.
-        #         #
-        #         '/d:"%s"' % win32print.GetDefaultPrinter(),
-        #         ".",
-        #         0
-        #     )
-        # except Exception as e:
-        #     self.showInf(f"printResultError:{e}+{self.HORIZONTAL_LINE}")
-        #     traceback.print_exc()
+    def printResult(self,list):
+        try:
+            self.generateLabel(list)
+            content = list[1]
+            file_name = f'{self.label_41.text()}{list[0]}_label.docx'
+            # if list[1] == 'FAIL':
+            #     content += f'\n\n{list[2]}'
+            #
+            # with open(file_name, "w") as f:
+            #     for line in content.splitlines():
+            #         f.write(line + "\n")
+
+            win32api.ShellExecute(
+                0,
+                "print",
+                file_name,
+                #
+                # If this is None, the default printer will
+                # be used anyway.
+                #
+                '/d:"%s"' % win32print.GetDefaultPrinter(),
+                ".",
+                0
+            )
+        except Exception as e:
+            self.showInf(f"printResultError:{e}+{self.HORIZONTAL_LINE}")
+            traceback.print_exc()
+
     def generateLabel(self,list):
         from docx import Document
 
