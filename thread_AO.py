@@ -6,7 +6,7 @@ from PyQt5.QtCore import QThread, pyqtSignal
 from main_logic import *
 import threading
 from CAN_option import *
-import win32print
+# import win32print
 import struct
 import otherOption
 

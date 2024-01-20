@@ -306,7 +306,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                         border-top-left-radius: 0px ;
                         border-top-right-radius: 0px;
                         padding: 8px;
-                        width: 120px; 
+                        width: 105px; 
                         height: 17px;
                         
                     }}
@@ -316,7 +316,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                         border-top-left-radius: 0px;
                         border-top-right-radius: 0px;
                         padding: 8px;
-                        width: 120px; 
+                        width: 105px; 
                         height: 13px;
                         margin-top: 5px
                     }}
@@ -337,7 +337,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                         border-top-left-radius: 0px ;
                         border-top-right-radius: 0px;
                         padding: 8px;
-                        width: 120px; 
+                        width: 105px; 
                         height: 17px;
                     }}
                  """)
@@ -1409,15 +1409,31 @@ class Ui_Control(QMainWindow,Ui_Form):
                 if not self.isModulesOnline([self.CAN1, self.CANAddr_relay, self.CANAddr_relay + 1, self.CAN2],
                                      [self.module_1, '继电器QR0016#1', '继电器QR0016#2', self.module_2]):
                     return False
-            elif self.tabIndex == 3:
-                if not self.configCANAddr(int(self.lineEdit_34.text()), int(self.lineEdit_35.text()),
-                                          int(self.lineEdit_36.text()), int(self.lineEdit_37.text()),
-                                          int(self.lineEdit_38.text())):
-                    return False
-                # CPU心跳检测
-                if not self.isModulesOnline([self.CANAddr1,self.CANAddr2,self.CANAddr3,self.CANAddr4,self.CANAddr5],
-                                     ['模块ET1600', '模块QN0016', '模块QN0016', '模块AE0400','模块AQ0004']):
-                    return False
+            elif self.tabIndex == 3 or self.tabIndex == 4:
+                # if self.radioButton_MA0202.isChecked():
+                #     if not self.configCANAddr(int(self.lineEdit_MA0202_AE.text()), int(self.lineEdit_MA0202_AQ.text())):
+                #         return False
+                #     # MA0202心跳检测
+                #     if not self.isModulesOnline([int(self.lineEdit_MA0202_AE.text()),
+                #                                  int(self.lineEdit_MA0202_AQ.text())], ['模块AE0400', '模块AQ0004']):
+                #         return False
+                if self.inf_CPU_test[17]:
+                    if not self.configCANAddr(int(self.lineEdit_37.text()),
+                                              int(self.lineEdit_38.text())):
+                        return False
+                    # MA0202心跳检测
+                    if not self.isModulesOnline([int(self.lineEdit_37.text()),
+                                              int(self.lineEdit_38.text())], ['模块AE0400', '模块AQ0004']):
+                        return False
+                else:
+                    if not self.configCANAddr(int(self.lineEdit_34.text()), int(self.lineEdit_35.text()),
+                                              int(self.lineEdit_36.text()), int(self.lineEdit_37.text()),
+                                              int(self.lineEdit_38.text())):
+                        return False
+                    # CPU心跳检测
+                    if not self.isModulesOnline([self.CANAddr1,self.CANAddr2,self.CANAddr3,self.CANAddr4,self.CANAddr5],
+                                         ['模块ET1600', '模块QN0016', '模块QN0016', '模块AE0400','模块AQ0004']):
+                        return False
 
 
 
