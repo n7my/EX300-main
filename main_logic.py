@@ -1365,7 +1365,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.pushButton_10.setEnabled(False)
             self.pushButton_10.setStyleSheet('color: rgb(255, 255, 255);background-color: rgb(197, 197, 197);')
             try:
-                if not self.sendMessage():
+                if not self.sendMessage():#测试参数确定
                     return False
             except Exception as e:
                 self.showInf(f"sendMessageError:{e}{self.HORIZONTAL_LINE}")
@@ -1375,24 +1375,53 @@ class Ui_Control(QMainWindow,Ui_Form):
 
             QApplication.processEvents()
 
-            #节点分配
+            #检查三码信息
+            if not mainThreadRunning():
+                return False
+            if len(self.module_pn) == 0 or len(self.module_sn) == 0 or len(self.module_rev) == 0:
+                # self.isPause()
+                if not mainThreadRunning():
+                    return False
+                reply = QMessageBox.warning(None, '警告', '产品三码信息不全，请重新扫入！',
+                                            QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+                return False
+
+            #节点分配+心跳检测
             if self.tabIndex == 0:
                 if not self.configCANAddr(int(self.lineEdit_6.text()), int(self.lineEdit_7.text()), '', '', ''):
+                    return False
+                # DI/DO心跳检测
+                if not self.isModulesOnline([self.CAN1, self.CAN2],[self.module_1,self.module_2]):
                     return False
             elif self.tabIndex == 1:
                 if not self.configCANAddr(int(self.lineEdit_18.text()),int(self.lineEdit_23.text()),
                                           int(self.lineEdit_23.text())+1, int(self.lineEdit_19.text()), ''):
                     return False
+                # AI心跳检测
+                if not self.isModulesOnline([self.CAN1,self.CANAddr_relay,self.CANAddr_relay+1, self.CAN2],
+                                     [self.module_1, '继电器QR0016#1', '继电器QR0016#2', self.module_2]):
+                    return False
             elif self.tabIndex == 2:
                 if not self.configCANAddr(int(self.lineEdit_39.text()),int(self.lineEdit_41.text()),
                                           int(self.lineEdit_41.text())+1, int(self.lineEdit_40.text()), ''):
+                    return False
+                # AO心跳检测
+                if not self.isModulesOnline([self.CAN1, self.CANAddr_relay, self.CANAddr_relay + 1, self.CAN2],
+                                     [self.module_1, '继电器QR0016#1', '继电器QR0016#2', self.module_2]):
                     return False
             elif self.tabIndex == 3:
                 if not self.configCANAddr(int(self.lineEdit_34.text()), int(self.lineEdit_35.text()),
                                           int(self.lineEdit_36.text()), int(self.lineEdit_37.text()),
                                           int(self.lineEdit_38.text())):
-
                     return False
+                # CPU心跳检测
+                if not self.isModulesOnline([self.CANAddr1,self.CANAddr2,self.CANAddr3,self.CANAddr4,self.CANAddr5],
+                                     ['模块ET1600', '模块QN0016', '模块QN0016', '模块AE0400','模块AQ0004']):
+                    return False
+
+
+
+
 
             self.result_queue = Queue()
             self.testFlag = ''
@@ -1412,16 +1441,6 @@ class Ui_Control(QMainWindow,Ui_Form):
             #开始时间
             self.allStart_time = time.time()
             if not mainThreadRunning():
-                return False
-
-            if not mainThreadRunning():
-                return False
-            if len(self.module_pn) == 0 or len(self.module_sn) == 0 or len(self.module_rev) == 0:
-                # self.isPause()
-                if not mainThreadRunning():
-                    return False
-                reply = QMessageBox.warning(None, '警告', '产品三码信息不全，请重新扫入！',
-                                            QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
                 return False
 
             self.pushButton_pause.setEnabled(True)
@@ -2095,8 +2114,8 @@ class Ui_Control(QMainWindow,Ui_Form):
 
             if self.comboBox.currentIndex() == 0 or self.comboBox.currentIndex() == 1 \
                     or self.comboBox.currentIndex() == 2:
-                self.module_1 = self.inf['DO1']
-                self.module_2 = self.inf['DI2']
+                self.module_1 = self.inf['模块QP(N)0016']
+                self.module_2 = self.inf['模块ET1600']
                 self.m_Channels = int(self.module_type[2:4])
                 # self.inf_param = [mTable, self.module_1, self.module_2, self.testNum]
                 # 获取CAN地址
@@ -2107,8 +2126,13 @@ class Ui_Control(QMainWindow,Ui_Form):
 
             if self.comboBox.currentIndex() == 3 or self.comboBox.currentIndex() == 4 \
                     or self.comboBox.currentIndex() == 5:
-                self.module_1 = self.inf['DI1']
-                self.module_2 = self.inf['DO2']
+                self.module_1 = self.inf['模块ET1600']
+                if self.comboBox.currentIndex() == 3:
+                    self.module_2 = self.inf['模块QN0008']
+                elif self.comboBox.currentIndex() == 4:
+                    self.module_2 = self.inf['模块QN0016']
+                elif self.comboBox.currentIndex() == 5:
+                    self.module_2 = self.inf['模块QP0016']
                 self.m_Channels = int(self.module_type[4:])
                 # self.inf_param = [mTable, self.module_1, self.module_2, self.testNum]
 
@@ -2518,50 +2542,49 @@ class Ui_Control(QMainWindow,Ui_Form):
         return True
 
 
-    def isModulesOnline(self):
+    def isModulesOnline(self,can_list,module_list):
         # 检测设备心跳
-        if self.check_heartbeat(self.CAN1, self.module_1, self.waiting_time) == False:
-            return False
-        if self.check_heartbeat(self.CAN2, self.module_2, self.waiting_time) == False:
-            return False
-        if self.tabIndex !=0:
-            if self.check_heartbeat(self.CANAddr_relay, '继电器QR0016#1', self.waiting_time) == False:
+        for i in range(len(can_list)):
+            if not self.check_heartbeat(can_list[i], module_list[i], self.waiting_time):
                 return False
-            if self.check_heartbeat(self.CANAddr_relay+1, '继电器QR0016#2', self.waiting_time) == False:
-                return False
-
         return True
+        # if self.check_heartbeat(self.CAN1, self.module_1, self.waiting_time) == False:
+        #     return False
+        # if self.check_heartbeat(self.CAN2, self.module_2, self.waiting_time) == False:
+        #     return False
+        # if self.tabIndex !=0:
+        #     if self.check_heartbeat(self.CANAddr_relay, '继电器QR0016#1', self.waiting_time) == False:
+        #         return False
+        #     if self.check_heartbeat(self.CANAddr_relay+1, '继电器QR0016#2', self.waiting_time) == False:
+        #         return False
+
+
 
     def check_heartbeat(self, can_addr, inf, max_waiting):
-        if inf == '继电器':
-            bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(0x700 + can_addr , max_waiting,0)
-            # print(self.m_can_obj.Data)
-            if bool_receive == False:
-                self.showInf(f'错误：未发现{inf}' + self.HORIZONTAL_LINE)
-                # self.isPause()
-                # if not self.isStop():
-                #     return
-                return False
+        can_id = 0x700 + can_addr
+        bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(can_id, max_waiting, 0)
 
-            self.showInf(f'发现{inf}：收到心跳帧：{hex(self.m_can_obj.ID)}\n\n')
-
-
+        if bool_receive == False:
+            self.showInf(f'错误：未发现{inf}' + self.HORIZONTAL_LINE)
+            return False
         else:
-            can_id = 0x700 + can_addr
-            bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(can_id, max_waiting,0)
-            # print(self.m_can_obj.Data)
-            if bool_receive == False:
-                self.showInf(f'错误：未发现{inf}' + self.HORIZONTAL_LINE)
-                # self.isPause()
-                # if not self.isStop():
-                #     return
-                return False
-
             self.showInf(f'发现{inf}：收到心跳帧：{hex(self.m_can_obj.ID)}\n\n')
-        # self.isPause()
-        #if not self.isStop():
-#            return
+
         return True
+        # if inf == '继电器':
+        #     bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(0x700 + can_addr , max_waiting,0)
+        #     # print(self.m_can_obj.Data)
+        #     if bool_receive == False:
+        #         self.showInf(f'错误：未发现{inf}' + self.HORIZONTAL_LINE)
+        #         # self.isPause()
+        #         # if not self.isStop():
+        #         #     return
+        #         return False
+        #
+        #     self.showInf(f'发现{inf}：收到心跳帧：{hex(self.m_can_obj.ID)}\n\n')
+
+
+
 
     def getSerialInf(self, num:int):
         self.textBrowser_5.clear()
