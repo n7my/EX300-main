@@ -233,82 +233,92 @@ class AOThread(QObject):
     def AOOption(self):
         self.isExcel = True
         #总线初始化
-        try:
-            time_online = time.time()
-            while True:
-                QApplication.processEvents()
-                if (time.time() - time_online)*1000 > 2000:
-                    self.pauseOption()
-                    if not self.is_running:
-                        # 后续测试全部取消
-                        self.isTest = False
-                        self.isCalibrate = False
-                        self.isExcel = False
-                        break
-                    self.result_signal.emit(f'错误：总线初始化超时！' + self.HORIZONTAL_LINE)
-                    QMessageBox.critical(None, '错误', '总线初始化超时！请检查CAN分析仪或各设备是否正确连接',
-                                         QMessageBox.AcceptRole |
-                                         QMessageBox.RejectRole, QMessageBox.AcceptRole)
-                    # 后续测试全部取消
-                    self.isTest = False
-                    self.isCalibrate = False
-                    self.isExcel = False
-                    break
-                CANAddr_array = [self.CANAddr_AI,self.CANAddr_AO,self.CANAddr_relay,self.CANAddr_relay+1]
-                module_array = [self.module_1, self.module_2,'QR0016#1','QR0016#2']
-                bool_online,eID = otherOption.isModulesOnline(CANAddr_array,module_array,self.waiting_time)
-                if bool_online:
-                    self.pauseOption()
-                    if not self.is_running:
-                        # 后续测试全部取消
-                        self.isTest = False
-                        self.isCalibrate = False
-                        self.isExcel = False
-                        break
-                    self.result_signal.emit(f'总线初始化成功！' + self.HORIZONTAL_LINE)
-                    #点亮右扩IO设备的RUN灯
-                    self.clearList(self.m_transmitData)
-                    self.m_transmitData[0] = 0x52
-                    self.m_transmitData[2] = 0x01
-                    for led_run in range(2,4):
-                        self.m_transmitData[1] = led_run
-                        bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x000,self.m_transmitData, 1)
-                        time.sleep(0.1)
-                    break
-                else:
-                    self.pauseOption()
-                    if not self.is_running:
-                        # 后续测试全部取消
-                        self.isTest = False
-                        self.isCalibrate = False
-                        self.isExcel = False
-                        break
-                    if eID != 0:
-                        self.result_signal.emit(f'错误：未发现{module_array[eID-1]}' + self.HORIZONTAL_LINE)
-                    # elif eID ==1:
-                    #     self.result_signal.emit(f'错误：未发现{self.module_2}' + self.HORIZONTAL_LINE)
-                    # elif eID ==3:
-                    #     self.result_signal.emit(f'错误：未发现继电器1' + self.HORIZONTAL_LINE)
-                    # elif eID ==7:
-                    #     self.result_signal.emit(f'错误：未发现继电器2' + self.HORIZONTAL_LINE)
-                    self.result_signal.emit(f'错误：总线初始化失败！再次尝试初始化。' + self.HORIZONTAL_LINE)
+        # try:
+        #     time_online = time.time()
+        #     while True:
+        #         QApplication.processEvents()
+        #         if (time.time() - time_online)*1000 > 2000:
+        #             self.pauseOption()
+        #             if not self.is_running:
+        #                 # 后续测试全部取消
+        #                 self.isTest = False
+        #                 self.isCalibrate = False
+        #                 self.isExcel = False
+        #                 break
+        #             self.result_signal.emit(f'错误：总线初始化超时！' + self.HORIZONTAL_LINE)
+        #             QMessageBox.critical(None, '错误', '总线初始化超时！请检查CAN分析仪或各设备是否正确连接',
+        #                                  QMessageBox.AcceptRole |
+        #                                  QMessageBox.RejectRole, QMessageBox.AcceptRole)
+        #             # 后续测试全部取消
+        #             self.isTest = False
+        #             self.isCalibrate = False
+        #             self.isExcel = False
+        #             break
+        #         CANAddr_array = [self.CANAddr_AI,self.CANAddr_AO,self.CANAddr_relay,self.CANAddr_relay+1]
+        #         module_array = [self.module_1, self.module_2,'QR0016#1','QR0016#2']
+        #         bool_online,eID = otherOption.isModulesOnline(CANAddr_array,module_array,self.waiting_time)
+        #         if bool_online:
+        #             self.pauseOption()
+        #             if not self.is_running:
+        #                 # 后续测试全部取消
+        #                 self.isTest = False
+        #                 self.isCalibrate = False
+        #                 self.isExcel = False
+        #                 break
+        #             self.result_signal.emit(f'总线初始化成功！' + self.HORIZONTAL_LINE)
+        #             #点亮右扩IO设备的RUN灯
+        #             self.clearList(self.m_transmitData)
+        #             self.m_transmitData[0] = 0x52
+        #             self.m_transmitData[2] = 0x01
+        #             for led_run in range(2,4):
+        #                 self.m_transmitData[1] = led_run
+        #                 bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x000,self.m_transmitData, 1)
+        #                 time.sleep(0.1)
+        #             break
+        #         else:
+        #             self.pauseOption()
+        #             if not self.is_running:
+        #                 # 后续测试全部取消
+        #                 self.isTest = False
+        #                 self.isCalibrate = False
+        #                 self.isExcel = False
+        #                 break
+        #             if eID != 0:
+        #                 self.result_signal.emit(f'错误：未发现{module_array[eID-1]}' + self.HORIZONTAL_LINE)
+        #             # elif eID ==1:
+        #             #     self.result_signal.emit(f'错误：未发现{self.module_2}' + self.HORIZONTAL_LINE)
+        #             # elif eID ==3:
+        #             #     self.result_signal.emit(f'错误：未发现继电器1' + self.HORIZONTAL_LINE)
+        #             # elif eID ==7:
+        #             #     self.result_signal.emit(f'错误：未发现继电器2' + self.HORIZONTAL_LINE)
+        #             self.result_signal.emit(f'错误：总线初始化失败！再次尝试初始化。' + self.HORIZONTAL_LINE)
+        #
+        #     self.result_signal.emit('模块在线检测结束！' + self.HORIZONTAL_LINE)
+        #
+        # except:
+        #     self.pauseOption()
+        #     if not self.is_running:
+        #         # 后续测试全部取消
+        #         self.isTest = False
+        #         self.isCalibrate = False
+        #         self.isExcel = False
+        #
+        #     QMessageBox(QMessageBox.Critical, '错误提示', '总线初始化异常，请检查设备').exec_()
+        #     # 后续测试全部取消
+        #     self.isTest = False
+        #     self.isCalibrate = False
+        #     self.isExcel = False
+        #     self.result_signal.emit('模块在线检测结束！' + self.HORIZONTAL_LINE)
 
-            self.result_signal.emit('模块在线检测结束！' + self.HORIZONTAL_LINE)
+        # 点亮右扩IO设备的RUN灯
+        self.clearList(self.m_transmitData)
+        self.m_transmitData[0] = 0x52
+        self.m_transmitData[2] = 0x01
+        for led_run in range(2,4):
+            self.m_transmitData[1] = led_run
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x000,self.m_transmitData, 1)
+            time.sleep(0.1)
 
-        except:
-            self.pauseOption()
-            if not self.is_running:
-                # 后续测试全部取消
-                self.isTest = False
-                self.isCalibrate = False
-                self.isExcel = False
-
-            QMessageBox(QMessageBox.Critical, '错误提示', '总线初始化异常，请检查设备').exec_()
-            # 后续测试全部取消
-            self.isTest = False
-            self.isCalibrate = False
-            self.isExcel = False
-            self.result_signal.emit('模块在线检测结束！' + self.HORIZONTAL_LINE)
         #开始测试
         if self.isTest:
             if self.isTestRunErr or self.isTestCANRunErr:
@@ -1867,7 +1877,7 @@ class AOThread(QObject):
         bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr),self.m_transmitData,1)
         runEnd_time = time.time()
         runTest_time = round(runEnd_time - runStart_time,2)
-        time.sleep(0.5)
+        time.sleep(0.1)
         image_RUN = self.current_dir + '/AQ_RUN.png'
         self.pic_messageBox_signal.emit(['检测RUN &ERROR', 'RUN指示灯是否如图所示点亮(绿灯)？', image_RUN])
         reply = self.result_queue.get()
@@ -1954,7 +1964,7 @@ class AOThread(QObject):
         bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
         errorEnd_time = time.time()
         errorTest_time = round(errorEnd_time-errorStart_time,2)
-        time.sleep(0.5)
+        time.sleep(0.1)
         image_ERR = self.current_dir + '/AQ_ERROR.png'
         self.pic_messageBox_signal.emit(['检测RUN &ERROR', 'ERROR指示灯是否如图所示点亮（红灯）？', image_ERR])
         reply = self.result_queue.get()
@@ -2046,7 +2056,7 @@ class AOThread(QObject):
         bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
         CANRunEnd_time = time.time()
         CANRunTest_time = round(CANRunEnd_time - CANRunStart_time, 2)
-        time.sleep(0.5)
+        time.sleep(0.1)
         self.messageBox_signal.emit(['检测CAN_RUN &CAN_ERROR', 'CAN_RUN指示灯是否点亮（绿灯）？'])
         reply = self.result_queue.get()
         if reply == QMessageBox.AcceptRole:
@@ -2105,7 +2115,7 @@ class AOThread(QObject):
         bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
         CANErrEnd_time = time.time()
         CANErrTest_time = round(CANErrEnd_time - CANErrStart_time, 2)
-        # time.sleep(0.1)
+        time.sleep(0.1)
         self.messageBox_signal.emit(['检测CAN_RUN &CAN_ERROR', 'CAN_ERROR指示灯是否点亮（红灯）？'])
         reply = self.result_queue.get()
         if reply == QMessageBox.AcceptRole:

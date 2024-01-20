@@ -742,7 +742,7 @@ class DIDOThread(QObject):
         bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
         runEnd_time = time.time()
         runTest_time = round(runEnd_time - runStart_time, 2)
-        time.sleep(0.5)
+        time.sleep(0.1)
         # reply = QMessageBox.question(None, '检测RUN &ERROR', 'RUN指示灯是否点亮？',
         #                              QMessageBox.AcceptRole | QMessageBox.RejectRole,
         #                              QMessageBox.AcceptRole)
@@ -836,7 +836,7 @@ class DIDOThread(QObject):
         bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
         errorEnd_time = time.time()
         errorTest_time = round(errorEnd_time - errorStart_time, 2)
-        time.sleep(0.5)
+        time.sleep(0.1)
         if type =='DI':
             image_ERROR = self.current_dir+'/ET1600_ERROR.png'
         elif type =='DO':
@@ -957,7 +957,7 @@ class DIDOThread(QObject):
             bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
             CANRunEnd_time = time.time()
             CANRunTest_time = round(CANRunEnd_time - CANRunStart_time, 2)
-            time.sleep(0.5)
+            time.sleep(0.1)
             self.messageBox_signal.emit(['检测RUN &ERROR', 'CAN_RUN指示灯是否点亮（绿色）？'])
             reply = self.result_queue.get()
             # reply = QMessageBox.question(None, '检测CAN_RUN &CAN_ERROR', '指示灯是否点亮？',
@@ -1018,7 +1018,7 @@ class DIDOThread(QObject):
             bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
             CANErrEnd_time = time.time()
             CANErrTest_time = round(CANErrEnd_time - CANErrStart_time, 2)
-            time.sleep(0.5)
+            time.sleep(0.1)
             self.messageBox_signal.emit(['检测RUN &ERROR', 'CAN_ERROR指示灯是否点亮(红色)？'])
             reply = self.result_queue.get()
             # reply = QMessageBox.question(None, '检测CAN_RUN &CAN_ERROR', '指示灯是否点亮？',
