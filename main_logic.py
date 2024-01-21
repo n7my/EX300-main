@@ -507,6 +507,15 @@ class Ui_Control(QMainWindow,Ui_Form):
             if self.comboBox_20.currentIndex()==0:
                 self.lineEdit_PN.setText('P0000010390631')
             self.lineEdit_30.setText(self.lineEdit_PN.text())
+        elif self.tabIndex == 4:
+            self.tableWidget_DIDO.setVisible(False)
+            self.tableWidget_AI.setVisible(False)
+            self.tableWidget_AO.setVisible(False)
+            self.tableWidget_CPU.setVisible(True)
+            self.label_7.setText("CPU")
+            # if self.comboBox_20.currentIndex()==0:
+            self.lineEdit_PN.setText('MA0202')
+            self.lineEdit_MA0202_PN.setText(self.lineEdit_PN.text())
         self.saveDir = self.label_41.text()
         self.tabWidget.currentChanged.connect(self.tabChange)
 
@@ -756,6 +765,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.pushButton_13.clicked.connect(self.option_pushButton13)
 
         #MA0202界面初始化
+        self.radioButton_MA0202.setChecked(True)
         self.MA0202_paramChanged()
         self.checkBox_MA0202_para.stateChanged.connect(self.MA0202_paramChanged)
 
@@ -1255,6 +1265,14 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.label_7.setText("CPU")
             if self.comboBox_20.currentIndex() == 0:
                 self.lineEdit_PN.setText('P0000010390631')
+        elif self.tabIndex == 4 and not self.isAllScreen:
+            self.tableWidget_DIDO.setVisible(False)
+            self.tableWidget_AI.setVisible(False)
+            self.tableWidget_AO.setVisible(False)
+            self.tableWidget_CPU.setVisible(True)
+            self.label_7.setText("CPU")
+            if self.comboBox_20.currentIndex() == 0:
+                self.lineEdit_PN.setText('MA0202')
         # self.reInputPNSNREV()
 
     def start_button(self):
@@ -1394,7 +1412,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                 reply = QMessageBox.warning(None, '警告', '产品三码信息不全，请重新扫入！',
                                             QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
                 return False
-
+            self.tabIndex = self.tabWidget.currentIndex()
             #节点分配+心跳检测
             if self.tabIndex == 0:
                 if not self.configCANAddr([int(self.lineEdit_6.text()), int(self.lineEdit_7.text()), '', '', '']):
@@ -1430,7 +1448,8 @@ class Ui_Control(QMainWindow,Ui_Form):
                     return False
             elif self.tabIndex == 4:
                 if self.radioButton_MA0202.isChecked():
-                    if not self.configCANAddr(int(self.lineEdit_MA0202_AE.text()), int(self.lineEdit_MA0202_AQ.text())):
+                    if not self.configCANAddr([int(self.lineEdit_MA0202_AE.text()),
+                                               int(self.lineEdit_MA0202_AQ.text())]):
                         return False
                     # MA0202工装心跳检测
                     if not self.isModulesOnline([int(self.lineEdit_MA0202_AE.text()),
@@ -1670,8 +1689,16 @@ class Ui_Control(QMainWindow,Ui_Form):
                 if not self.CPU_thread or not self.worker_thread.isRunning():
                     # # 创建队列用于主线程和子线程之间的通信
                     # self.result_queue = Queue()
-                    self.inf_CPUlist = [[[],[],[],[],[],[],[]], [[],[],[],[],[],[],[]],[[],[],[],[],[]],
-                                        [[],[],[],[],[],[],[]], [[],[]],self.current_dir]
+                    self.inf_MA0202_test = [False for x in range(18)]
+                    self.inf_MA0202_test[17] =True
+                    self.inf_CPUlist = [['','','','',self.moduleName_1,self.moduleName_2,1],
+                                        [self.radioButton_MA0202.text(),self.lineEdit_MA0202_PN.text(),
+                                         self.lineEdit_MA0202_SN.text(),self.lineEdit_MA0202_REV.text(),'',0,0],
+                                        ['','','',int(self.lineEdit_MA0202_AE.text()),
+                                         int(self.lineEdit_MA0202_AQ.text())],
+                                        ['','',self.comboBox_MA0202_typeC.currentText(),self.saveDir,'','',''],
+                                        [self.inf_MA0202_test,''],
+                                        self.current_dir]
                     self.CPU_thread = QThread()
                     from thread_CPU import CPUThread
                     self.CPU_option = CPUThread(self.inf_CPUlist, self.result_queue)
@@ -2554,6 +2581,10 @@ class Ui_Control(QMainWindow,Ui_Form):
                                 self.inf_serialPort, self.inf_test,self.current_dir]
         elif self.tabIndex == 4:#MA0202界面
             # mTable = self.tableWidget_CPU
+            self.module_pn = self.lineEdit_MA0202_PN.text()
+            self.module_sn = self.lineEdit_MA0202_SN.text()
+            self.module_rev = self.lineEdit_MA0202_REV.text()
+            # self.module_MAC = self.lineEdit_33.text()
             self.MA0202_isChangePara = self.checkBox_MA0202_para.isChecked()
             self.moduleName_1 = '工装1（AE0400）'
             self.moduleName_2 = '工装2（AQ0004）'

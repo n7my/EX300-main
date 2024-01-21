@@ -190,6 +190,9 @@ class CPUThread(QObject):
 
     def CPU_start(self):
         thread_signal = self.CPUOption()
+        if not thread_signal:
+            self.label_signal.emit(['fail', '未通过'])
+
     def CPUOption(self):
         # self.isExcel = True
         #测试是否成功标志
@@ -2004,6 +2007,7 @@ class CPUThread(QObject):
             self.messageBox_signal.emit(['错误提示', f'测试出现问题，请检查测试程序和测试设备！\n'
                                                      f'"ErrorInf:\n{traceback.format_exc()}"'])
             self.showErrorInf('测试')
+            return False
         finally:
             self.result_signal.emit(f'self.testNum={self.testNum}\n')
             if True:
@@ -2031,7 +2035,7 @@ class CPUThread(QObject):
         self.item_signal.emit([0, 1, 0, ''])
         if not self.is_running:
             self.cancelAllTest()
-            return
+            return False
         self.messageBox_signal.emit(['外观检测', '请检查：\n（1）外壳字体是否清晰?\n（2）型号是否正确？\n（3）外壳是否完好？'])
         reply = self.result_queue.get()
         if reply == QMessageBox.AcceptRole:
@@ -2245,7 +2249,7 @@ class CPUThread(QObject):
         except serial.SerialException as e:
             if not self.is_running:
                 self.cancelAllTest()
-                return
+                return False
             self.messageBox_signal.emit(['错误警告',f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'
                                                     f'Failed to open serial port: {e}'])
             self.isPassFPGA = False
@@ -2262,7 +2266,7 @@ class CPUThread(QObject):
             name_dict ={0x00:'保存固件',0x01:'加载固件',0x02:'端口配平'}
             if not self.is_running:
                 self.cancelAllTest()
-                return
+                return False
             self.result_signal.emit(f'等待<{name_dict[transmitData[5]]}>。\n\n')
             # 等待0.5s后接收数据
             time.sleep(5)
@@ -2293,7 +2297,7 @@ class CPUThread(QObject):
         if not self.isPassFPGA:
             if not self.is_running:
                 self.cancelAllTest()
-                return
+                return False
             self.messageBox_signal.emit(['测试警告', 'FPGA测试不通过，是否取消后续测试？'])
             reply = self.result_queue.get()
             if reply == QMessageBox.AcceptRole:
