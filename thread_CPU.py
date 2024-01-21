@@ -3,6 +3,8 @@
 import time
 
 from PyQt5.QtCore import QThread, pyqtSignal
+
+import CAN_option
 from main_logic import *
 from CAN_option import *
 import otherOption
@@ -124,6 +126,7 @@ class CPUThread(QObject):
         self.module_4 = inf_CPUlist[0][4]
         self.module_5 = inf_CPUlist[0][5]
         self.testNum = inf_CPUlist[0][6]
+        # self.testNum = 17
         # self.inf_product = [self.module_type, self.module_pn, self.module_sn,
         #                    self.module_rev, self.in_Channels,self.out_Channels]
         #获取产品信息
@@ -481,6 +484,7 @@ class CPUThread(QObject):
                                             if not self.isCancelAllTest:
                                                 self.result_signal.emit('设备重新上电。\n')
                                                 if not self.isCancelAllTest:
+                                                    time.sleep(6)
                                                     # 数据检查
                                                     self.CPU_powerOffSaveTest(serial_transmitData=serial_transmitData1)
                                                     if not self.isCancelAllTest:
@@ -526,8 +530,7 @@ class CPUThread(QObject):
                             self.CPU_passItem[i] = self.isPassPowerOffSave
                             self.CPU_testItem[i] = True
                             #若工装的电是通过CPU供电的，断电后需要重新分配节点
-                            self.configCANAddr(self.CANAddr1, self.CANAddr2, self.CANAddr3,
-                                               self.CANAddr4, self.CANAddr5)
+                            self.configCANAddr(self.CANAddr1, self.CANAddr2, self.CANAddr3)
                             self.isPassAll &= self.isPassPowerOffSave
                             self.testNum = self.testNum - 1
                             if self.isPassPowerOffSave:
@@ -585,8 +588,7 @@ class CPUThread(QObject):
                             self.CPU_testItem[i] = True
                             if not self.CPU_isTest[6]:
                                 # 若工装的电是通过CPU供电的，断电后需要重新分配节点
-                                self.configCANAddr(self.CANAddr1, self.CANAddr2, self.CANAddr3,
-                                                   self.CANAddr4, self.CANAddr5)
+                                self.configCANAddr(self.CANAddr1, self.CANAddr2, self.CANAddr3)
                             self.isPassAll &= self.isPassRTC
                             self.testNum = self.testNum - 1
                             if self.isPassRTC:
@@ -1039,12 +1041,18 @@ class CPUThread(QObject):
                                         if not self.isCancelAllTest:
                                             try:
                                                 # 连接CAN设备CANalyst-II，并初始化两个CAN通道
-                                                self.CAN_init([0])
+                                                CAN_bool,mess = self.CAN_init([0])
+                                                if CAN_bool:
+                                                    self.result_signal.emit('CAN设备的CAN1通道启动成功。\n')
+                                                else:
+                                                    self.result_signal.emit('CAN设备的CAN1通道启动失败，后续测试全部取消。\n')
+                                                    self.cancelAllTest()
+                                                    break
                                             except Exception as e:
                                                 self.result_signal.emit(
-                                                    f'CAN_init error:{e}\nCAN设备通道0启动失败，后续测试全部取消。\n')
+                                                    f'CAN_init error:{e}\nCAN设备的CAN1通道启动失败，后续测试全部取消。\n')
                                                 self.messageBox_signal.emit(['警告',
-                                                                             f'CAN_init error:{e}\nCAN设备通道0启动失败，'
+                                                                             f'CAN_init error:{e}\nCAN设备的CAN1通道启动失败，'
                                                                              f'后续测试全部取消。\n'])
                                                 reply = self.result_queue.get()
                                                 if reply == QMessageBox.AcceptRole:
@@ -1081,11 +1089,13 @@ class CPUThread(QObject):
                                                         decimal_data = [int.from_bytes(byte_data[i:i+1], byteorder='big')
                                                                         for i in range(len(byte_data))]  # 将字节数组类型参数转换成十进制数组
                                                         # self.result_signal.emit(f'decimal_data:{decimal_data}')
+                                                        self.result_signal.emit(f'decimal_data:{decimal_data}')
                                                         if len(decimal_data) == 0:
                                                             self.isPassRightCAN &= False
                                                             break
                                                         for ii in range(len(rightCAN_transmitData)):
                                                             if int(rightCAN_transmitData[ii]) != int(decimal_data[ii]):
+
                                                                 self.result_signal.emit(f'右扩CAN数据接收失败。\n'
                                                                                 f'接收的数据为：{decimal_data}\n\n')
                                                                 self.isPassRightCAN &= False
@@ -1826,20 +1836,20 @@ class CPUThread(QObject):
                                                                 break
 
                                                             self.result_signal.emit('读REV成功！\n\n')
-                                #                         else:
-                                #                             break
-                                #                     else:
-                                #                         break
-                                #                 else:
-                                #                     break
-                                #             else:
-                                #                 break
-                                #         else:
-                                #             break
-                                #     else:
-                                #         break
-                                # else:
-                                #     break
+                                                        else:
+                                                            break
+                                                    else:
+                                                        break
+                                                else:
+                                                    break
+                                            else:
+                                                break
+                                        else:
+                                            break
+                                    else:
+                                        break
+                                else:
+                                    break
 
 
                             elif opType == '422':
@@ -3231,36 +3241,36 @@ class CPUThread(QObject):
             hex_transmitData = [hex(ht) for ht in transmitData]
             self.result_signal.emit(f'发送的数据：{hex_transmitData}')
             # 等待0.5s后接收数据
-            time.sleep(0.3)
+            time.sleep(1)
             serial_receiveData = [0 for x in range(len(transmitData))]
             # 接收数组数据
-            data = typeC_serial.read(len(transmitData))
-            if len(data) == 0:
-                self.messageBox_signal.emit(['操作警告', '未接收到信号，请检查可编程电源的通信线是否断开。'])
-                reply = self.result_queue.get()
-                if reply == QMessageBox.AcceptRole:
-                    isReceiveTrueData &= False
-                else:
-                    isReceiveTrueData &= False
-                break
-            serial_receiveData = [hex(i) for i in data]
-            # for i in range(len(serial_receiveData)):
-            #     serial_receiveData[i] = int(serial_receiveData[i], 16)
-            for tt in range(len(transmitData)):
-                if hex(transmitData[tt]) != serial_receiveData[tt]:
-                    isReceiveTrueData &= False
-                    self.result_signal.emit(f'接收的数据：{serial_receiveData}，错误。\n\n')
-                    break
-            if isReceiveTrueData:
-                self.result_signal.emit(f'接收的数据：{serial_receiveData}，正确。\n\n')
-                isReceiveTrueData &= True
-                break
+            ## data = typeC_serial.read(len(transmitData))
+            # if len(data) == 0:
+            #     self.messageBox_signal.emit(['操作警告', '未接收到信号，请检查可编程电源的通信线是否断开。'])
+            #     reply = self.result_queue.get()
+            #     if reply == QMessageBox.AcceptRole:
+            #         isReceiveTrueData &= False
+            #     else:
+            #         isReceiveTrueData &= False
+            #     break
+            # serial_receiveData = [hex(i) for i in data]
+            # # for i in range(len(serial_receiveData)):
+            # #     serial_receiveData[i] = int(serial_receiveData[i], 16)
+            # for tt in range(len(transmitData)):
+            #     if hex(transmitData[tt]) != serial_receiveData[tt]:
+            #         isReceiveTrueData &= False
+            #         self.result_signal.emit(f'接收的数据：{serial_receiveData}，错误。\n\n')
+            #         break
+            # if isReceiveTrueData:
+            #     self.result_signal.emit(f'接收的数据：{serial_receiveData}，正确。\n\n')
+            #     isReceiveTrueData &= True
+            #     break
 
-        if not isReceiveTrueData:
-            self.messageBox_signal.emit(['测试警告', '控制可编程电源失败，是否取消后续测试？'])
-            reply = self.result_queue.get()
-            if reply == QMessageBox.AcceptRole:
-                self.cancelAllTest()
+        # if not isReceiveTrueData:
+        #     self.messageBox_signal.emit(['测试警告', '控制可编程电源失败，是否取消后续测试？'])
+        #     reply = self.result_queue.get()
+        #     if reply == QMessageBox.AcceptRole:
+        #         self.cancelAllTest()
         # 关闭串口
         typeC_serial.close()
         # return isReceiveTrueData
@@ -3361,7 +3371,7 @@ class CPUThread(QObject):
             if justOff:
                 break
             # 等待0.5s后接收数据
-            time.sleep(1)
+            time.sleep(0.5)
             serial_receiveData = [0 for x in range(40)]
             # 接收数组数据
             data = typeC_serial.read(40)
@@ -4013,6 +4023,8 @@ class CPUThread(QObject):
                 # self.result_signal.emit(f'未找到startNum\n')
                 isSendAgain = True
                 return trueData,dataLen,isSendAgain
+        # self.result_signal.emit(f'serial_receiveData:{serial_receiveData}')
+        # self.result_signal.emit(f'startNum:{startNum}')
         dataLen = int(serial_receiveData[startNum + 1])
 
         # 验证数据接收是否正确
@@ -4104,7 +4116,14 @@ class CPUThread(QObject):
         QApplication.processEvents()
 
         for channel in CAN_channel:
-            #通道0
+            # if channel == 0:
+            #     #波特率 = 100k
+            #     CAN_option.TIMING_0 = 0x04
+            #     CAN_option.TIMING_1 = 0x1C
+            # elif channel == 1:
+            #     #波特率 = 1000k
+            #     CAN_option.TIMING_0 = 0x00
+            #     CAN_option.TIMING_1 = 0x14
             if not CAN_option.connect(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, channel):
                 # self.showMessageBox(['CAN设备存在问题', 'CAN设备开启失败，请检查CAN设备！'])
                 # self.CANFail()
@@ -4173,9 +4192,9 @@ class CPUThread(QObject):
             array[i] = 0x00
 
     # 自动分配节点
-    def configCANAddr(self, addr1, addr2, addr3, addr4, addr5):
+    def configCANAddr(self, addr1, addr2, addr3):
 
-        list = [addr1, addr2, addr3, addr4, addr5]
+        list = [addr1, addr2, addr3]
 
         for a in list:
             self.m_transmitData = [0xac, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
