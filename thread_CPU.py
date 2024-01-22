@@ -179,6 +179,7 @@ class CPUThread(QObject):
         self.outErrorInf = '输出通道'
 
         self.current_dir = inf_CPUlist[5]
+        self.testType = inf_CPUlist[6]
         # #初始化表格状态
         # for i in range(len(self.CPU_isTest)):
         #     self.result_signal.emit(f"self.CPU_isTest[{i}]:{self.CPU_isTest[i]}\n")
@@ -190,8 +191,8 @@ class CPUThread(QObject):
 
     def CPU_start(self):
         thread_signal = self.CPUOption()
-        if not thread_signal:
-            self.label_signal.emit(['fail', '未通过'])
+        # if not thread_signal:
+        #     self.label_signal.emit(['fail', '未通过'])
 
     def CPUOption(self):
         # self.isExcel = True
@@ -1273,246 +1274,38 @@ class CPUThread(QObject):
                         try:
                             opType = self.CPU_optionPanel(transmitData=r_exType)
                             if opType == 'MA0202':
-                                # 写MA0202量程和码值
-                                w_MA0202_1 = [0xAC, 11, 0x00, 0x0F, 0x10, 0x00,
-                                            0x00, 0x00, 0x01, 0x00,0x00,
-                                            0x00]
-                                # 写MA0202三码
-                                # w_MA0202_2 = [0xAC, 11, 0x00, 0x0F, 0x10, 0x00,
-                                #               0x00, 0x00, 0x01, 0x00, 0x00,
-                                #               0x00]
-                                # 读MA0202量程和码值
-                                r_MA0202_1 = [0xAC, 9, 0x00, 0x0F, 0x0E, 0x00,0x00,0x00,0x00,0x00]
-                                # 读MA0202三码
-                                r_MA0202_2 = [0xAC, 8, 0x00, 0x0F, 0x0E, 0x00,0x00,0xF1,0x00]
+                                if self.testType == 'CPU':
+                                    self.isPassOp &= True
+                                elif self.testType == 'MA0202':
+                                    # 写MA0202量程和码值
+                                    w_MA0202_1 = [0xAC, 11, 0x00, 0x0F, 0x10, 0x00,
+                                                0x00, 0x00, 0x01, 0x00,0x00,
+                                                0x00]
+                                    # 写MA0202三码
+                                    # w_MA0202_2 = [0xAC, 11, 0x00, 0x0F, 0x10, 0x00,
+                                    #               0x00, 0x00, 0x01, 0x00, 0x00,
+                                    #               0x00]
+                                    # 读MA0202量程和码值
+                                    r_MA0202_1 = [0xAC, 9, 0x00, 0x0F, 0x0E, 0x00,0x00,0x00,0x00,0x00]
+                                    # 读MA0202三码
+                                    r_MA0202_2 = [0xAC, 8, 0x00, 0x0F, 0x0E, 0x00,0x00,0xF1,0x00]
 
-                                        #   0-10V     0-20mA
-                                AI_range=[0x2A,0x00,0x34,0x00]
-                                        #   0-10V
-                                AO_range=[0xE8,0x03]
-                                #写AI量程0-10v
-                                w_MA0202_1[6] = 0x00
-                                w_MA0202_1[7] = 0x00
-                                w_MA0202_1[8] = 0x01
-                                w_MA0202_1[9] = 0x2A
-                                w_MA0202_1[10] = 0x00
-                                w_MA0202_1[11] = self.getCheckNum(w_MA0202_1[:11])
-                                self.pauseOption()
-                                if not self.is_running:
-                                    self.cancelAllTest()
-                                    break
-                                #1 写AI通道1量程0-10V
-                                self.CPU_optionPanel(transmitData=w_MA0202_1)
-                                # 2 写AI通道2量程0-10V
-                                w_MA0202_1[8] = 0x02
-                                w_MA0202_1[11] = self.getCheckNum(w_MA0202_1[:11])
-                                self.pauseOption()
-                                if not self.is_running:
-                                    self.cancelAllTest()
-                                    break
-                                self.CPU_optionPanel(transmitData=w_MA0202_1)
-                                if not self.isCancelAllTest:
-                                    self.pauseOption()
-                                    if not self.is_running:
-                                        self.cancelAllTest()
-                                        break
-                                    self.result_signal.emit('------------写选项板AI通道1、2量程0-10V成功------------\n\n')
-                                    # 3 读AI通道1量程0-10V
-                                    r_MA0202_1[6] = 0x00
-                                    r_MA0202_1[7] = 0x00
-                                    r_MA0202_1[8] = 0x01
-                                    r_MA0202_1[9] = self.getCheckNum(r_MA0202_1[:9])
-                                    self.pauseOption()
-                                    if not self.is_running:
-                                        self.cancelAllTest()
-                                        break
-                                    self.CPU_optionPanel(transmitData=r_MA0202_1,param1=[0x2A,0x00])
-                                    r_MA0202_1[8] = 0x02
-                                    r_MA0202_1[9] = self.getCheckNum(r_MA0202_1[:9])
-                                    self.pauseOption()
-                                    if not self.is_running:
-                                        self.cancelAllTest()
-                                        break
-                                    self.CPU_optionPanel(transmitData=r_MA0202_1,param1=[0x2A,0x00])
-                                    if not self.isCancelAllTest:
-                                        self.pauseOption()
-                                        if not self.is_running:
-                                            self.cancelAllTest()
-                                            break
-                                        self.result_signal.emit('------------读选项板AI通道1、2量程0-10V成功------------\n\n')
-                                        # 4 写AI量程通道1量程0-20mA
-                                        w_MA0202_1 = [0xAC, 11, 0x00, 0x0F, 0x10, 0x00,0x00, 0x00, 0x01, 0x34, 0x00,
-                                                      0x00]
-                                        w_MA0202_1[11] = self.getCheckNum(w_MA0202_1[:11])
-                                        self.pauseOption()
-                                        if not self.is_running:
-                                            self.cancelAllTest()
-                                            break
-                                        self.CPU_optionPanel(transmitData=w_MA0202_1)
-                                        # 5 写AI量程通道2量程0-20mA
-                                        w_MA0202_1 = [0xAC, 11, 0x00, 0x0F, 0x10, 0x00, 0x00, 0x00, 0x02, 0x34, 0x00,
-                                                      0x00]
-                                        w_MA0202_1[11] = self.getCheckNum(w_MA0202_1[:11])
-                                        self.pauseOption()
-                                        if not self.is_running:
-                                            self.cancelAllTest()
-                                            break
-                                        self.CPU_optionPanel(transmitData=w_MA0202_1)
-                                        if not self.isCancelAllTest:
-                                            self.pauseOption()
-                                            if not self.is_running:
-                                                self.cancelAllTest()
-                                                break
-                                            self.result_signal.emit('------------写选项板AI通道1、2量程0-20mA成功------------\n\n')
-                                            # 6 读AI通道1量程0-20mA
-                                            r_MA0202_1[6] = 0x00
-                                            r_MA0202_1[7] = 0x00
-                                            r_MA0202_1[8] = 0x01
-                                            r_MA0202_1[9] = self.getCheckNum(r_MA0202_1[:9])
-                                            self.pauseOption()
-                                            if not self.is_running:
-                                                self.cancelAllTest()
-                                                break
-                                            self.CPU_optionPanel(transmitData=r_MA0202_1,param1=[0x34,0x00])
-                                            # 7 读AI通道2量程0-20mA
-                                            r_MA0202_1[8] = 0x02
-                                            r_MA0202_1[9] = self.getCheckNum(r_MA0202_1[:9])
-                                            self.pauseOption()
-                                            if not self.is_running:
-                                                self.cancelAllTest()
-                                                break
-                                            self.CPU_optionPanel(transmitData=r_MA0202_1,param1=[0x34,0x00])
-                                            if not self.isCancelAllTest:
-                                                if not self.is_running:
-                                                    self.cancelAllTest()
-                                                    break
-                                                self.result_signal.emit('------------读选项板AI通道1、2量程0-20mA成功------------\n\n')
-                                                try:
-                                                    #8控制AQ0004模块发送电流
-                                                    CAN_bool,mess = self.CAN_init([1])
-                                                except Exception as e:
-                                                    self.isPassOp &= False
-                                                    if not self.is_running:
-                                                        self.cancelAllTest()
-                                                        break
-                                                    self.result_signal.emit(
-                                                        f'CAN_init error:{e}\nCAN设备通道1启动失败，后续测试全部取消。\n')
-                                                    self.messageBox_signal.emit(['警告',
-                                                                                 f'CAN_init error:{e}\nCAN设备通道1启动失败，'
-                                                                                 f'后续测试全部取消。\n'])
-                                                    reply = self.result_queue.get()
-                                                    if reply == QMessageBox.AcceptRole:
-                                                        self.cancelAllTest()
-                                                    else:
-                                                        self.cancelAllTest()
-                                                    break
-                                                if CAN_bool:
-                                                    # 0v-10v的理论值
-                                                    voltageTheory_0010 = [int(0x6c00*1.17),0x6c00, (int)(0x6c00 * 0.75),
-                                                                          (int)(0x6c00 * 0.5), (int)(0x6c00 * 0.25),
-                                                                          0]  # 0x6c00 =>27648
-                                                    arrayVol_0010 = ["11.7V测试","10V测试", "7.5V测试", "5V测试",
-                                                                     "2.5V测试","0V测试"]
-                                                    # 0mA-20mA的理论值
-                                                    currentTheory_0020 = [(int)(0x6c00*1.17),0x6c00, (int)(0x6c00 * 0.75),
-                                                                          (int)(0x6c00 * 0.5), (int)(0x6c00 * 0.25),
-                                                                          0]  # 0x6c00 =>27648
-                                                    arrayCur_0020 = ["23.4mA", "20mA", "15mA",
-                                                                     "10mA", "5mA","0mA"]
-                                                    AQ_transmit = (c_ubyte * 8)(0x00,0x00,0x00,0x00,
-                                                                              0x00,0x00,0x00,0x00)
-                                                    for va in range(len(currentTheory_0020)):
-                                                        if va == 0:
-                                                            # 修改AQ量程为0-20mA
-                                                            AQ_transmit = [0x2b, 0x10, 0x63, 1,
-                                                                           0xeb, 0x03, 0x00, 0x00]
-
-                                                            bool_range1 = CAN_option.transmitCAN((0x600 + self.CANAddr5),
-                                                                                                AQ_transmit, 1)[0]
-                                                            AQ_transmit = [0x2b, 0x10, 0x63, 2,
-                                                                           0xeb, 0x03, 0x00, 0x00]
-                                                            bool_range2 = \
-                                                            CAN_option.transmitCAN((0x600 + self.CANAddr5),
-                                                                                   AQ_transmit, 1)[0]
-                                                            if bool_range1&bool_range2:
-                                                                if not self.is_running:
-                                                                    self.cancelAllTest()
-                                                                    break
-                                                                self.result_signal.emit(
-                                                                    f"------------成功修改AQ0004通道1、2量程为0-20mA------------\n\n")
-                                                            else:
-                                                                if not self.is_running:
-                                                                    self.cancelAllTest()
-                                                                    break
-                                                                self.result_signal.emit(
-                                                                    f"------------修改AQ0004通道1、2量程为0-20mA失败，取消后续测试------------\n\n")
-                                                                self.cancelAllTest()
-                                                                self.isPassOp &= False
-                                                                break
-                                                            time.sleep(0.5)
-                                                        for ch in range(2):
-                                                            #发送0-20mA的电流
-                                                            AQ_transmit=[0x2b,0x11,0x64, ch+1,
-                                                                         (currentTheory_0020[va] & 0xff),
-                                                                         ((currentTheory_0020[va] >> 8)& 0xff),
-                                                                         0x00,0x00]
-                                                            for asd in range(10):
-                                                                CAN_option.transmitCAN((0x600 + self.CANAddr5),
-                                                                                       AQ_transmit,1)
-                                                                # time.sleep(0.1)
-                                                            #等待一秒，等待输出稳定
-                                                            self.result_signal.emit('\n等待输出稳定……\n')
-                                                            time.sleep(1)
-                                                            if not self.is_running:
-                                                                self.cancelAllTest()
-                                                                break
-                                                            self.result_signal.emit(f'\n\n------------AQ0004通道{ch+1}'
-                                                                                    f'输出电流为：{arrayCur_0020[va]}'
-                                                                                    f'------------\n')
-                                                            r_MA0202_1 = [0xAC, 9, 0x00, 0x0F, 0x0E, 0x00, 0x00,
-                                                                          0x01,ch+1,0x00]
-                                                            r_MA0202_1[9] = self.getCheckNum(r_MA0202_1[:9])
-                                                            rate = round(float(27648/4095),2)
-                                                            self.pauseOption()
-                                                            if not self.is_running:
-                                                                self.cancelAllTest()
-                                                                break
-                                                            self.CPU_optionPanel(transmitData=r_MA0202_1,
-                                                                                 param1=[(int(currentTheory_0020[va]/rate) & 0xff),
-                                                                                        ((int(currentTheory_0020[va]/rate) >> 8)& 0xff)])
-                                                        if self.isCancelAllTest:
-                                                            break
-                                                else:
-                                                    self.isPassOp &=False
-                                                    self.messageBox_signal.emit(mess)
-                                                    reply = self.result_queue.get()
-                                                    if reply == QMessageBox.AcceptRole:
-                                                        self.cancelAllTest()
-                                                    else:
-                                                        self.cancelAllTest()
-                                #                     break
-                                #             else:
-                                #                 break
-                                #         else:
-                                #             break
-                                #     else:
-                                #         break
-                                # else:
-                                #     break
-                                # AO
-                                if not self.isCancelAllTest:
-                                    # 写AO量程0-10v
-                                    w_MA0202_1[6] = 0x01
+                                            #   0-10V     0-20mA
+                                    AI_range=[0x2A,0x00,0x34,0x00]
+                                            #   0-10V
+                                    AO_range=[0xE8,0x03]
+                                    #写AI量程0-10v
+                                    w_MA0202_1[6] = 0x00
                                     w_MA0202_1[7] = 0x00
                                     w_MA0202_1[8] = 0x01
-                                    w_MA0202_1[9] = 0xE8
-                                    w_MA0202_1[10] = 0x03
+                                    w_MA0202_1[9] = 0x2A
+                                    w_MA0202_1[10] = 0x00
                                     w_MA0202_1[11] = self.getCheckNum(w_MA0202_1[:11])
                                     self.pauseOption()
                                     if not self.is_running:
                                         self.cancelAllTest()
                                         break
-                                    # 1 写AO通道1量程0-10V
+                                    #1 写AI通道1量程0-10V
                                     self.CPU_optionPanel(transmitData=w_MA0202_1)
                                     # 2 写AI通道2量程0-10V
                                     w_MA0202_1[8] = 0x02
@@ -1523,13 +1316,13 @@ class CPUThread(QObject):
                                         break
                                     self.CPU_optionPanel(transmitData=w_MA0202_1)
                                     if not self.isCancelAllTest:
+                                        self.pauseOption()
                                         if not self.is_running:
                                             self.cancelAllTest()
                                             break
-                                        self.result_signal.emit(
-                                            '------------写选项板AO通道1、2量程0-10V成功------------\n\n')
-                                        # 3 读AO通道1量程0-10V
-                                        r_MA0202_1[6] = 0x01
+                                        self.result_signal.emit('------------写选项板AI通道1、2量程0-10V成功------------\n\n')
+                                        # 3 读AI通道1量程0-10V
+                                        r_MA0202_1[6] = 0x00
                                         r_MA0202_1[7] = 0x00
                                         r_MA0202_1[8] = 0x01
                                         r_MA0202_1[9] = self.getCheckNum(r_MA0202_1[:9])
@@ -1537,308 +1330,521 @@ class CPUThread(QObject):
                                         if not self.is_running:
                                             self.cancelAllTest()
                                             break
-                                        self.CPU_optionPanel(transmitData=r_MA0202_1, param1=[0xE8, 0x03])
+                                        self.CPU_optionPanel(transmitData=r_MA0202_1,param1=[0x2A,0x00])
                                         r_MA0202_1[8] = 0x02
                                         r_MA0202_1[9] = self.getCheckNum(r_MA0202_1[:9])
                                         self.pauseOption()
                                         if not self.is_running:
                                             self.cancelAllTest()
                                             break
-                                        self.CPU_optionPanel(transmitData=r_MA0202_1, param1=[0xE8, 0x03])
+                                        self.CPU_optionPanel(transmitData=r_MA0202_1,param1=[0x2A,0x00])
                                         if not self.isCancelAllTest:
                                             self.pauseOption()
                                             if not self.is_running:
                                                 self.cancelAllTest()
                                                 break
-                                            self.result_signal.emit(
-                                                '------------读选项板AO通道1、2量程0-10V成功------------\n\n')
-                                            try:
-                                                # 8控制选项板AO通道发送电压
-                                                CAN_bool, mess = self.CAN_init([1])
-                                                if CAN_bool:
-                                                    # 0v-10v的理论值
-                                                    voltageTheory_0010 = [int(4095 * 1.17),4095,
-                                                                          (int)(4095 * 0.75),
-                                                                          (int)(4095 * 0.5), (int)(4095 * 0.25),
-                                                                          0]  # 0x6c00 =>27648
-                                                    # voltageTheory_0010 = [0]
-                                                    arrayVol_0010 = ["11.7V测试", "10V测试", "7.5V测试", "5V测试",
-                                                                     "2.5V测试", "0V测试"]
+                                            self.result_signal.emit('------------读选项板AI通道1、2量程0-10V成功------------\n\n')
+                                            # 4 写AI量程通道1量程0-20mA
+                                            w_MA0202_1 = [0xAC, 11, 0x00, 0x0F, 0x10, 0x00,0x00, 0x00, 0x01, 0x34, 0x00,
+                                                          0x00]
+                                            w_MA0202_1[11] = self.getCheckNum(w_MA0202_1[:11])
+                                            self.pauseOption()
+                                            if not self.is_running:
+                                                self.cancelAllTest()
+                                                break
+                                            self.CPU_optionPanel(transmitData=w_MA0202_1)
+                                            # 5 写AI量程通道2量程0-20mA
+                                            w_MA0202_1 = [0xAC, 11, 0x00, 0x0F, 0x10, 0x00, 0x00, 0x00, 0x02, 0x34, 0x00,
+                                                          0x00]
+                                            w_MA0202_1[11] = self.getCheckNum(w_MA0202_1[:11])
+                                            self.pauseOption()
+                                            if not self.is_running:
+                                                self.cancelAllTest()
+                                                break
+                                            self.CPU_optionPanel(transmitData=w_MA0202_1)
+                                            if not self.isCancelAllTest:
+                                                self.pauseOption()
+                                                if not self.is_running:
+                                                    self.cancelAllTest()
+                                                    break
+                                                self.result_signal.emit('------------写选项板AI通道1、2量程0-20mA成功------------\n\n')
+                                                # 6 读AI通道1量程0-20mA
+                                                r_MA0202_1[6] = 0x00
+                                                r_MA0202_1[7] = 0x00
+                                                r_MA0202_1[8] = 0x01
+                                                r_MA0202_1[9] = self.getCheckNum(r_MA0202_1[:9])
+                                                self.pauseOption()
+                                                if not self.is_running:
+                                                    self.cancelAllTest()
+                                                    break
+                                                self.CPU_optionPanel(transmitData=r_MA0202_1,param1=[0x34,0x00])
+                                                # 7 读AI通道2量程0-20mA
+                                                r_MA0202_1[8] = 0x02
+                                                r_MA0202_1[9] = self.getCheckNum(r_MA0202_1[:9])
+                                                self.pauseOption()
+                                                if not self.is_running:
+                                                    self.cancelAllTest()
+                                                    break
+                                                self.CPU_optionPanel(transmitData=r_MA0202_1,param1=[0x34,0x00])
+                                                if not self.isCancelAllTest:
+                                                    if not self.is_running:
+                                                        self.cancelAllTest()
+                                                        break
+                                                    self.result_signal.emit('------------读选项板AI通道1、2量程0-20mA成功------------\n\n')
+                                                    try:
+                                                        #8控制AQ0004模块发送电流
+                                                        CAN_bool,mess = self.CAN_init([1])
+                                                    except Exception as e:
+                                                        self.isPassOp &= False
+                                                        if not self.is_running:
+                                                            self.cancelAllTest()
+                                                            break
+                                                        self.result_signal.emit(
+                                                            f'CAN_init error:{e}\nCAN设备通道1启动失败，后续测试全部取消。\n')
+                                                        self.messageBox_signal.emit(['警告',
+                                                                                     f'CAN_init error:{e}\nCAN设备通道1启动失败，'
+                                                                                     f'后续测试全部取消。\n'])
+                                                        reply = self.result_queue.get()
+                                                        if reply == QMessageBox.AcceptRole:
+                                                            self.cancelAllTest()
+                                                        else:
+                                                            self.cancelAllTest()
+                                                        break
+                                                    if CAN_bool:
+                                                        # 0v-10v的理论值
+                                                        voltageTheory_0010 = [int(0x6c00*1.17),0x6c00, (int)(0x6c00 * 0.75),
+                                                                              (int)(0x6c00 * 0.5), (int)(0x6c00 * 0.25),
+                                                                              0]  # 0x6c00 =>27648
+                                                        arrayVol_0010 = ["11.7V测试","10V测试", "7.5V测试", "5V测试",
+                                                                         "2.5V测试","0V测试"]
+                                                        # 0mA-20mA的理论值
+                                                        currentTheory_0020 = [(int)(0x6c00*1.17),0x6c00, (int)(0x6c00 * 0.75),
+                                                                              (int)(0x6c00 * 0.5), (int)(0x6c00 * 0.25),
+                                                                              0]  # 0x6c00 =>27648
+                                                        arrayCur_0020 = ["23.4mA", "20mA", "15mA",
+                                                                         "10mA", "5mA","0mA"]
+                                                        AQ_transmit = (c_ubyte * 8)(0x00,0x00,0x00,0x00,
+                                                                                  0x00,0x00,0x00,0x00)
+                                                        for va in range(len(currentTheory_0020)):
+                                                            if va == 0:
+                                                                # 修改AQ量程为0-20mA
+                                                                AQ_transmit = [0x2b, 0x10, 0x63, 1,
+                                                                               0xeb, 0x03, 0x00, 0x00]
 
-                                                    AE_transmit = (c_ubyte * 8)(0x00, 0x00, 0x00, 0x00,
-                                                                                0x00, 0x00, 0x00, 0x00)
-                                                    for va in range(len(voltageTheory_0010)):
-                                                        if va == 0:
-                                                            # 修改AI量程为0-10V
-                                                            AE_transmit = [0x2b, 0x10, 0x61, 1,
-                                                                           0x2a, 0x00, 0x00, 0x00]
-                                                            bool_range1 = \
-                                                            CAN_option.transmitCAN((0x600 + self.CANAddr5),
-                                                                                   AE_transmit, 1)[0]
-                                                            AE_transmit = [0x2b, 0x10, 0x61, 2,
-                                                                           0x2a, 0x00, 0x00, 0x00]
-                                                            bool_range2 = \
+                                                                bool_range1 = CAN_option.transmitCAN((0x600 + self.CANAddr5),
+                                                                                                    AQ_transmit, 1)[0]
+                                                                AQ_transmit = [0x2b, 0x10, 0x63, 2,
+                                                                               0xeb, 0x03, 0x00, 0x00]
+                                                                bool_range2 = \
+                                                                CAN_option.transmitCAN((0x600 + self.CANAddr5),
+                                                                                       AQ_transmit, 1)[0]
+                                                                if bool_range1&bool_range2:
+                                                                    if not self.is_running:
+                                                                        self.cancelAllTest()
+                                                                        break
+                                                                    self.result_signal.emit(
+                                                                        f"------------成功修改AQ0004通道1、2量程为0-20mA------------\n\n")
+                                                                else:
+                                                                    if not self.is_running:
+                                                                        self.cancelAllTest()
+                                                                        break
+                                                                    self.result_signal.emit(
+                                                                        f"------------修改AQ0004通道1、2量程为0-20mA失败，取消后续测试------------\n\n")
+                                                                    self.cancelAllTest()
+                                                                    self.isPassOp &= False
+                                                                    break
+                                                                time.sleep(0.5)
+                                                            for ch in range(2):
+                                                                #发送0-20mA的电流
+                                                                AQ_transmit=[0x2b,0x11,0x64, ch+1,
+                                                                             (currentTheory_0020[va] & 0xff),
+                                                                             ((currentTheory_0020[va] >> 8)& 0xff),
+                                                                             0x00,0x00]
+                                                                for asd in range(10):
+                                                                    CAN_option.transmitCAN((0x600 + self.CANAddr5),
+                                                                                           AQ_transmit,1)
+                                                                    # time.sleep(0.1)
+                                                                #等待一秒，等待输出稳定
+                                                                self.result_signal.emit('\n等待输出稳定……\n')
+                                                                time.sleep(1)
+                                                                if not self.is_running:
+                                                                    self.cancelAllTest()
+                                                                    break
+                                                                self.result_signal.emit(f'\n\n------------AQ0004通道{ch+1}'
+                                                                                        f'输出电流为：{arrayCur_0020[va]}'
+                                                                                        f'------------\n')
+                                                                r_MA0202_1 = [0xAC, 9, 0x00, 0x0F, 0x0E, 0x00, 0x00,
+                                                                              0x01,ch+1,0x00]
+                                                                r_MA0202_1[9] = self.getCheckNum(r_MA0202_1[:9])
+                                                                rate = round(float(27648/4095),2)
+                                                                self.pauseOption()
+                                                                if not self.is_running:
+                                                                    self.cancelAllTest()
+                                                                    break
+                                                                self.CPU_optionPanel(transmitData=r_MA0202_1,
+                                                                                     param1=[(int(currentTheory_0020[va]/rate) & 0xff),
+                                                                                            ((int(currentTheory_0020[va]/rate) >> 8)& 0xff)])
+                                                            if self.isCancelAllTest:
+                                                                break
+                                                    else:
+                                                        self.isPassOp &=False
+                                                        self.messageBox_signal.emit(mess)
+                                                        reply = self.result_queue.get()
+                                                        if reply == QMessageBox.AcceptRole:
+                                                            self.cancelAllTest()
+                                                        else:
+                                                            self.cancelAllTest()
+                                    #                     break
+                                    #             else:
+                                    #                 break
+                                    #         else:
+                                    #             break
+                                    #     else:
+                                    #         break
+                                    # else:
+                                    #     break
+                                    # AO
+                                    if not self.isCancelAllTest:
+                                        # 写AO量程0-10v
+                                        w_MA0202_1[6] = 0x01
+                                        w_MA0202_1[7] = 0x00
+                                        w_MA0202_1[8] = 0x01
+                                        w_MA0202_1[9] = 0xE8
+                                        w_MA0202_1[10] = 0x03
+                                        w_MA0202_1[11] = self.getCheckNum(w_MA0202_1[:11])
+                                        self.pauseOption()
+                                        if not self.is_running:
+                                            self.cancelAllTest()
+                                            break
+                                        # 1 写AO通道1量程0-10V
+                                        self.CPU_optionPanel(transmitData=w_MA0202_1)
+                                        # 2 写AI通道2量程0-10V
+                                        w_MA0202_1[8] = 0x02
+                                        w_MA0202_1[11] = self.getCheckNum(w_MA0202_1[:11])
+                                        self.pauseOption()
+                                        if not self.is_running:
+                                            self.cancelAllTest()
+                                            break
+                                        self.CPU_optionPanel(transmitData=w_MA0202_1)
+                                        if not self.isCancelAllTest:
+                                            if not self.is_running:
+                                                self.cancelAllTest()
+                                                break
+                                            self.result_signal.emit(
+                                                '------------写选项板AO通道1、2量程0-10V成功------------\n\n')
+                                            # 3 读AO通道1量程0-10V
+                                            r_MA0202_1[6] = 0x01
+                                            r_MA0202_1[7] = 0x00
+                                            r_MA0202_1[8] = 0x01
+                                            r_MA0202_1[9] = self.getCheckNum(r_MA0202_1[:9])
+                                            self.pauseOption()
+                                            if not self.is_running:
+                                                self.cancelAllTest()
+                                                break
+                                            self.CPU_optionPanel(transmitData=r_MA0202_1, param1=[0xE8, 0x03])
+                                            r_MA0202_1[8] = 0x02
+                                            r_MA0202_1[9] = self.getCheckNum(r_MA0202_1[:9])
+                                            self.pauseOption()
+                                            if not self.is_running:
+                                                self.cancelAllTest()
+                                                break
+                                            self.CPU_optionPanel(transmitData=r_MA0202_1, param1=[0xE8, 0x03])
+                                            if not self.isCancelAllTest:
+                                                self.pauseOption()
+                                                if not self.is_running:
+                                                    self.cancelAllTest()
+                                                    break
+                                                self.result_signal.emit(
+                                                    '------------读选项板AO通道1、2量程0-10V成功------------\n\n')
+                                                try:
+                                                    # 8控制选项板AO通道发送电压
+                                                    CAN_bool, mess = self.CAN_init([1])
+                                                    if CAN_bool:
+                                                        # 0v-10v的理论值
+                                                        voltageTheory_0010 = [int(4095 * 1.17),4095,
+                                                                              (int)(4095 * 0.75),
+                                                                              (int)(4095 * 0.5), (int)(4095 * 0.25),
+                                                                              0]  # 0x6c00 =>27648
+                                                        # voltageTheory_0010 = [0]
+                                                        arrayVol_0010 = ["11.7V测试", "10V测试", "7.5V测试", "5V测试",
+                                                                         "2.5V测试", "0V测试"]
+
+                                                        AE_transmit = (c_ubyte * 8)(0x00, 0x00, 0x00, 0x00,
+                                                                                    0x00, 0x00, 0x00, 0x00)
+                                                        for va in range(len(voltageTheory_0010)):
+                                                            if va == 0:
+                                                                # 修改AI量程为0-10V
+                                                                AE_transmit = [0x2b, 0x10, 0x61, 1,
+                                                                               0x2a, 0x00, 0x00, 0x00]
+                                                                bool_range1 = \
                                                                 CAN_option.transmitCAN((0x600 + self.CANAddr5),
                                                                                        AE_transmit, 1)[0]
-                                                            if bool_range1 & bool_range2:
-                                                                if not self.is_running:
+                                                                AE_transmit = [0x2b, 0x10, 0x61, 2,
+                                                                               0x2a, 0x00, 0x00, 0x00]
+                                                                bool_range2 = \
+                                                                    CAN_option.transmitCAN((0x600 + self.CANAddr5),
+                                                                                           AE_transmit, 1)[0]
+                                                                if bool_range1 & bool_range2:
+                                                                    if not self.is_running:
+                                                                        self.cancelAllTest()
+                                                                        break
+                                                                    self.result_signal.emit(
+                                                                        f"------------成功修改AE0400通道1、2量程为0-10V------------\n\n")
+                                                                else:
+                                                                    if not self.is_running:
+                                                                        self.cancelAllTest()
+                                                                        break
+                                                                    self.result_signal.emit(
+                                                                        f"------------修改AE0400通道1、2量程为0-10V失败，取消后续测试------------\n\n")
                                                                     self.cancelAllTest()
+                                                                    self.isPassOp &= False
                                                                     break
-                                                                self.result_signal.emit(
-                                                                    f"------------成功修改AE0400通道1、2量程为0-10V------------\n\n")
-                                                            else:
-                                                                if not self.is_running:
-                                                                    self.cancelAllTest()
-                                                                    break
-                                                                self.result_signal.emit(
-                                                                    f"------------修改AE0400通道1、2量程为0-10V失败，取消后续测试------------\n\n")
-                                                                self.cancelAllTest()
-                                                                self.isPassOp &= False
-                                                                break
 
-                                                        for ch in range(2):
-                                                            # 发送0-10V的电压
-                                                            w_MA0202_1 = [0xAC, 11, 0x00, 0x0F, 0x10, 0x00,
-                                                                          0x01, 0x01, ch+1,
-                                                                          (voltageTheory_0010[va] & 0xff),
-                                                                          ((voltageTheory_0010[va] >> 8) & 0xff),0x00]
-                                                            if va == 5:
-                                                                w_MA0202_1[9] = 0x00
-                                                                w_MA0202_1[10] = 0x00
-                                                            w_MA0202_1[11] = self.getCheckNum(w_MA0202_1[:11])
-                                                            self.pauseOption()
-                                                            if not self.is_running:
-                                                                self.cancelAllTest()
-                                                                break
-                                                            self.CPU_optionPanel(transmitData=w_MA0202_1)
-                                                            if not self.isCancelAllTest:
+                                                            for ch in range(2):
+                                                                # 发送0-10V的电压
+                                                                w_MA0202_1 = [0xAC, 11, 0x00, 0x0F, 0x10, 0x00,
+                                                                              0x01, 0x01, ch+1,
+                                                                              (voltageTheory_0010[va] & 0xff),
+                                                                              ((voltageTheory_0010[va] >> 8) & 0xff),0x00]
+                                                                if va == 5:
+                                                                    w_MA0202_1[9] = 0x00
+                                                                    w_MA0202_1[10] = 0x00
+                                                                w_MA0202_1[11] = self.getCheckNum(w_MA0202_1[:11])
+                                                                self.pauseOption()
                                                                 if not self.is_running:
                                                                     self.cancelAllTest()
                                                                     break
-                                                                self.result_signal.emit(
-                                                                    f'\n\n------------选项板AO通道{ch+1}'
-                                                                    f'输出电压为：{arrayVol_0010[va]}'
-                                                                    f'------------')
-                                                                if not self.is_running:
-                                                                    self.cancelAllTest()
-                                                                    break
-                                                                self.result_signal.emit('等待接收的信号稳定……\n\n')
-                                                                tt0 = time.time()
-                                                                while True:
-                                                                    rate = round(float(27648 / 4095), 2)
-                                                                    if (time.time() - tt0)*1000 >10000:
-                                                                        if not self.is_running:
-                                                                            self.cancelAllTest()
+                                                                self.CPU_optionPanel(transmitData=w_MA0202_1)
+                                                                if not self.isCancelAllTest:
+                                                                    if not self.is_running:
+                                                                        self.cancelAllTest()
+                                                                        break
+                                                                    self.result_signal.emit(
+                                                                        f'\n\n------------选项板AO通道{ch+1}'
+                                                                        f'输出电压为：{arrayVol_0010[va]}'
+                                                                        f'------------')
+                                                                    if not self.is_running:
+                                                                        self.cancelAllTest()
+                                                                        break
+                                                                    self.result_signal.emit('等待接收的信号稳定……\n\n')
+                                                                    tt0 = time.time()
+                                                                    while True:
+                                                                        rate = round(float(27648 / 4095), 2)
+                                                                        if (time.time() - tt0)*1000 >10000:
+                                                                            if not self.is_running:
+                                                                                self.cancelAllTest()
+                                                                                break
+                                                                            self.result_signal.emit(
+                                                                                '\n\n*********AE0400无法接收到稳定数据，'
+                                                                                '取消后续测试！*********\n\n')
+                                                                            self.isPassOp &= False
+                                                                            # self.cancelAllTest()
                                                                             break
-                                                                        self.result_signal.emit(
-                                                                            '\n\n*********AE0400无法接收到稳定数据，'
-                                                                            '取消后续测试！*********\n\n')
-                                                                        self.isPassOp &= False
-                                                                        # self.cancelAllTest()
-                                                                        break
-                                                                    bool_AE,AE_value = self.receiveAIData(CANAddr_AI= self.CANAddr4,channel=ch)
-
-                                                                    if abs(voltageTheory_0010[va] - int(AE_value/rate)) < 40:
-                                                                        break
-                                                                if self.isCancelAllTest:
-                                                                    break
-
-                                                                tt1 = time.time()
-                                                                while True:
-                                                                    if (time.time() - tt1)*1000 >2000:
-                                                                        self.isPassOp &= False
-                                                                        if not self.is_running:
-                                                                            self.cancelAllTest()
-                                                                            break
-                                                                        self.result_signal.emit('\n\n*********AE0400未接收到数据，取消后续测试！*********\n\n')
-                                                                        # self.cancelAllTest()
-                                                                        break
-                                                                    try:
                                                                         bool_AE,AE_value = self.receiveAIData(CANAddr_AI= self.CANAddr4,channel=ch)
-                                                                    except:
-                                                                        if not self.is_running:
-                                                                            self.cancelAllTest()
-                                                                            break
-                                                                        self.result_signal.emit(
-                                                                            f'ErrorInf:\n{traceback.format_exc()}')
-                                                                    if bool_AE:
-                                                                        if not self.is_running:
-                                                                            self.cancelAllTest()
-                                                                            break
-                                                                        self.result_signal.emit(
-                                                                            f'-----------模拟量输出通道{ch+1}写入的值为{voltageTheory_0010[va]}-----------。\n')
-                                                                        if not self.is_running:
-                                                                            self.cancelAllTest()
-                                                                            break
 
-                                                                        self.result_signal.emit(
-                                                                            f'-----------AE0400接收值转换比例后的值为{int(AE_value/rate)}。-----------\n')
+                                                                        if abs(voltageTheory_0010[va] - int(AE_value/rate)) < 40:
+                                                                            break
+                                                                    if self.isCancelAllTest:
+                                                                        break
+
+                                                                    tt1 = time.time()
+                                                                    while True:
+                                                                        if (time.time() - tt1)*1000 >2000:
+                                                                            self.isPassOp &= False
+                                                                            if not self.is_running:
+                                                                                self.cancelAllTest()
+                                                                                break
+                                                                            self.result_signal.emit('\n\n*********AE0400未接收到数据，取消后续测试！*********\n\n')
+                                                                            # self.cancelAllTest()
+                                                                            break
                                                                         try:
-                                                                            if abs(voltageTheory_0010[va] - int(AE_value/rate)) < 40:
-                                                                                self.isPassOp &= True
-                                                                                break
-                                                                            else:
-                                                                                self.isPassOp &= False
-                                                                                break
+                                                                            bool_AE,AE_value = self.receiveAIData(CANAddr_AI= self.CANAddr4,channel=ch)
                                                                         except:
+                                                                            if not self.is_running:
+                                                                                self.cancelAllTest()
+                                                                                break
+                                                                            self.result_signal.emit(
+                                                                                f'ErrorInf:\n{traceback.format_exc()}')
+                                                                        if bool_AE:
+                                                                            if not self.is_running:
+                                                                                self.cancelAllTest()
+                                                                                break
+                                                                            self.result_signal.emit(
+                                                                                f'-----------模拟量输出通道{ch+1}写入的值为{voltageTheory_0010[va]}-----------。\n')
                                                                             if not self.is_running:
                                                                                 self.cancelAllTest()
                                                                                 break
 
                                                                             self.result_signal.emit(
-                                                                                f'ErrorInf:\n{traceback.format_exc()}')
-                                                                            break
-                                                                    else:
-                                                                        continue
-                                                        if self.isCancelAllTest:
-                                                            break
-                                                else:
+                                                                                f'-----------AE0400接收值转换比例后的值为{int(AE_value/rate)}。-----------\n')
+                                                                            try:
+                                                                                if abs(voltageTheory_0010[va] - int(AE_value/rate)) < 40:
+                                                                                    self.isPassOp &= True
+                                                                                    break
+                                                                                else:
+                                                                                    self.isPassOp &= False
+                                                                                    break
+                                                                            except:
+                                                                                if not self.is_running:
+                                                                                    self.cancelAllTest()
+                                                                                    break
+
+                                                                                self.result_signal.emit(
+                                                                                    f'ErrorInf:\n{traceback.format_exc()}')
+                                                                                break
+                                                                        else:
+                                                                            continue
+                                                            if self.isCancelAllTest:
+                                                                break
+                                                    else:
+                                                        self.isPassOp &= False
+                                                        self.messageBox_signal.emit(mess)
+                                                        reply = self.result_queue.get()
+                                                        if reply == QMessageBox.AcceptRole:
+                                                            self.cancelAllTest()
+                                                        else:
+                                                            self.cancelAllTest()
+                                                        break
+                                                except Exception as e:
                                                     self.isPassOp &= False
-                                                    self.messageBox_signal.emit(mess)
+                                                    if not self.is_running:
+                                                        self.cancelAllTest()
+                                                        break
+
+                                                    self.result_signal.emit(
+                                                        f'CAN_init error:{e}\nCAN设备通道1启动失败，后续测试全部取消。\n')
+                                                    self.messageBox_signal.emit(['警告',
+                                                                                 f'CAN_init error:{e}\nCAN设备通道1启动失败，'
+                                                                                 f'后续测试全部取消。\n'])
+
                                                     reply = self.result_queue.get()
                                                     if reply == QMessageBox.AcceptRole:
                                                         self.cancelAllTest()
                                                     else:
                                                         self.cancelAllTest()
                                                     break
-                                            except Exception as e:
-                                                self.isPassOp &= False
-                                                if not self.is_running:
-                                                    self.cancelAllTest()
-                                                    break
-
-                                                self.result_signal.emit(
-                                                    f'CAN_init error:{e}\nCAN设备通道1启动失败，后续测试全部取消。\n')
-                                                self.messageBox_signal.emit(['警告',
-                                                                             f'CAN_init error:{e}\nCAN设备通道1启动失败，'
-                                                                             f'后续测试全部取消。\n'])
-
-                                                reply = self.result_queue.get()
-                                                if reply == QMessageBox.AcceptRole:
-                                                    self.cancelAllTest()
-                                                else:
-                                                    self.cancelAllTest()
-                                                break
-                                else:
-                                    break
-
-                                # 三码
-                                if not self.isCancelAllTest:
-                                    option_pn='P0000010390631'
-                                    option_sn = 'S1223-001083'
-                                    option_rev = '06'
-                                    w_PN = [0xac, 0x21, 0x00, 0x0f, 0x10, 0x00, 0x00, 0xf1, 0x18,
-                                            0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-                                            0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-                                            0x00]
-                                    for pn in range(len(option_pn)):
-                                        w_PN[9+pn] = ord(option_pn[pn])
-                                    w_PN[33] = self.getCheckNum(w_PN[:33])
-                                    if not self.is_running:
-                                        self.cancelAllTest()
+                                    else:
                                         break
 
-                                    self.result_signal.emit(f'开始写入选项板PN码：{option_pn}。\n')
-                                    self.pauseOption()
-                                    if not self.is_running:
-                                        self.cancelAllTest()
-                                        break
-                                    self.CPU_optionPanel(transmitData=w_PN)
+                                    # 三码
                                     if not self.isCancelAllTest:
+                                        option_pn='P0000010390631'
+                                        option_sn = 'S1223-001083'
+                                        option_rev = '06'
+                                        w_PN = [0xac, 0x21, 0x00, 0x0f, 0x10, 0x00, 0x00, 0xf1, 0x18,
+                                                0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+                                                0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+                                                0x00]
+                                        for pn in range(len(option_pn)):
+                                            w_PN[9+pn] = ord(option_pn[pn])
+                                        w_PN[33] = self.getCheckNum(w_PN[:33])
                                         if not self.is_running:
                                             self.cancelAllTest()
                                             break
 
-                                        self.result_signal.emit('写入PN成功！\n')
-                                        self.result_signal.emit('开始读取选项板PN码。\n\n')
-                                        r_PN = [0xac, 8, 0x00, 0x0f, 0x0e, 0x00, 0x00, 0xf1, 0x00]
-                                        r_PN[8] = self.getCheckNum(r_PN[:8])
+                                        self.result_signal.emit(f'开始写入选项板PN码：{option_pn}。\n')
                                         self.pauseOption()
                                         if not self.is_running:
                                             self.cancelAllTest()
                                             break
-                                        self.CPU_optionPanel(transmitData=r_PN,param2=option_pn)
+                                        self.CPU_optionPanel(transmitData=w_PN)
                                         if not self.isCancelAllTest:
                                             if not self.is_running:
                                                 self.cancelAllTest()
                                                 break
 
-                                            self.result_signal.emit('读PN成功！\n\n')
-                                            w_SN = [0xac, 0x19, 0x00, 0x0f, 0x10, 0x00, 0x00, 0xf2, 0x10,
-                                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                                    0x00]
-                                            for sn in range(len(option_sn)):
-                                                w_SN[9 + sn] = ord(option_sn[sn])
-                                            w_SN[25] = self.getCheckNum(w_SN[:25])
-                                            # self.result_signal.emit(f'w_SN:{w_SN}')
-                                            if not self.is_running:
-                                                self.cancelAllTest()
-                                                break
-
-                                            self.result_signal.emit(f'开始写入选项板SN码：{option_sn}。\n')
+                                            self.result_signal.emit('写入PN成功！\n')
+                                            self.result_signal.emit('开始读取选项板PN码。\n\n')
+                                            r_PN = [0xac, 8, 0x00, 0x0f, 0x0e, 0x00, 0x00, 0xf1, 0x00]
+                                            r_PN[8] = self.getCheckNum(r_PN[:8])
                                             self.pauseOption()
                                             if not self.is_running:
                                                 self.cancelAllTest()
                                                 break
-                                            self.CPU_optionPanel(transmitData=w_SN)
+                                            self.CPU_optionPanel(transmitData=r_PN,param2=option_pn)
                                             if not self.isCancelAllTest:
                                                 if not self.is_running:
                                                     self.cancelAllTest()
                                                     break
 
-                                                self.result_signal.emit('写入SN成功！\n')
-                                                self.result_signal.emit('开始读取选项板SN码。\n\n')
-                                                r_SN = [0xac, 8, 0x00, 0x0f, 0x0e, 0x00, 0x00, 0xf2, 0x00]
-                                                r_SN[8] = self.getCheckNum(r_SN[:8])
+                                                self.result_signal.emit('读PN成功！\n\n')
+                                                w_SN = [0xac, 0x19, 0x00, 0x0f, 0x10, 0x00, 0x00, 0xf2, 0x10,
+                                                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                                        0x00]
+                                                for sn in range(len(option_sn)):
+                                                    w_SN[9 + sn] = ord(option_sn[sn])
+                                                w_SN[25] = self.getCheckNum(w_SN[:25])
+                                                # self.result_signal.emit(f'w_SN:{w_SN}')
+                                                if not self.is_running:
+                                                    self.cancelAllTest()
+                                                    break
+
+                                                self.result_signal.emit(f'开始写入选项板SN码：{option_sn}。\n')
                                                 self.pauseOption()
                                                 if not self.is_running:
                                                     self.cancelAllTest()
                                                     break
-                                                self.CPU_optionPanel(transmitData=r_SN, param2=option_sn)
+                                                self.CPU_optionPanel(transmitData=w_SN)
                                                 if not self.isCancelAllTest:
                                                     if not self.is_running:
                                                         self.cancelAllTest()
                                                         break
 
-                                                    self.result_signal.emit('读SN成功！\n\n')
-                                                    w_REV = [0xac, 0x11, 0x00, 0x0f, 0x10, 0x00, 0x00, 0xf3, 0x08,
-                                                             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                                             0x00]
-                                                    for rev in range(len(option_rev)):
-                                                        w_REV[9 + rev] = ord(option_rev[rev])
-                                                    w_REV[17] = self.getCheckNum(w_REV[:17])
-                                                    # self.result_signal.emit(f'w_rev:{w_REV}')
-                                                    if not self.is_running:
-                                                        self.cancelAllTest()
-                                                        break
-
-                                                    self.result_signal.emit(f'开始写入选项板REV码：{option_rev}。\n')
+                                                    self.result_signal.emit('写入SN成功！\n')
+                                                    self.result_signal.emit('开始读取选项板SN码。\n\n')
+                                                    r_SN = [0xac, 8, 0x00, 0x0f, 0x0e, 0x00, 0x00, 0xf2, 0x00]
+                                                    r_SN[8] = self.getCheckNum(r_SN[:8])
                                                     self.pauseOption()
                                                     if not self.is_running:
                                                         self.cancelAllTest()
                                                         break
-                                                    self.CPU_optionPanel(transmitData=w_REV)
+                                                    self.CPU_optionPanel(transmitData=r_SN, param2=option_sn)
                                                     if not self.isCancelAllTest:
                                                         if not self.is_running:
                                                             self.cancelAllTest()
                                                             break
 
-                                                        self.result_signal.emit('写入REV成功！\n')
-                                                        self.result_signal.emit('开始读取选项板REV码。\n\n')
-                                                        r_REV = [0xac, 8, 0x00, 0x0f, 0x0e, 0x00, 0x00, 0xf3, 0x3b]
-                                                        # r_REV[8] = self.getCheckNum(r_REV[:8])
+                                                        self.result_signal.emit('读SN成功！\n\n')
+                                                        w_REV = [0xac, 0x11, 0x00, 0x0f, 0x10, 0x00, 0x00, 0xf3, 0x08,
+                                                                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                                                 0x00]
+                                                        for rev in range(len(option_rev)):
+                                                            w_REV[9 + rev] = ord(option_rev[rev])
+                                                        w_REV[17] = self.getCheckNum(w_REV[:17])
+                                                        # self.result_signal.emit(f'w_rev:{w_REV}')
+                                                        if not self.is_running:
+                                                            self.cancelAllTest()
+                                                            break
+
+                                                        self.result_signal.emit(f'开始写入选项板REV码：{option_rev}。\n')
                                                         self.pauseOption()
                                                         if not self.is_running:
                                                             self.cancelAllTest()
                                                             break
-                                                        self.CPU_optionPanel(transmitData=r_REV, param2=option_rev)
+                                                        self.CPU_optionPanel(transmitData=w_REV)
                                                         if not self.isCancelAllTest:
                                                             if not self.is_running:
                                                                 self.cancelAllTest()
                                                                 break
 
-                                                            self.result_signal.emit('读REV成功！\n\n')
+                                                            self.result_signal.emit('写入REV成功！\n')
+                                                            self.result_signal.emit('开始读取选项板REV码。\n\n')
+                                                            r_REV = [0xac, 8, 0x00, 0x0f, 0x0e, 0x00, 0x00, 0xf3, 0x3b]
+                                                            # r_REV[8] = self.getCheckNum(r_REV[:8])
+                                                            self.pauseOption()
+                                                            if not self.is_running:
+                                                                self.cancelAllTest()
+                                                                break
+                                                            self.CPU_optionPanel(transmitData=r_REV, param2=option_rev)
+                                                            if not self.isCancelAllTest:
+                                                                if not self.is_running:
+                                                                    self.cancelAllTest()
+                                                                    break
+
+                                                                self.result_signal.emit('读REV成功！\n\n')
+                                                            else:
+                                                                break
                                                         else:
                                                             break
                                                     else:
@@ -1851,8 +1857,6 @@ class CPUThread(QObject):
                                             break
                                     else:
                                         break
-                                else:
-                                    break
 
 
                             elif opType == '422':
@@ -1998,6 +2002,9 @@ class CPUThread(QObject):
                 reply = self.result_queue.get()
                 if reply == QMessageBox.AcceptRole or reply == QMessageBox.RejectRole:
                     self.messageBox_signal.emit(['操作提示', f'请将拨杆拨到STOP位置（下）。\n'])
+                    reply = self.result_queue.get()
+                    if reply == QMessageBox.AcceptRole or reply == QMessageBox.RejectRole:
+                        pass
             else:
                 self.messageBox_signal.emit(['操作提示', f'测试被中止！\n'])
                 self.label_signal.emit(['fail', '测试停止'])

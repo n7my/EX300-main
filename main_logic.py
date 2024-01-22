@@ -1391,6 +1391,30 @@ class Ui_Control(QMainWindow,Ui_Form):
             CAN_option.receiveResume()
             self.pushButton_10.setEnabled(False)
             self.pushButton_10.setStyleSheet('color: rgb(255, 255, 255);background-color: rgb(197, 197, 197);')
+            # try:#开电源
+                # # 可编程电源开断电
+                # power_off = [0x01, 0x06, 0x00, 0x01, 0x00, 0x00, 0xD8, 0x0A]
+                # power_on = [0x01, 0x06, 0x00, 0x01, 0x00, 0x01, 0x19, 0xCA]
+                # vol_24v = [0x01, 0x10, 0x00, 0x20, 0x00, 0x02, 0x04, 0x00, 0x00, 0x5D, 0xC0, 0xC9, 0x77]
+                # cur_2a = [0x01, 0x10, 0x00, 0x22, 0x00, 0x02, 0x04, 0x00, 0x00, 0x4E, 0x20, 0x44, 0x16]
+                # self.powerControl(baudRate=9600, transmitData=power_off)
+                # if not self.isCancelAllTest:
+                #     self.result_signal.emit('设备已断电。等待3秒后自动重新上电。\n')
+                #     for dd in range(3):
+                #         self.result_signal.emit(f'剩余等待{3 - dd}秒……\n')
+                #         time.sleep(1)
+                #     self.powerControl(baudRate=9600, transmitData=vol_24v)
+                #     if not self.isCancelAllTest:
+                #         self.result_signal.emit('设置电压为24V。\n')
+                #         self.powerControl(baudRate=9600, transmitData=cur_2a)
+                #         if not self.isCancelAllTest:
+                #             self.result_signal.emit('设置电压为2A。\n')
+                #             self.powerControl(baudRate=9600, transmitData=power_on)
+                #             if not self.isCancelAllTest:
+                #                 self.result_signal.emit('设备重新上电。\n')
+                #                 if not self.isCancelAllTest:
+                #                     time.sleep(6)
+
             try:
                 if not self.sendMessage():#测试参数确定
                     return False
@@ -1698,7 +1722,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                                          int(self.lineEdit_MA0202_AQ.text())],
                                         ['','',self.comboBox_MA0202_typeC.currentText(),self.saveDir,'','',''],
                                         [self.inf_MA0202_test,''],
-                                        self.current_dir]
+                                        self.current_dir,'MA0202']
                     self.CPU_thread = QThread()
                     from thread_CPU import CPUThread
                     self.CPU_option = CPUThread(self.inf_CPUlist, self.result_queue)
@@ -2578,7 +2602,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                 else:
                     self.itemOperation(mTable, i, 0, 0, '')
             self.inf_CPUlist = [self.inf_param,self.inf_product, self.inf_CANIPAdrr,
-                                self.inf_serialPort, self.inf_test,self.current_dir]
+                                self.inf_serialPort, self.inf_test,self.current_dir,'CPU']
         elif self.tabIndex == 4:#MA0202界面
             # mTable = self.tableWidget_CPU
             self.module_pn = self.lineEdit_MA0202_PN.text()
