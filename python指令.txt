@@ -54,3 +54,16 @@ D:
 python虚拟环境激活报错的解决方法：https://blog.csdn.net/Protinx/article/details/121048100
 
 pip install -r requirements.txt -i https://pypi.douban.com/simple/
+
+
+
+
+
+self.MA0202_isChangePara = self.checkBox_MA0202_para.isChecked()
+            self.moduleName_1 = '工装1（AE0400）'
+            self.moduleName_2 = '工装2（AQ0004）'
+            self.MA0202_CANAddr1 = int(self.lineEdit_MA0202_AE.text())
+            self.MA0202_CANAddr2 = int(self.lineEdit_MA0202_AQ.text())
+            self.isTestModule = self.radioButton_MA0202.isChecked()
+            self.testModuleType = self.radioButton_MA0202.text()
+            self.serialPort_typeC = self.comboBox_MA0202_typeC.currentText()
