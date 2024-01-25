@@ -1,0 +1,69 @@
+1.".ui"文件转“.py”文件指令
+
+pyuic5 -o 20240120.py new1440_all_20240120.ui
+
+
+2.打包成python程序打包成exe文件
+
+pyinstaller -D -w main.py
+
+pyinstaller.exe -D -c --add-data "ControlCAN.dll;." --add-data "config.txt;." --add-data "取消全屏按钮.png;." --add-data "取消全屏按钮2.png;." --add-data "全屏按钮.png;." --add-data "全屏按钮2.png;." --add-data "logo.png;." --add-data "pass.png;." --add-data "fail.png;." --add-data "ControlCAN.lib;." --add-data "pushbutton.qrc;." --add-data "beast5.png;." --add-data "0000.png;." --add-data "485拨码.png;." --add-data "5555.png;." --add-data "AAAA.png;." --add-data "AE_00.png;." --add-data "AE_55.png;." --add-data "AE_aa.png;." --add-data "BAT_LOW灯.png;." --add-data "ERROR灯.png;." --add-data "HOST灯.png;." --add-data "PRG灯.png;." --add-data "RS-232C灯.png;." --add-data "RS-485灯.png;." --add-data "RUN灯.png;." --add-data "所有灯.png;." main.py
+
+
+pyinstaller.exe -D -w --add-data "ControlCAN.dll;." --add-data "config.txt;." --add-data "取消全屏按钮.png;." --add-data "取消全屏按钮2.png;." --add-data "全屏按钮.png;." --add-data "全屏按钮2.png;." --add-data "logo.png;." --add-data "pass.png;." --add-data "fail.png;." --add-data "ControlCAN.lib;." --add-data "pushbutton.qrc;." --add-data "beast5.png;." --add-data "0000.png;." --add-data "485拨码.png;." --add-data "5555.png;." --add-data "AAAA.png;." --add-data "AE_00.png;." --add-data "AE_55.png;." --add-data "AE_aa.png;." --add-data "BAT_LOW灯.png;." --add-data "ERROR灯.png;." --add-data "HOST灯.png;." --add-data "PRG灯.png;." --add-data "RS-232C灯.png;." --add-data "RS-485灯.png;." --add-data "RUN灯.png;." --add-data "所有灯.png;." main.py
+
+pyinstaller.exe -D -w  --add-data "beast5.ico;." --icon=./beast5.ico --add-data "ControlCAN.dll;." --add-data "config.txt;." --add-data "取消全屏按钮.png;." --add-data "取消全屏按钮2.png;." --add-data "全屏按钮.png;." --add-data "全屏按钮2.png;." --add-data "logo.png;." --add-data "pass.png;." --add-data "fail.png;." --add-data "ControlCAN.lib;." --add-data "pushbutton.qrc;." --add-data "beast5.png;." --add-data "0000.png;." --add-data "485拨码.png;." --add-data "5555.png;." --add-data "AAAA.png;." --add-data "AE_00.png;." --add-data "AE_55.png;." --add-data "AE_aa.png;." --add-data "BAT_LOW灯.png;." --add-data "ERROR灯.png;." --add-data "HOST灯.png;." --add-data "PRG灯.png;." --add-data "RS-232C灯.png;." --add-data "RS-485灯.png;." --add-data "RUN灯.png;." --add-data "所有灯.png;." --add-data  "AE_ERROR.png;." --add-data "AE_RUN.png;." --add-data "AQ_ERROR.png;." --add-data "AQ_RUN.png;." --add-data "DO_0.png;." --add-data "DO_1.png;." --add-data "DO_10.png;." --add-data "DO_11.png;." --add-data "DO_12.png;." --add-data "DO_13.png;." --add-data "DO_14.png;." --add-data "DO_15.png;." --add-data "DO_2.png;." --add-data "DO_3.png;." --add-data "DO_4.png;." --add-data "DO_5.png;." --add-data "DO_6.png;." --add-data "DO_7.png;." --add-data "DO_8.png;." --add-data "DO_9.png;." --add-data "DO_ERROR.png;." --add-data "DO_FF.png;." --add-data "DO_RUN.png;." --add-data "ET1600_0.png;." --add-data "ET1600_1.png;." --add-data "ET1600_10.png;." --add-data "ET1600_11.png;." --add-data "ET1600_12.png;." --add-data "ET1600_13.png;." --add-data "ET1600_14.png;." --add-data "ET1600_15.png;." --add-data "ET1600_2.png;." --add-data "ET1600_3.png;." --add-data "ET1600_4.png;." --add-data "ET1600_5.png;." --add-data "ET1600_6.png;." --add-data "ET1600_7.png;." --add-data "ET1600_8.png;." --add-data "ET1600_9.png;." --add-data "ET1600_ERROR.png;." --add-data "ET1600_FF.png;." --add-data "ET1600_RUN.png;." main.py
+
+pyinstaller.exe -D -w  -i beast5.ico --add-data "ControlCAN.dll;." --add-data "config.txt;." --add-data "取消全屏按钮.png;." --add-data "取消全屏按钮2.png;." --add-data "全屏按钮.png;." --add-data "全屏按钮2.png;." --add-data "logo.png;." --add-data "pass.png;." --add-data "fail.png;." --add-data "ControlCAN.lib;." --add-data "pushbutton.qrc;." --add-data "beast5.png;." --add-data "0000.png;." --add-data "485拨码.png;." --add-data "5555.png;." --add-data "AAAA.png;." --add-data "AE_00.png;." --add-data "AE_55.png;." --add-data "AE_aa.png;." --add-data "BAT_LOW灯.png;." --add-data "ERROR灯.png;." --add-data "HOST灯.png;." --add-data "PRG灯.png;." --add-data "RS-232C灯.png;." --add-data "RS-485灯.png;." --add-data "RUN灯.png;." --add-data "所有灯.png;." --add-data  "AE_ERROR.png;." --add-data "AE_RUN.png;." --add-data "AQ_ERROR.png;." --add-data "AQ_RUN.png;." --add-data "DO_0.png;." --add-data "DO_1.png;." --add-data "DO_10.png;." --add-data "DO_11.png;." --add-data "DO_12.png;." --add-data "DO_13.png;." --add-data "DO_14.png;." --add-data "DO_15.png;." --add-data "DO_2.png;." --add-data "DO_3.png;." --add-data "DO_4.png;." --add-data "DO_5.png;." --add-data "DO_6.png;." --add-data "DO_7.png;." --add-data "DO_8.png;." --add-data "DO_9.png;." --add-data "DO_ERROR.png;." --add-data "DO_FF.png;." --add-data "DO_RUN.png;." --add-data "ET1600_0.png;." --add-data "ET1600_1.png;." --add-data "ET1600_10.png;." --add-data "ET1600_11.png;." --add-data "ET1600_12.png;." --add-data "ET1600_13.png;." --add-data "ET1600_14.png;." --add-data "ET1600_15.png;." --add-data "ET1600_2.png;." --add-data "ET1600_3.png;." --add-data "ET1600_4.png;." --add-data "ET1600_5.png;." --add-data "ET1600_6.png;." --add-data "ET1600_7.png;." --add-data "ET1600_8.png;." --add-data "ET1600_9.png;." --add-data "ET1600_ERROR.png;." --add-data "ET1600_FF.png;." --add-data "ET1600_RUN.png;." main.py
+
+pyinstaller.exe -D -c --add-data "ControlCAN.dll;." --add-data "config.txt;." --add-data "取消全屏按钮.png;." --add-data "取消全屏按钮2.png;." --add-data "全屏按钮.png;." --add-data "全屏按钮2.png;." --add-data "logo.png;." --add-data "pass.png;." --add-data "fail.png;." --add-data "ControlCAN.lib;." --add-data "pushbutton.qrc;." main.spec
+注：-F，打包成一个EXE文件。
+      -D，创建一个目录，包含EXE和所有依赖文件。
+      -c，使用控制台，无窗口。
+      -w，使用窗口，无控制台。
+
+3.进入conda环境
+conda activate EX300_env_py38
+进入d盘
+D:
+
+
+
+
+如何创建python虚拟环境
+要在Python中创建虚拟环境，可以按照以下步骤进行操作：
+
+首先确保已经安装了Python的包管理工具pip。如果没有安装，可以通过官网（https://www.python.org/downloads/）下载并安装最新版本的Python。
+
+打开命令提示符或者终端，输入以下命令来安装virtualenv库：pip install virtualenv。这将会使用pip自动从PyPI上下载并安装virtualenv库。
+
+接下来，选择一个合适的目录来存放虚拟环境文件夹。比如我们选择在当前目录下创建名为"my_venv"的虚拟环境。
+
+运行以下命令来创建虚拟环境：virtualenv my_venv。这将会在指定的目录下创建一个名为"my_venv"的文件夹，其中包含了所需的Python解释器、标准库等。
+
+完成后，可以切换到虚拟环境。对于Windows系统，运行以下命令：.\my_venv\Scripts\activate；对于MacOS或Linux系统，运行以下命令：source ./my_venv/bin/activate。此时命令提示符或终端的前面应该显示(my_venv)字样，表明已经成功激活虚拟环境。
+
+现在就可以在虚拟环境中安装任意第三方库或项目依赖了。只需使用常规的pip命令即可，例如 pip install package-name。
+
+若想退出虚拟环境，可以运行以下命令：deactivate。
+
+删除虚拟环境也非常简单，只需删除相关的文件夹即可。注意不要直接删除全局Python环境中的文件夹，否则可能导致系统错误。
+
+希望以上信息对您有所帮助！
+
+python虚拟环境激活报错的解决方法：https://blog.csdn.net/Protinx/article/details/121048100
+
+pip install -r requirements.txt -i https://pypi.douban.com/simple/
+
+
+
+
+
+self.MA0202_isChangePara = self.checkBox_MA0202_para.isChecked()
+            self.moduleName_1 = '工装1（AE0400）'
+            self.moduleName_2 = '工装2（AQ0004）'
+            self.MA0202_CANAddr1 = int(self.lineEdit_MA0202_AE.text())
+            self.MA0202_CANAddr2 = int(self.lineEdit_MA0202_AQ.text())
+            self.isTestModule = self.radioButton_MA0202.isChecked()
+            self.testModuleType = self.radioButton_MA0202.text()
+            self.serialPort_typeC = self.comboBox_MA0202_typeC.currentText()

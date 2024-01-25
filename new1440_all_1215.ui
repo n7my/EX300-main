@@ -1900,7 +1900,7 @@ border: none;</string>
        <rect>
         <x>425</x>
         <y>85</y>
-        <width>101</width>
+        <width>104</width>
         <height>30</height>
        </rect>
       </property>
@@ -2233,7 +2233,7 @@ border: none;</string>
        <rect>
         <x>10</x>
         <y>130</y>
-        <width>121</width>
+        <width>122</width>
         <height>30</height>
        </rect>
       </property>
@@ -2264,7 +2264,7 @@ border: none;</string>
        <rect>
         <x>140</x>
         <y>130</y>
-        <width>115</width>
+        <width>122</width>
         <height>30</height>
        </rect>
       </property>
@@ -2295,7 +2295,7 @@ border: none;</string>
        <rect>
         <x>270</x>
         <y>130</y>
-        <width>121</width>
+        <width>128</width>
         <height>30</height>
        </rect>
       </property>
@@ -3536,9 +3536,9 @@ background-color: rgb(76, 165, 132);</string>
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>658</y>
+     <y>680</y>
      <width>711</width>
-     <height>181</height>
+     <height>161</height>
     </rect>
    </property>
    <property name="maximumSize">
@@ -3561,9 +3561,9 @@ p, li { white-space: pre-wrap; }
   <widget class="QLabel" name="label">
    <property name="geometry">
     <rect>
-     <x>120</x>
+     <x>10</x>
      <y>40</y>
-     <width>600</width>
+     <width>711</width>
      <height>100</height>
     </rect>
    </property>
@@ -3685,25 +3685,6 @@ background-color: rgb(76, 165, 132);</string>
     <string>写入三码</string>
    </property>
   </widget>
-  <widget class="QLabel" name="label_11">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>40</y>
-     <width>100</width>
-     <height>100</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string/>
-   </property>
-   <property name="pixmap">
-    <pixmap>../../MyData/wujun89/.designer/backup/beast5.png</pixmap>
-   </property>
-   <property name="scaledContents">
-    <bool>true</bool>
-   </property>
-  </widget>
   <widget class="Line" name="line_4">
    <property name="geometry">
     <rect>
@@ -3818,7 +3799,6 @@ background-color: rgb(76, 165, 132);</string>
   <zorder>label_7</zorder>
   <zorder>label_47</zorder>
   <zorder>pushButton_12</zorder>
-  <zorder>label_11</zorder>
   <zorder>line_4</zorder>
   <zorder>label_13</zorder>
   <zorder>lineEdit_MAC</zorder>

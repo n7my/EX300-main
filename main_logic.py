@@ -1,8 +1,8 @@
 import os
 import sys
 import threading
-import win32api
-import win32print
+# import win32api
+# import win32print
 import CAN_option
 # from main_ui import Ui_Form
 from ctypes import *
@@ -219,7 +219,8 @@ class Ui_Control(QMainWindow,Ui_Form):
         super(Ui_Control,self).__init__(parent)
         self.setupUi(self)
         self.pushButton_13.setVisible(False)
-        self.label_11.setPixmap(QtGui.QPixmap(f"{current_dir}/beast5.png"))
+        # self.label_11.setPixmap(QtGui.QPixmap(f"{current_dir}/beast5.png"))
+        # self.label_11.setVisible(False)
         # CPU页面参数配置
         self.CPU_lineEdit_array = [self.lineEdit_33, self.lineEdit_34, self.lineEdit_35, self.lineEdit_36,
                                    self.lineEdit_37, self.lineEdit_38]
@@ -244,7 +245,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.label_41.setAlignment(QtCore.Qt.AlignLeft|Qt.AlignVCenter)
         #屏蔽pushbutton_9
         self.pushButton_9.setVisible(False)
-        self.getSerialInf(0)
+        self.getSerialInf(0,type = 'CPU')
         # 读页面配置
         # self.loadConfig()必须放在类似comboBox.currentIndexChanged.connect(self.saveConfig)的代码之前
         # 某则一修改参数就会触发saveConfig，导致还没修改的参数被默认参数覆盖。
@@ -285,7 +286,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         #批量设置lineEdit只读
         lE_arr = [self.lineEdit,self.lineEdit_3,self.lineEdit_5,self.lineEdit_20,self.lineEdit_21,self.lineEdit_22,
                   self.lineEdit_45,self.lineEdit_46,self.lineEdit_47,self.lineEdit_30,self.lineEdit_31,self.lineEdit_32
-                  ,self.lineEdit_33]
+                  ,self.lineEdit_33,self.lineEdit_MA0202_SN,self.lineEdit_MA0202_PN,self.lineEdit_MA0202_REV]
         for lE in lE_arr:
             lE.setReadOnly(True)
 
@@ -305,7 +306,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                         border-top-left-radius: 0px ;
                         border-top-right-radius: 0px;
                         padding: 8px;
-                        width: 120px; 
+                        width: 105px; 
                         height: 17px;
                         
                     }}
@@ -315,7 +316,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                         border-top-left-radius: 0px;
                         border-top-right-radius: 0px;
                         padding: 8px;
-                        width: 120px; 
+                        width: 105px; 
                         height: 13px;
                         margin-top: 5px
                     }}
@@ -336,7 +337,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                         border-top-left-radius: 0px ;
                         border-top-right-radius: 0px;
                         padding: 8px;
-                        width: 120px; 
+                        width: 105px; 
                         height: 17px;
                     }}
                  """)
@@ -350,7 +351,7 @@ class Ui_Control(QMainWindow,Ui_Form):
 
         # 设置按钮悬停时的样式
         self.hover_color = QColor("#11826C").lighter(150)
-        listPushButton = [self.pushButton_5,self.pushButton_6,self.pushButton_10,self.pushButton_renewSerial]
+        listPushButton = [self.pushButton_5,self.pushButton_6,self.pushButton_10,self.pushButton_CPU_renewSerial]
         for pB in listPushButton:
             pB.setStyleSheet(f"""
                         QPushButton {{
@@ -506,6 +507,15 @@ class Ui_Control(QMainWindow,Ui_Form):
             if self.comboBox_20.currentIndex()==0:
                 self.lineEdit_PN.setText('P0000010390631')
             self.lineEdit_30.setText(self.lineEdit_PN.text())
+        elif self.tabIndex == 4:
+            self.tableWidget_DIDO.setVisible(False)
+            self.tableWidget_AI.setVisible(False)
+            self.tableWidget_AO.setVisible(False)
+            self.tableWidget_CPU.setVisible(True)
+            self.label_7.setText("CPU")
+            # if self.comboBox_20.currentIndex()==0:
+            self.lineEdit_PN.setText('MA0202')
+            self.lineEdit_MA0202_PN.setText(self.lineEdit_PN.text())
         self.saveDir = self.label_41.text()
         self.tabWidget.currentChanged.connect(self.tabChange)
 
@@ -673,7 +683,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.lineEdit_REV.setPlaceholderText('请输入REV码')
         self.lineEdit_REV.setReadOnly(True)
         self.lineEdit_MAC.setPlaceholderText('请输入MAC地址')
-        self.lineEdit_MAC.setReadOnly(True)
+        self.lineEdit_MAC.setReadOnly(False)
         # self.lineEdit_PN.setFocus()
         # self.lineEdit_PN.editingFinished.connect(self.inputPN)
         self.lineEdit_SN.setFocus()
@@ -754,9 +764,15 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.pushButton_12.clicked.connect(self.uiRecovery)
         self.pushButton_13.clicked.connect(self.option_pushButton13)
 
+        #MA0202界面初始化
+        self.radioButton_MA0202.setChecked(True)
+        self.MA0202_paramChanged()
+        self.checkBox_MA0202_para.stateChanged.connect(self.MA0202_paramChanged)
+
         #更新串口
-        self.pushButton_renewSerial.clicked.connect(lambda:self.getSerialInf(1))
-        global isMainRunning
+        self.pushButton_CPU_renewSerial.clicked.connect(lambda:self.getSerialInf(1,type = 'CPU'))
+        self.pushButton_MA0202_renewSerial.clicked.connect(lambda: self.getSerialInf(1, type = 'MA0202'))
+        global isMainRunning# 程序运行标志
         isMainRunning = True
 
     def generateDefaultConfigFile(self):
@@ -1157,12 +1173,18 @@ class Ui_Control(QMainWindow,Ui_Form):
                 self.lineEdit_46.setText(self.lineEdit_SN.text())
             elif self.tabIndex == 3:
                 self.lineEdit_31.setText(self.lineEdit_SN.text())
+            elif self.tabIndex == 4:
+                self.lineEdit_MA0202_SN.setText(self.lineEdit_SN.text())
         else:
             # time.sleep(0.1)
             self.lineEdit_SN.clear()
 
     def inputREV(self):
         if len(self.lineEdit_REV.text()) == 2:
+            # reply = QMessageBox.warning(None, '操作警告', '扫入的REV码与设备中存储的REV不一致，\n取消该模块测试！',
+            #                             QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+            # if reply == QMessageBox.Yes or QMessageBox.No:
+            #     self.reInputPNSNREV()
             # self.showInf('三码完成输入')
             self.lineEdit_REV.setReadOnly(True)
             self.pushButton_4.setEnabled(True)
@@ -1187,6 +1209,8 @@ class Ui_Control(QMainWindow,Ui_Form):
                 self.lineEdit_45.setText(self.lineEdit_REV.text())
             elif self.tabIndex == 3:
                 self.lineEdit_32.setText(self.lineEdit_REV.text())
+            elif self.tabIndex == 4:
+                self.lineEdit_MA0202_REV.setText(self.lineEdit_REV.text())
             self.pushButton_4.setFocus()
         else:
             # time.sleep(0.5)
@@ -1241,10 +1265,17 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.label_7.setText("CPU")
             if self.comboBox_20.currentIndex() == 0:
                 self.lineEdit_PN.setText('P0000010390631')
+        elif self.tabIndex == 4 and not self.isAllScreen:
+            self.tableWidget_DIDO.setVisible(False)
+            self.tableWidget_AI.setVisible(False)
+            self.tableWidget_AO.setVisible(False)
+            self.tableWidget_CPU.setVisible(True)
+            self.label_7.setText("CPU")
+            if self.comboBox_20.currentIndex() == 0:
+                self.lineEdit_PN.setText('MA0202')
         # self.reInputPNSNREV()
 
     def start_button(self):
-
         self.label.setStyleSheet(self.testState_qss['testing'])
         self.label.setText('检测中……')
         self.pushButton_3.setEnabled(True)
@@ -1281,7 +1312,6 @@ class Ui_Control(QMainWindow,Ui_Form):
 
         if not self.startTest():
             self.PassOrFail(False)
-            self.showInf('检测已停止！\n\n')
 
 
 
@@ -1328,7 +1358,7 @@ class Ui_Control(QMainWindow,Ui_Form):
     def stop_button(self):
         # self.textBrowser_5.insertPlainText(self.HORIZONTAL_LINE + '停止测试\n' + self.HORIZONTAL_LINE)
         # self.move_to_end()
-        self.showInf(self.HORIZONTAL_LINE + '停止测试\n' + self.HORIZONTAL_LINE)
+        # self.showInf(self.HORIZONTAL_LINE + '停止测试\n' + self.HORIZONTAL_LINE)
         self.stop_signal.emit(True)
         self.pushButton_3.setEnabled(False)
         self.pushButton_3.setStyleSheet(self.topButton_qss['off'])
@@ -1351,14 +1381,6 @@ class Ui_Control(QMainWindow,Ui_Form):
     def startTest(self):
         try:
             # 启动CAN分析仪
-            # can_thread=threading.Thread(target = canInit_thread)
-            # can_thread.start()
-            # event_canInit.wait()
-            # list_canInit = q.get()
-            # if not list_canInit[0]:
-            #     self.showMessageBox(list_canInit[1])
-            #     self.CANFail()
-            #     return False
             list_canInit=CAN_init([1])
             if not list_canInit[0]:
                 self.showMessageBox(list_canInit[1])
@@ -1369,8 +1391,32 @@ class Ui_Control(QMainWindow,Ui_Form):
             CAN_option.receiveResume()
             self.pushButton_10.setEnabled(False)
             self.pushButton_10.setStyleSheet('color: rgb(255, 255, 255);background-color: rgb(197, 197, 197);')
+            # try:#开电源
+            #     # 可编程电源开断电
+            #     power_off = [0x01, 0x06, 0x00, 0x01, 0x00, 0x00, 0xD8, 0x0A]
+            #     power_on = [0x01, 0x06, 0x00, 0x01, 0x00, 0x01, 0x19, 0xCA]
+            #     vol_24v = [0x01, 0x10, 0x00, 0x20, 0x00, 0x02, 0x04, 0x00, 0x00, 0x5D, 0xC0, 0xC9, 0x77]
+            #     cur_2a = [0x01, 0x10, 0x00, 0x22, 0x00, 0x02, 0x04, 0x00, 0x00, 0x4E, 0x20, 0x44, 0x16]
+            #     self.powerControl(baudRate=9600, transmitData=power_off)
+            #     if not self.isCancelAllTest:
+            #         self.result_signal.emit('设备已断电。等待3秒后自动重新上电。\n')
+            #         for dd in range(3):
+            #             self.result_signal.emit(f'剩余等待{3 - dd}秒……\n')
+            #             time.sleep(1)
+            #         self.powerControl(baudRate=9600, transmitData=vol_24v)
+            #         if not self.isCancelAllTest:
+            #             self.result_signal.emit('设置电压为24V。\n')
+            #             self.powerControl(baudRate=9600, transmitData=cur_2a)
+            #             if not self.isCancelAllTest:
+            #                 self.result_signal.emit('设置电压为2A。\n')
+            #                 self.powerControl(baudRate=9600, transmitData=power_on)
+            #                 if not self.isCancelAllTest:
+            #                     self.result_signal.emit('设备重新上电。\n')
+            #                     if not self.isCancelAllTest:
+            #                         time.sleep(6)
+
             try:
-                if not self.sendMessage():
+                if not self.sendMessage():#测试参数确定
                     return False
             except Exception as e:
                 self.showInf(f"sendMessageError:{e}{self.HORIZONTAL_LINE}")
@@ -1380,24 +1426,59 @@ class Ui_Control(QMainWindow,Ui_Form):
 
             QApplication.processEvents()
 
-            #节点分配
+            #检查三码信息
+            if not mainThreadRunning():
+                return False
+            if len(self.module_pn) == 0 or len(self.module_sn) == 0 or len(self.module_rev) == 0:
+                # self.isPause()
+                if not mainThreadRunning():
+                    return False
+                reply = QMessageBox.warning(None, '警告', '产品三码信息不全，请重新扫入！',
+                                            QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+                return False
+            self.tabIndex = self.tabWidget.currentIndex()
+            #节点分配+心跳检测
             if self.tabIndex == 0:
-                if not self.configCANAddr(int(self.lineEdit_6.text()), int(self.lineEdit_7.text()), '', '', ''):
+                if not self.configCANAddr([int(self.lineEdit_6.text()), int(self.lineEdit_7.text()), '', '', '']):
+                    return False
+                # DI/DO心跳检测
+                if not self.isModulesOnline([self.CAN1, self.CAN2],[self.module_1,self.module_2]):
                     return False
             elif self.tabIndex == 1:
-                if not self.configCANAddr(int(self.lineEdit_18.text()),int(self.lineEdit_23.text()),
-                                          int(self.lineEdit_23.text())+1, int(self.lineEdit_19.text()), ''):
+                if not self.configCANAddr([int(self.lineEdit_18.text()),int(self.lineEdit_23.text()),
+                                          int(self.lineEdit_23.text())+1, int(self.lineEdit_19.text()), '']):
+                    return False
+                # AI心跳检测
+                if not self.isModulesOnline([self.CAN1,self.CANAddr_relay,self.CANAddr_relay+1, self.CAN2],
+                                     [self.module_1, '继电器QR0016#1', '继电器QR0016#2', self.module_2]):
                     return False
             elif self.tabIndex == 2:
-                if not self.configCANAddr(int(self.lineEdit_39.text()),int(self.lineEdit_41.text()),
-                                          int(self.lineEdit_41.text())+1, int(self.lineEdit_40.text()), ''):
+                if not self.configCANAddr([int(self.lineEdit_39.text()),int(self.lineEdit_41.text()),
+                                          int(self.lineEdit_41.text())+1, int(self.lineEdit_40.text()), '']):
+                    return False
+                # AO心跳检测
+                if not self.isModulesOnline([self.CAN1, self.CANAddr_relay, self.CANAddr_relay + 1, self.CAN2],
+                                     [self.module_1, '继电器QR0016#1', '继电器QR0016#2', self.module_2]):
                     return False
             elif self.tabIndex == 3:
-                if not self.configCANAddr(int(self.lineEdit_34.text()), int(self.lineEdit_35.text()),
-                                          int(self.lineEdit_36.text()), int(self.lineEdit_37.text()),
-                                          int(self.lineEdit_38.text())):
-
+                if not self.configCANAddr([int(self.lineEdit_34.text()), int(self.lineEdit_35.text()),
+                                           int(self.lineEdit_36.text())]):
                     return False
+                time.sleep(0.5)
+                # CPU工装心跳检测
+                if not self.isModulesOnline([int(self.lineEdit_34.text()), int(self.lineEdit_35.text()),
+                                             int(self.lineEdit_36.text())],
+                                            ['模块ET1600', '模块QN0016', '模块QN0016']):
+                    return False
+            elif self.tabIndex == 4:
+                if self.radioButton_MA0202.isChecked():
+                    if not self.configCANAddr([int(self.lineEdit_MA0202_AE.text()),
+                                               int(self.lineEdit_MA0202_AQ.text())]):
+                        return False
+                    # MA0202工装心跳检测
+                    if not self.isModulesOnline([int(self.lineEdit_MA0202_AE.text()),
+                                                 int(self.lineEdit_MA0202_AQ.text())], ['模块AE0400', '模块AQ0004']):
+                        return False
 
             self.result_queue = Queue()
             self.testFlag = ''
@@ -1419,15 +1500,11 @@ class Ui_Control(QMainWindow,Ui_Form):
             if not mainThreadRunning():
                 return False
 
-            if not mainThreadRunning():
-                return False
-            if len(self.module_pn) == 0 or len(self.module_sn) == 0 or len(self.module_rev) == 0:
-                # self.isPause()
-                if not mainThreadRunning():
-                    return False
-                reply = QMessageBox.warning(None, '警告', '产品三码信息不全，请重新扫入！',
-                                            QMessageBox.AcceptRole | QMessageBox.RejectRole, QMessageBox.AcceptRole)
-                return False
+            self.pushButton_pause.setEnabled(True)
+            self.pushButton_pause.setVisible(True)
+
+            self.pushButton_resume.setEnabled(False)
+            self.pushButton_resume.setVisible(False)
 
             if self.tabWidget.currentIndex() == 0:
                 self.testFlag = 'DIDO'
@@ -1450,11 +1527,12 @@ class Ui_Control(QMainWindow,Ui_Form):
                 # self.DIDO_option.RunErr_signal.connect(self.testRunErr)
                 # self.DIDO_option.CANRunErr_signal.connect(self.testCANRunErr)
                 self.DIDO_option.messageBox_signal.connect(self.showMessageBox)
+                self.DIDO_option.pic_messageBox_signal.connect(self.pic_MessageBox)
                 # self.DIDO_option.excel_signal.connect(self.generateExcel)
                 self.DIDO_option.allFinished_signal.connect(self.allFinished)
                 self.DIDO_option.label_signal.connect(self.labelChange)
                 self.DIDO_option.saveExcel_signal.connect(self.saveExcel)
-                # self.DIDO_option.print_signal.connect(self.printResult)
+                self.DIDO_option.print_signal.connect(self.printResult)
 
                 self.pushButton_3.clicked.connect(self.DIDO_option.stop_work)
                 self.pushButton_pause.clicked.connect(self.DIDO_option.pause_work)
@@ -1536,6 +1614,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                     # self.AI_option.RunErr_signal.connect(self.testRunErr)
                     # self.AI_option.CANRunErr_signal.connect(self.testCANRunErr)
                     self.AI_option.messageBox_signal.connect(self.showMessageBox)
+                    self.AI_option.pic_messageBox_signal.connect(self.pic_MessageBox)
                     # self.AI_option.excel_signal.connect(self.generateExcel)
                     self.AI_option.allFinished_signal.connect(self.allFinished)
                     self.AI_option.label_signal.connect(self.labelChange)
@@ -1572,6 +1651,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                     # self.AO_option.RunErr_signal.connect(self.testRunErr)
                     # self.AO_option.CANRunErr_signal.connect(self.testCANRunErr)
                     self.AO_option.messageBox_signal.connect(self.showMessageBox)
+                    self.AO_option.pic_messageBox_signal.connect(self.pic_MessageBox)
                     # self.AO_option.excel_signal.connect(self.generateExcel)
                     self.AO_option.allFinished_signal.connect(self.allFinished)
                     self.AO_option.label_signal.connect(self.labelChange)
@@ -1600,13 +1680,60 @@ class Ui_Control(QMainWindow,Ui_Form):
                     self.CPU_thread = QThread()
                     from thread_CPU import CPUThread
                     self.CPU_option = CPUThread(self.inf_CPUlist, self.result_queue)
+                    self.pushButton_3.clicked.connect(self.CPU_option.cancelAllTest)
                     self.CPU_option.result_signal.connect(self.showInf)
                     self.CPU_option.item_signal.connect(self.CPU_itemOperation)
                     self.CPU_option.pass_signal.connect(self.PassOrFail)
                     # self.CPU_option.RunErr_signal.connect(self.testRunErr)
                     # self.CPU_option.CANRunErr_signal.connect(self.testCANRunErr)
                     self.CPU_option.messageBox_signal.connect(self.showMessageBox)
-                    self.CPU_option.pic_messageBox_signal.connect(self.CPU_MessageBox)
+                    self.CPU_option.pic_messageBox_signal.connect(self.pic_MessageBox)
+                    self.CPU_option.moveToRow_signal.connect(self.CPU_moveToRow)
+                    # self.CPU_option.excel_signal.connect(self.generateExcel)
+                    self.CPU_option.allFinished_signal.connect(self.allFinished)
+                    self.CPU_option.label_signal.connect(self.labelChange)
+                    self.CPU_option.saveExcel_signal.connect(self.saveExcel)
+                    # self.CPU_option.print_signal.connect(self.printResult)
+
+                    self.pushButton_3.clicked.connect(self.CPU_option.stop_work)
+                    self.pushButton_pause.clicked.connect(self.CPU_option.pause_work)
+                    self.pushButton_resume.clicked.connect(self.CPU_option.resume_work)
+
+                    self.CPU_option.moveToThread(self.CPU_thread)
+                    self.CPU_thread.started.connect(self.CPU_option.CPU_start)
+                    self.CPU_thread.start()
+
+            elif self.tabWidget.currentIndex() == 4:
+                self.testFlag = 'CPU'
+                mTable = self.tableWidget_CPU
+                # CPU的外观检测选项放在子线程里进行并且可选
+                # self.appearanceTest(self.testFlag)
+                self.CPU_thread = None
+                self.worker = None
+                if not self.CPU_thread or not self.worker_thread.isRunning():
+                    # # 创建队列用于主线程和子线程之间的通信
+                    # self.result_queue = Queue()
+                    self.inf_MA0202_test = [False for x in range(18)]
+                    self.inf_MA0202_test[17] =True
+                    self.inf_CPUlist = [['','','','',self.moduleName_1,self.moduleName_2,1],
+                                        [self.radioButton_MA0202.text(),self.lineEdit_MA0202_PN.text(),
+                                         self.lineEdit_MA0202_SN.text(),self.lineEdit_MA0202_REV.text(),'',0,0],
+                                        ['','','',int(self.lineEdit_MA0202_AE.text()),
+                                         int(self.lineEdit_MA0202_AQ.text())],
+                                        ['','',self.comboBox_MA0202_typeC.currentText(),self.saveDir,'','',''],
+                                        [self.inf_MA0202_test,''],
+                                        self.current_dir,'MA0202']
+                    self.CPU_thread = QThread()
+                    from thread_CPU import CPUThread
+                    self.CPU_option = CPUThread(self.inf_CPUlist, self.result_queue)
+                    self.pushButton_3.clicked.connect(self.CPU_option.cancelAllTest)
+                    self.CPU_option.result_signal.connect(self.showInf)
+                    self.CPU_option.item_signal.connect(self.CPU_itemOperation)
+                    self.CPU_option.pass_signal.connect(self.PassOrFail)
+                    # self.CPU_option.RunErr_signal.connect(self.testRunErr)
+                    # self.CPU_option.CANRunErr_signal.connect(self.testCANRunErr)
+                    self.CPU_option.messageBox_signal.connect(self.showMessageBox)
+                    self.CPU_option.pic_messageBox_signal.connect(self.pic_MessageBox)
                     self.CPU_option.moveToRow_signal.connect(self.CPU_moveToRow)
                     # self.CPU_option.excel_signal.connect(self.generateExcel)
                     self.CPU_option.allFinished_signal.connect(self.allFinished)
@@ -1650,9 +1777,9 @@ class Ui_Control(QMainWindow,Ui_Form):
 
         if not mainThreadRunning():
             return False
-        reply = QMessageBox.question(None, '外观检测', '产品外观是否完好?',
-                                     QMessageBox.AcceptRole | QMessageBox.RejectRole, QMessageBox.AcceptRole)
-        if reply == QMessageBox.AcceptRole:
+        reply = QMessageBox.question(None, '外观检测', '请检查：\n（1）外壳字体是否清晰?\n（2）型号是否正确？\n（3）外壳是否完好？',
+                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+        if reply == QMessageBox.Yes:
             self.appearance = True
             appearanceEnd_time = time.time()
             appearanceTest_time = round(appearanceEnd_time - appearanceStart_time, 2)
@@ -1660,7 +1787,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                 return False
             self.itemOperation(mTable, 0, 2, 1, appearanceTest_time)
 
-        elif reply == QMessageBox.RejectRole:
+        elif reply == QMessageBox.No:
             self.appearance = False
             appearanceEnd_time = time.time()
             appearanceTest_time = round(appearanceEnd_time - appearanceStart_time, 2)
@@ -1686,8 +1813,8 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.lineEdit_SN.clear()
         self.lineEdit_REV.clear()
         # self.lineEdit_PN.setReadOnly(False)
-        self.lineEdit_SN.setReadOnly(False)
-        self.lineEdit_REV.setReadOnly(False)
+        # self.lineEdit_SN.setReadOnly(False)
+        # self.lineEdit_REV.setReadOnly(False)
         if self.tabWidget.currentIndex() == 0:
             # self.lineEdit.clear()
             self.lineEdit_3.clear()
@@ -1715,46 +1842,55 @@ class Ui_Control(QMainWindow,Ui_Form):
         #
         # # 将弹窗结果放入队列
         # self.result_queue.put(reply)
-        msg_box = QMessageBox()
-        # 设置消息
-        msg_box.setText(list[1])
-        # msg_box.setInformativeText(list[1])
-        msg_box.setWindowTitle(list[0])
-        # 设置样式表
-        msg_box.setStyleSheet('QLabel{font-size: 18px;}')
+        global isMainRunning
+        if isMainRunning:
+            msg_box = QMessageBox()
+            # 设置消息
+            msg_box.setText(list[1])
+            # msg_box.setInformativeText(list[1])
+            msg_box.setWindowTitle(list[0])
+            # 设置样式表
+            msg_box.setStyleSheet('QLabel{font-size: 18px;}')
+            # 添加按钮
+            msg_box.addButton('是', QMessageBox.AcceptRole)
+            msg_box.addButton('否', QMessageBox.RejectRole)
 
-        # 添加按钮
-        msg_box.addButton('确定', QMessageBox.AcceptRole)
-        msg_box.addButton('取消', QMessageBox.RejectRole)
+            # 显示消息框
+            reply = msg_box.exec_()
+            # 将弹窗结果放入队列
+            self.result_queue.put(reply)
+        else:
+            # 将弹窗结果放入队列
+            self.result_queue.put(QMessageBox.RejectRole)
 
-        # 显示消息框
-        reply = msg_box.exec_()
-        # 将弹窗结果放入队列
-        self.result_queue.put(reply)
 
+    def pic_MessageBox(self, list):
+        global isMainRunning
+        if isMainRunning:
+            msg_box = QMessageBox()
 
-    def CPU_MessageBox(self, list):
-        msg_box = QMessageBox()
+            # 设置图标
+            icon = QIcon(list[2])
+            msg_box.setIconPixmap(icon.pixmap(300, 300))
 
-        # 设置图标
-        icon = QIcon(list[2])
-        msg_box.setIconPixmap(icon.pixmap(300, 300))
+            # 设置消息
+            msg_box.setText(list[1])
+            # msg_box.setInformativeText(list[1])
+            msg_box.setWindowTitle(list[0])
+            # 设置样式表
+            msg_box.setStyleSheet('QLabel{font-size: 18px;}')
 
-        # 设置消息
-        msg_box.setText(list[1])
-        # msg_box.setInformativeText(list[1])
-        msg_box.setWindowTitle(list[0])
-        # 设置样式表
-        msg_box.setStyleSheet('QLabel{font-size: 18px;}')
+            # 添加按钮
+            msg_box.addButton('是', QMessageBox.AcceptRole)
+            msg_box.addButton('否', QMessageBox.RejectRole)
 
-        # 添加按钮
-        msg_box.addButton('确定', QMessageBox.AcceptRole)
-        msg_box.addButton('取消', QMessageBox.RejectRole)
-
-        # 显示消息框
-        reply = msg_box.exec_()
-        # 将弹窗结果放入队列
-        self.result_queue.put(reply)
+            # 显示消息框
+            reply = msg_box.exec_()
+            # 将弹窗结果放入队列
+            self.result_queue.put(reply)
+        else:
+            # 将弹窗结果放入队列
+            self.result_queue.put(QMessageBox.RejectRole)
 
     def CPU_moveToRow(self,list):
         self.tableWidget_CPU.setCurrentCell(list[0],list[1])
@@ -1799,44 +1935,56 @@ class Ui_Control(QMainWindow,Ui_Form):
                                     """)
 
     def  stop_subThread(self):
-        if self.testFlag == 'AI':
-            if self.AI_thread and self.AI_thread.isRunning():
-                try:
-                    self.AI_thread.quit()
-                    self.AI_thread.wait()
-                    # self.showInf(f'结束AI子线程成功！' + self.HORIZONTAL_LINE)
-                except Exception as e:
-                    self.showInf(f'结束AI线程异常！' + self.HORIZONTAL_LINE)
-                    traceback.print_exc()
-        elif self.testFlag == 'AO':
-            if self.AO_thread and self.AO_thread.isRunning():
-                try:
-                    self.AO_thread.quit()
-                    self.AO_thread.wait()
-                except Exception as e:
-                    self.showInf(f'结束AO线程异常！' + self.HORIZONTAL_LINE)
-                    traceback.print_exc()
-        elif self.testFlag == 'DO' or self.testFlag == 'DI' or self.testFlag == 'DIDO':
-            if self.DIDO_thread and self.DIDO_thread.isRunning():
-                # self.showInf(f'结束DIDO子线程' + self.HORIZONTAL_LINE)
-                try:
-                    self.DIDO_thread.quit()
-                    self.DIDO_thread.wait()
-                except Exception as e:
-                    self.showInf(f'结束DIDO线程异常！' + self.HORIZONTAL_LINE)
-                    traceback.print_exc()
-        elif self.testFlag == 'CPU':
-            if self.CPU_thread and self.CPU_thread.isRunning():
-                try:
-                # self.showInf(f'结束CPU子线程' + self.HORIZONTAL_LINE)
-                    self.CPU_thread.quit()
-                    self.CPU_thread.wait()
-                except Exception as e:
-                    self.showInf(f'结束CPU线程异常！' + self.HORIZONTAL_LINE)
-                    traceback.print_exc()
-        else:
-            self.showInf(f'不存在运行的子线程' + self.HORIZONTAL_LINE)
-    
+        try:
+            if self.testFlag == 'AI':
+                if self.AI_thread and self.AI_thread.isRunning():
+                    try:
+                        self.AI_thread.quit()
+                        self.AI_thread.wait()
+                        # self.showInf(f'结束AI子线程成功！' + self.HORIZONTAL_LINE)
+                    except Exception as e:
+                        self.showInf(f'结束AI线程异常！' + self.HORIZONTAL_LINE)
+                        traceback.print_exc()
+            elif self.testFlag == 'AO':
+                if self.AO_thread and self.AO_thread.isRunning():
+                    try:
+                        self.AO_thread.quit()
+                        self.AO_thread.wait()
+                    except Exception as e:
+                        self.showInf(f'结束AO线程异常！' + self.HORIZONTAL_LINE)
+                        traceback.print_exc()
+            elif self.testFlag == 'DO' or self.testFlag == 'DI' or self.testFlag == 'DIDO':
+                if self.DIDO_thread and self.DIDO_thread.isRunning():
+                    # self.showInf(f'结束DIDO子线程' + self.HORIZONTAL_LINE)
+                    try:
+                        self.DIDO_thread.quit()
+                        self.DIDO_thread.wait()
+                    except Exception as e:
+                        self.showInf(f'结束DIDO线程异常！' + self.HORIZONTAL_LINE)
+                        traceback.print_exc()
+            elif self.testFlag == 'CPU':
+                if self.CPU_thread and self.CPU_thread.isRunning():
+                    try:
+                    # self.showInf(f'结束CPU子线程' + self.HORIZONTAL_LINE)
+                        self.CPU_thread.quit()
+                        self.CPU_thread.wait()
+                    except Exception as e:
+                        self.showInf(f'结束CPU线程异常！' + self.HORIZONTAL_LINE)
+                        traceback.print_exc()
+            else:
+                self.showInf(f'不存在运行的子线程' + self.HORIZONTAL_LINE)
+
+            self.textBrowser_5.append('进程已正确停止。\n')
+            QApplication.processEvents()
+            time.sleep(0.1)
+        except:
+            self.textBrowser_5.append('进程停止出错。\n')
+            QApplication.processEvents()
+            time.sleep(0.1)
+        finally:
+            self.lineEdit_SN.setReadOnly(False)
+            self.lineEdit_REV.setReadOnly(False)
+
         
 
     def DIDOCANAddr_stateChanged(self):
@@ -1888,11 +2036,17 @@ class Ui_Control(QMainWindow,Ui_Form):
                          self.comboBox_22,self.comboBox_23,self.comboBox_24,self.comboBox_25,
                           self.comboBox_26,self.label_59,self.label_60,self.label_62,
                          self.label_64,self.label_65,self.label_66,self.label_67,self.label_68,self.label_69,
-                         self.label_70,self.label_71,self.label_72,self.label_90]
+                         self.label_70,self.label_71,self.label_72,self.label_90,self.pushButton_CPU_renewSerial]
         for Cparam in CPU_param_array:
             Cparam.setEnabled(self.checkBox_71.isChecked())
 
-        # self.saveConfig()
+    def MA0202_paramChanged(self):
+        MA0202_param_array=[ self.label_21, self.radioButton_MA0202, self.label_105,
+                         self.comboBox_MA0202_typeC, self.pushButton_MA0202_renewSerial,self.label_116,self.label_113,
+                         self.lineEdit_MA0202_AE,self.label_114,self.lineEdit_MA0202_AQ]
+        for Mparam in MA0202_param_array:
+            Mparam.setEnabled(self.checkBox_MA0202_para.isChecked())
+
 
     def testAllorNot(self):
         CPU_test_array = [self.checkBox_50, self.checkBox_51, self.checkBox_52, self.checkBox_53,
@@ -2050,7 +2204,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             mTable = self.tableWidget_DIDO
             # print(f'tabIndex={self.tabIndex}')
 
-            self.testNum = 3#外观检测 + CAN_RunErr检测 + RunErr检测 + 通道检测
+            self.testNum = 2#外观检测 + CAN_RunErr检测 + RunErr检测 + 通道检测
             # 获取产品信息
             self.module_type = self.comboBox.currentText()
             if self.module_type == 'ET0800' or self.module_type == 'ET1600' or \
@@ -2069,8 +2223,8 @@ class Ui_Control(QMainWindow,Ui_Form):
 
             if self.comboBox.currentIndex() == 0 or self.comboBox.currentIndex() == 1 \
                     or self.comboBox.currentIndex() == 2:
-                self.module_1 = self.inf['DO1']
-                self.module_2 = self.inf['DI2']
+                self.module_1 = self.inf['模块QP(N)0016']
+                self.module_2 = self.inf['模块ET1600']
                 self.m_Channels = int(self.module_type[2:4])
                 # self.inf_param = [mTable, self.module_1, self.module_2, self.testNum]
                 # 获取CAN地址
@@ -2081,8 +2235,13 @@ class Ui_Control(QMainWindow,Ui_Form):
 
             if self.comboBox.currentIndex() == 3 or self.comboBox.currentIndex() == 4 \
                     or self.comboBox.currentIndex() == 5:
-                self.module_1 = self.inf['DI1']
-                self.module_2 = self.inf['DO2']
+                self.module_1 = self.inf['模块ET1600']
+                if self.comboBox.currentIndex() == 3:
+                    self.module_2 = self.inf['模块QN0008']
+                elif self.comboBox.currentIndex() == 4:
+                    self.module_2 = self.inf['模块QN0016']
+                elif self.comboBox.currentIndex() == 5:
+                    self.module_2 = self.inf['模块QP0016']
                 self.m_Channels = int(self.module_type[4:])
                 # self.inf_param = [mTable, self.module_1, self.module_2, self.testNum]
 
@@ -2443,7 +2602,25 @@ class Ui_Control(QMainWindow,Ui_Form):
                 else:
                     self.itemOperation(mTable, i, 0, 0, '')
             self.inf_CPUlist = [self.inf_param,self.inf_product, self.inf_CANIPAdrr,
-                                self.inf_serialPort, self.inf_test,self.current_dir]
+                                self.inf_serialPort, self.inf_test,self.current_dir,'CPU']
+        elif self.tabIndex == 4:#MA0202界面
+            # mTable = self.tableWidget_CPU
+            self.module_pn = self.lineEdit_MA0202_PN.text()
+            self.module_sn = self.lineEdit_MA0202_SN.text()
+            self.module_rev = self.lineEdit_MA0202_REV.text()
+            # self.module_MAC = self.lineEdit_33.text()
+            self.MA0202_isChangePara = self.checkBox_MA0202_para.isChecked()
+            self.moduleName_1 = '工装1（AE0400）'
+            self.moduleName_2 = '工装2（AQ0004）'
+            self.MA0202_CANAddr1 = int(self.lineEdit_MA0202_AE.text())
+            self.MA0202_CANAddr2 = int(self.lineEdit_MA0202_AQ.text())
+            self.isTestModule = self.radioButton_MA0202.isChecked()
+            self.testModuleType = self.radioButton_MA0202.text()
+            self.serialPort_typeC = self.comboBox_MA0202_typeC.currentText()
+
+            self.inf_MA0202list = [self.MA0202_isChangePara,self.moduleName_1,self.moduleName_2,self.MA0202_CANAddr1,
+                                   self.MA0202_CANAddr2,self.isTestModule,self.testModuleType,self.serialPort_typeC]
+
         if self.tabIndex == 0 or self.tabIndex == 1 or self.tabIndex == 2:
             #三码转换
             self.asciiCode_pn = (strToASCII(self.lineEdit_PN.text()))
@@ -2460,32 +2637,32 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.textBrowser_5.insertPlainText(f'产品信息下发成功，开始测试。' + self.HORIZONTAL_LINE)
 
 
-        self.pushButton_pause.setEnabled(True)
-        self.pushButton_pause.setVisible(True)
-
-        self.pushButton_resume.setEnabled(False)
-        self.pushButton_resume.setVisible(False)
+        # self.pushButton_pause.setEnabled(True)
+        # self.pushButton_pause.setVisible(True)
+        #
+        # self.pushButton_resume.setEnabled(False)
+        # self.pushButton_resume.setVisible(False)
         return True
-        # self.pushButton_4.setStyleSheet(self.topButton_qss['on'])
-        # self.pushButton_4.setEnabled(True)
-        # self.pushButton_4.setVisible(True)
+
 
     def clearList(self,array):
         for i in range(len(array)):
             array[i] = 0x00
 
     #自动分配节点
-    def configCANAddr(self,addr1,addr2,addr3,addr4,addr5):
+    def configCANAddr(self,list):
         if self.tabIndex == 1 or self.tabIndex == 2:
-            list =[addr1,addr2,addr3,addr4]
+            list =[list[0],list[1],list[2],list[3]]
         elif self.tabIndex == 3:
-            list = [addr1,addr2,addr3,addr4, addr5]
+            list = [list[0],list[1],list[2]]
+        elif self.tabIndex == 4:
+            list = [list[0],list[1]]
         else:
-            list = [addr1, addr2]
+            list = [list[0],list[1]]
         for a in list:
             self.m_transmitData=[0xac, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
             self.m_transmitData[2] = a
-            boola = CAN_option.transmitCANAddr(0x0,self.m_transmitData)[0]
+            boola = CAN_option.transmitCAN(0x0,self.m_transmitData,1)[0]
             time.sleep(0.01)
             if not boola:
                 self.showInf(f'节点{a}分配失败' + self.HORIZONTAL_LINE)
@@ -2494,90 +2671,109 @@ class Ui_Control(QMainWindow,Ui_Form):
         return True
 
 
-    def isModulesOnline(self):
+    def isModulesOnline(self,can_list,module_list):
         # 检测设备心跳
-        if self.check_heartbeat(self.CAN1, self.module_1, self.waiting_time) == False:
-            return False
-        if self.check_heartbeat(self.CAN2, self.module_2, self.waiting_time) == False:
-            return False
-        if self.tabIndex !=0:
-            if self.check_heartbeat(self.CANAddr_relay, '继电器1', self.waiting_time) == False:
+        for i in range(len(can_list)):
+            if not self.check_heartbeat(can_list[i], module_list[i], self.waiting_time):
                 return False
-            if self.check_heartbeat(self.CANAddr_relay+1, '继电器2', self.waiting_time) == False:
-                return False
-
         return True
+        # if self.check_heartbeat(self.CAN1, self.module_1, self.waiting_time) == False:
+        #     return False
+        # if self.check_heartbeat(self.CAN2, self.module_2, self.waiting_time) == False:
+        #     return False
+        # if self.tabIndex !=0:
+        #     if self.check_heartbeat(self.CANAddr_relay, '继电器QR0016#1', self.waiting_time) == False:
+        #         return False
+        #     if self.check_heartbeat(self.CANAddr_relay+1, '继电器QR0016#2', self.waiting_time) == False:
+        #         return False
+
+
 
     def check_heartbeat(self, can_addr, inf, max_waiting):
-        if inf == '继电器':
-            bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(0x700 + can_addr , max_waiting,0)
-            # print(self.m_can_obj.Data)
-            if bool_receive == False:
-                self.showInf(f'错误：未发现{inf}' + self.HORIZONTAL_LINE)
-                # self.isPause()
-                # if not self.isStop():
-                #     return
-                return False
+        can_id = 0x700 + can_addr
+        bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(can_id, max_waiting, 1)
 
-            self.showInf(f'发现{inf}：收到心跳帧：{hex(self.m_can_obj.ID)}\n\n')
-
-
+        if bool_receive == False:
+            self.showInf(f'错误：未发现{inf}' + self.HORIZONTAL_LINE)
+            return False
         else:
-            can_id = 0x700 + can_addr
-            bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(can_id, max_waiting,0)
-            # print(self.m_can_obj.Data)
-            if bool_receive == False:
-                self.showInf(f'错误：未发现{inf}' + self.HORIZONTAL_LINE)
-                # self.isPause()
-                # if not self.isStop():
-                #     return
-                return False
-
             self.showInf(f'发现{inf}：收到心跳帧：{hex(self.m_can_obj.ID)}\n\n')
-        # self.isPause()
-        #if not self.isStop():
-#            return
+
         return True
+        # if inf == '继电器':
+        #     bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(0x700 + can_addr , max_waiting,0)
+        #     # print(self.m_can_obj.Data)
+        #     if bool_receive == False:
+        #         self.showInf(f'错误：未发现{inf}' + self.HORIZONTAL_LINE)
+        #         # self.isPause()
+        #         # if not self.isStop():
+        #         #     return
+        #         return False
+        #
+        #     self.showInf(f'发现{inf}：收到心跳帧：{hex(self.m_can_obj.ID)}\n\n')
 
-    def getSerialInf(self, num:int):
-        self.textBrowser_5.clear()
-        #清空串口选项
-        for i in range(self.comboBox_21.count()):
-            self.comboBox_21.removeItem(i)
-            self.comboBox_22.removeItem(i)
-            self.comboBox_23.removeItem(i)
-            self.comboBox_24.removeItem(i)
-            self.comboBox_25.removeItem(i)
-            self.comboBox_26.removeItem(i)
-        # 获取电脑上可用的串口列表
-        ports = serial.tools.list_ports.comports()
 
-        # 遍历串口列表并打印串口信息
-        for i in range(len(ports)):
-            self.comboBox_21.addItem("")
-            self.comboBox_22.addItem("")
-            self.comboBox_23.addItem("")
-            self.comboBox_24.addItem("")
-            self.comboBox_25.addItem("")
-            self.comboBox_26.addItem("")
-            self.comboBox_21.setItemText(i, ports[i].device)
-            self.comboBox_22.setItemText(i, ports[i].device)
-            self.comboBox_23.setItemText(i, ports[i].device)
-            self.comboBox_24.setItemText(i, ports[i].device)
-            self.comboBox_25.setItemText(i, ports[i].device)
-            self.comboBox_26.setItemText(i, ports[i].device)
-            if num != 0:
-                if i ==0:
-                    self.showInf(f'可用串口：\n')
-                self.showInf(f'({i + 1}){ports[i].description}\n')
-            # self.showInf(f'({i+1}){ports[i].device}, {ports[i].name}, {ports[i].description}\n')
 
-        self.comboBox_21.removeItem(len(ports))
-        self.comboBox_22.removeItem(len(ports))
-        self.comboBox_23.removeItem(len(ports))
-        self.comboBox_24.removeItem(len(ports))
-        self.comboBox_25.removeItem(len(ports))
-        self.comboBox_26.removeItem(len(ports))
+
+    def getSerialInf(self, num:int,type):
+        # self.textBrowser_5.clear()
+        if type =="CPU":
+            #清空串口选项
+            for i in range(self.comboBox_21.count()):
+                self.comboBox_21.removeItem(i)
+                self.comboBox_22.removeItem(i)
+                self.comboBox_23.removeItem(i)
+                self.comboBox_24.removeItem(i)
+                self.comboBox_25.removeItem(i)
+                self.comboBox_26.removeItem(i)
+            # 获取电脑上可用的串口列表
+            ports = serial.tools.list_ports.comports()
+
+            # 遍历串口列表并打印串口信息
+            for i in range(len(ports)):
+                self.comboBox_21.addItem("")
+                self.comboBox_22.addItem("")
+                self.comboBox_23.addItem("")
+                self.comboBox_24.addItem("")
+                self.comboBox_25.addItem("")
+                self.comboBox_26.addItem("")
+                self.comboBox_21.setItemText(i, ports[i].device)
+                self.comboBox_22.setItemText(i, ports[i].device)
+                self.comboBox_23.setItemText(i, ports[i].device)
+                self.comboBox_24.setItemText(i, ports[i].device)
+                self.comboBox_25.setItemText(i, ports[i].device)
+                self.comboBox_26.setItemText(i, ports[i].device)
+                if num != 0:
+                    if i ==0:
+                        self.showInf(f'可用串口：\n')
+                    self.showInf(f'({i + 1}){ports[i].description}\n')
+                # self.showInf(f'({i+1}){ports[i].device}, {ports[i].name}, {ports[i].description}\n')
+
+            self.comboBox_21.removeItem(len(ports))
+            self.comboBox_22.removeItem(len(ports))
+            self.comboBox_23.removeItem(len(ports))
+            self.comboBox_24.removeItem(len(ports))
+            self.comboBox_25.removeItem(len(ports))
+            self.comboBox_26.removeItem(len(ports))
+        elif type == "MA0202":
+            # 清空串口选项
+            for i in range(self.comboBox_MA0202_typeC.count()):
+                self.comboBox_MA0202_typeC.removeItem(i)
+            # 获取电脑上可用的串口列表
+            ports = serial.tools.list_ports.comports()
+
+            # 遍历串口列表并打印串口信息
+            for i in range(len(ports)):
+                self.comboBox_MA0202_typeC.addItem("")
+                self.comboBox_MA0202_typeC.setItemText(i, ports[i].device)
+
+                if num != 0:
+                    if i == 0:
+                        self.showInf(f'可用串口：\n')
+                    self.showInf(f'({i + 1}){ports[i].description}\n')
+                # self.showInf(f'({i+1}){ports[i].device}, {ports[i].name}, {ports[i].description}\n')
+
+            self.comboBox_MA0202_typeC.removeItem(len(ports))
     def CANFail(self):
         self.endOfTest()
         self.initPara()
@@ -2602,33 +2798,34 @@ class Ui_Control(QMainWindow,Ui_Form):
         saveList[0].save(str(self.label_41.text()) + saveList[1])
         # book.save(self.label_41.text() + saveDir)
 
-    def printResult(self,list):
-        try:
-            self.generateLabel(list)
-            content = list[1]
-            file_name = f'{self.label_41.text()}{list[0]}_label.docx'
-            # if list[1] == 'FAIL':
-            #     content += f'\n\n{list[2]}'
-            #
-            # with open(file_name, "w") as f:
-            #     for line in content.splitlines():
-            #         f.write(line + "\n")
+    # def printResult(self,list):
+    #     try:
+    #         self.generateLabel(list)
+    #         content = list[1]
+    #         file_name = f'{self.label_41.text()}{list[0]}_label.docx'
+    #         # if list[1] == 'FAIL':
+    #         #     content += f'\n\n{list[2]}'
+    #         #
+    #         # with open(file_name, "w") as f:
+    #         #     for line in content.splitlines():
+    #         #         f.write(line + "\n")
+    #
+    #         win32api.ShellExecute(
+    #             0,
+    #             "print",
+    #             file_name,
+    #             #
+    #             # If this is None, the default printer will
+    #             # be used anyway.
+    #             #
+    #             '/d:"%s"' % win32print.GetDefaultPrinter(),
+    #             ".",
+    #             0
+    #         )
+    #     except Exception as e:
+    #         self.showInf(f"printResultError:{e}+{self.HORIZONTAL_LINE}")
+    #         traceback.print_exc()
 
-            win32api.ShellExecute(
-                0,
-                "print",
-                file_name,
-                #
-                # If this is None, the default printer will
-                # be used anyway.
-                #
-                '/d:"%s"' % win32print.GetDefaultPrinter(),
-                ".",
-                0
-            )
-        except Exception as e:
-            self.showInf(f"printResultError:{e}+{self.HORIZONTAL_LINE}")
-            traceback.print_exc()
     def generateLabel(self,list):
         from docx import Document
 
@@ -2968,11 +3165,17 @@ class Ui_Control(QMainWindow,Ui_Form):
   #       return recv
 
     def showInf(self,inf):
-        self.textBrowser_5.append(inf)
-        if inf[:8] =='本轮测试总时间：':
-            self.move_to_end()
-        QApplication.processEvents()
-        time.sleep(0.1)
+        global isMainRunning
+        if isMainRunning:
+            self.textBrowser_5.append(inf)
+            if inf[:8] =='本轮测试总时间：':
+                self.move_to_end()
+            QApplication.processEvents()
+            time.sleep(0.1)
+        else:
+            self.textBrowser_5.append('等待进程停止。\n')
+            QApplication.processEvents()
+            time.sleep(0.1)
 
         # self.isPause()
         # if self.work_thread.stopFlag.isSet():
