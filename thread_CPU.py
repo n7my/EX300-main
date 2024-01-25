@@ -3197,7 +3197,7 @@ class CPUThread(QObject):
             # 接收数组数据
             data = typeC_serial.read(len(transmitData))
             if len(data) == 0:
-                self.messageBox_signal.emit(['操作警告','未接收到信号，请检查232（或485）接线是否断开。'])
+                self.messageBox_signal.emit(['操作警告',f'未接收到{type}信号，请检查{type}接线是否断开。'])
                 reply = self.result_queue.get()
                 if reply == QMessageBox.AcceptRole:
                     isReceiveTrueData &= False
