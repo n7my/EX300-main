@@ -5,22 +5,24 @@ import time
 from PyQt5.QtCore import QThread, pyqtSignal
 from main_logic import *
 import threading
-from  CAN_option import *
+from CAN_option import *
 import struct
 import otherOption
 
+
 class AIThread(QObject):
-    #result_signal：在运行日志框中显示信息
+    # result_signal：在运行日志框中显示信息
     result_signal = pyqtSignal(str)
-    #item_signal：修改表格状态信号
+    # item_signal：修改表格状态信号
     item_signal = pyqtSignal(list)
     pass_signal = pyqtSignal(bool)
     # RunErr_signal = pyqtSignal(int)
     # CANRunErr_signal = pyqtSignal(int)
-    #messageBox_signal：显示对话框信号
-    messageBox_signal= pyqtSignal(list)
+    # messageBox_signal：显示对话框信号
+    messageBox_signal = pyqtSignal(list)
     pic_messageBox_signal = pyqtSignal(list)
-    #allFinished_signal：所有测试结束信号
+    messageBox_oneButton_signal = pyqtSignal(list)
+    # allFinished_signal：所有测试结束信号
     allFinished_signal = pyqtSignal()
     label_signal = pyqtSignal(list)
     saveExcel_signal = pyqtSignal(list)
@@ -186,7 +188,7 @@ class AIThread(QObject):
     # 发送的数据
     ubyte_array_transmit = c_ubyte * 8
     m_transmitData = ubyte_array_transmit(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
-    #主副线程弹窗结果
+    # 主副线程弹窗结果
     result_queue = 0
 
     CAN_errorLED = True
@@ -194,14 +196,15 @@ class AIThread(QObject):
     errorLED = True
     runLED = True
 
-    #是否生成检测报告
+    # 是否生成检测报告
     isExcel = True
-    def __init__(self,inf_AIlist:list,result_queue,appearance):
+
+    def __init__(self, inf_AIlist: list, result_queue, appearance):
         super().__init__()
         self.result_queue = result_queue
         self.is_running = True
         self.is_pause = False
-        self.appearance = appearance
+        self.appearance = True
         self.mTable = inf_AIlist[0][0]
         self.module_1 = inf_AIlist[0][1]
         self.module_2 = inf_AIlist[0][2]
@@ -246,90 +249,12 @@ class AIThread(QObject):
 
         self.current_dir = os.getcwd().replace('\\', '/') + "/_internal"
 
-
     def AIOption(self):
         self.isExcel = True
-        # 总线初始化
-        try:
-            time_online = time.time()
-            while True:
-                QApplication.processEvents()
-                if (time.time() - time_online) * 1000 > 2000:
-                    self.pauseOption()
-                    if not self.is_running:
-                        # 后续测试全部取消
-                        self.isTest = False
-                        self.isCalibrate = False
-                        self.isExcel = False
-                        break
-                    self.result_signal.emit(f'错误：总线初始化超时！' + self.HORIZONTAL_LINE)
-                    QMessageBox.critical(None, '错误', '总线初始化超时！请检查CAN分析仪或各设备是否正确连接',
-                                         QMessageBox.AcceptRole |
-                                         QMessageBox.RejectRole, QMessageBox.AcceptRole)
-                    # 后续测试全部取消
-                    self.isTest = False
-                    self.isCalibrate = False
-                    self.isExcel = False
-                    break
-                CANAddr_array = [self.CANAddr_AO, self.CANAddr_AI, self.CANAddr_relay, self.CANAddr_relay + 1]
-                module_array = [self.module_1, self.module_2, 'QR0016#1', 'QR0016#2']
-                bool_online, eID = otherOption.isModulesOnline(CANAddr_array,module_array,self.waiting_time)
-                if bool_online:
-                    self.pauseOption()
-                    if not self.is_running:
-                        # 后续测试全部取消
-                        self.isTest = False
-                        self.isCalibrate = False
-                        self.isExcel = False
-                        break
-                    self.result_signal.emit(f'总线初始化成功！' + self.HORIZONTAL_LINE)
-                    # 点亮右扩IO设备的RUN灯
-                    self.clearList(self.m_transmitData)
-                    self.m_transmitData[0] = 0x52
-                    self.m_transmitData[2] = 0x01
-                    for led_run in range(2, 4):
-                        self.m_transmitData[1] = led_run
-                        bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x000, self.m_transmitData, 1)
-                    break
-                else:
-                    self.pauseOption()
-                    if not self.is_running:
-                        # 后续测试全部取消
-                        self.isTest = False
-                        self.isCalibrate = False
-                        self.isExcel = False
-                        break
-                    if eID != 0:
-                        self.result_signal.emit(f'错误：未发现{module_array[eID - 1]}' + self.HORIZONTAL_LINE)
-                    # if eID == 0:
-                    #     self.result_signal.emit(f'错误：未发现{self.module_1}' + self.HORIZONTAL_LINE)
-                    # elif eID == 1:
-                    #     self.result_signal.emit(f'错误：未发现{self.module_2}' + self.HORIZONTAL_LINE)
-                    # elif eID == 3:
-                    #     self.result_signal.emit(f'错误：未发现继电器1' + self.HORIZONTAL_LINE)
-                    # elif eID == 7:
-                    #     self.result_signal.emit(f'错误：未发现继电器2' + self.HORIZONTAL_LINE)
-                    self.result_signal.emit(f'错误：总线初始化失败！再次尝试初始化。' + self.HORIZONTAL_LINE)
+        # image_RUN = self.current_dir + '/以太网测试_1.png'
+        # self.pic_messageBox_signal.emit(['操作提示', '请将网线插入红框中的以太网口。', image_RUN])
 
-            self.result_signal.emit('模块在线检测结束！' + self.HORIZONTAL_LINE)
-
-        except:
-            self.pauseOption()
-            if not self.is_running:
-                # 后续测试全部取消
-                self.isTest = False
-                self.isCalibrate = False
-                self.isExcel = False
-
-            QMessageBox(QMessageBox.Critical, '错误提示', '总线初始化异常，请检查设备').exec_()
-            # 捕获异常并输出详细的错误信息
-            traceback.print_exc()
-            # 后续测试全部取消
-            self.isTest = False
-            self.isCalibrate = False
-            self.isExcel = False
-            self.result_signal.emit('模块在线检测结束！' + self.HORIZONTAL_LINE)
-        #开始测试
+        # 开始测试
         if self.isTest:
             if self.isTestRunErr or self.isTestCANRunErr:
                 # 进入指示灯测试模式
@@ -347,7 +272,7 @@ class AIThread(QObject):
                 self.m_transmitData[5] = 0x54
                 self.m_transmitData[6] = 0x41
                 self.m_transmitData[7] = 0x52
-                isLEDTest, whatEver = CAN_option.transmitCAN((0x600 + int(self.CANAddr_AI)), self.m_transmitData,1)
+                isLEDTest, whatEver = CAN_option.transmitCAN((0x600 + int(self.CANAddr_AI)), self.m_transmitData, 1)
                 if isLEDTest:
                     self.pauseOption()
                     if not self.is_running:
@@ -374,7 +299,7 @@ class AIThread(QObject):
                     self.m_transmitData[6] = 0x49
                     self.m_transmitData[7] = 0x54
                     bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + self.CANAddr_AI),
-                                                                           self.m_transmitData,1)
+                                                                           self.m_transmitData, 1)
                     if bool_transmit:
                         self.pauseOption()
                         if not self.is_running:
@@ -400,9 +325,9 @@ class AIThread(QObject):
             bool_calibrate = self.calibrateAI()
             if not bool_calibrate:
                 self.pass_signal.emit(False)
-                #标定出错直接取消后续的测试和表格生成
-                self.isTest= False
-                self.isExcel=False
+                # 标定出错直接取消后续的测试和表格生成
+                self.isTest = False
+                self.isExcel = False
         else:
             bool_calibrate = False
 
@@ -433,9 +358,9 @@ class AIThread(QObject):
             self.result_signal.emit('开始生成校准校验表…………' + self.HORIZONTAL_LINE)
             code_array = [self.module_pn, self.module_sn, self.module_rev]
             station_array = [self.isAIPassTest, self.isAITestVol, self.isAITestCur]
-            excel_bool, book, sheet, self.AI_row= otherOption.generateExcel(code_array,
+            excel_bool, book, sheet, self.AI_row = otherOption.generateExcel(code_array,
 
-                                                                            station_array,self.AI_Channels, 'AI')
+                                                                             station_array, self.AI_Channels, 'AI')
             if not excel_bool:
                 self.result_signal.emit('校准校验表生成出错！请检查代码！' + self.HORIZONTAL_LINE)
             else:
@@ -457,7 +382,6 @@ class AIThread(QObject):
         #     self.pass_signal.emit(True)
         # elif not self.isCalibrate and (bool_testVol or bool_testCur):
 
-
     # def CAN_init(self):
     #     CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
     #     time.sleep(0.1)
@@ -469,10 +393,10 @@ class AIThread(QObject):
     #
     #     CAN_option.start(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, CAN_option.CAN_INDEX)
 
-    def testAI(self,testType):
-        #1.退出标定模式
+    def testAI(self, testType):
+        # 1.退出标定模式
         self.setAIChOutCalibrate()
-        #2.判断测试类型
+        # 2.判断测试类型
         if testType == 'AIVoltage':
             self.pauseOption()
             if not self.is_running:
@@ -480,30 +404,31 @@ class AIThread(QObject):
             # 每次切换电压电流量程初始化CAN分析仪
             # self.CAN_init()
             self.result_signal.emit('切换到电压模式' + self.HORIZONTAL_LINE)
-            #CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
-            #self.can_start()
+            # CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
+            # self.can_start()
             time.sleep(1)
             self.testNum = self.testNum - 1
             self.m_transmitData = [0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
 
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay, self.m_transmitData,1)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay, self.m_transmitData, 1)
             if not bool_transmit:
                 self.result_signal.emit('QR0016#1切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
                 # print('QR0016#1切换错误，请停止检查设备！')
                 return False
 
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay + 1, self.m_transmitData,1)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay + 1, self.m_transmitData,
+                                                                   1)
             if not bool_transmit:
                 self.result_signal.emit('QR0016#2切换错误，请停止检查设备！' + self.HORIZONTAL_LINE)
                 # print('QR0016#2切换错误，请停止检查设备！')
                 return False
             time.sleep(0.3)
-            #3-1.测试程序
+            # 3-1.测试程序
             if not self.AITestLoop(testType):
                 return False
             self.m_transmitData = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
 
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay, self.m_transmitData,1)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay, self.m_transmitData, 1)
             if not bool_transmit:
                 self.pauseOption()
                 if not self.is_running:
@@ -513,7 +438,7 @@ class AIThread(QObject):
                 return False
 
             bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay + 1,
-                                                                   self.m_transmitData,1)
+                                                                   self.m_transmitData, 1)
             if not bool_transmit:
                 self.pauseOption()
                 if not self.is_running:
@@ -529,14 +454,14 @@ class AIThread(QObject):
                 return False
             # 每次切换电压电流量程初始化CAN分析仪
             # self.CAN_init()
-            self.result_signal.emit('切换到电流模式'+self.HORIZONTAL_LINE)
+            self.result_signal.emit('切换到电流模式' + self.HORIZONTAL_LINE)
 
             time.sleep(1)
             self.testNum = self.testNum - 1
             self.m_transmitData = [0x06, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
 
             bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay,
-                                                                   self.m_transmitData,1)
+                                                                   self.m_transmitData, 1)
             if not bool_transmit:
                 self.pauseOption()
                 if not self.is_running:
@@ -546,7 +471,7 @@ class AIThread(QObject):
                 return False
 
             bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay + 1,
-                                                                   self.m_transmitData,1)
+                                                                   self.m_transmitData, 1)
             if not bool_transmit:
                 self.pauseOption()
                 if not self.is_running:
@@ -560,7 +485,7 @@ class AIThread(QObject):
                 return False
 
             self.m_transmitData = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay, self.m_transmitData,1)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay, self.m_transmitData, 1)
             if not bool_transmit:
                 self.pauseOption()
                 if not self.is_running:
@@ -570,7 +495,7 @@ class AIThread(QObject):
                 return False
 
             bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay + 1,
-                                                                   self.m_transmitData,1)
+                                                                   self.m_transmitData, 1)
             if not bool_transmit:
                 self.pauseOption()
                 if not self.is_running:
@@ -582,21 +507,21 @@ class AIThread(QObject):
 
         return True
 
-    def AITestLoop(self,type:str):
+    def AITestLoop(self, type: str):
 
         testStart_time = time.time()
         m_valueTheory = []
         m_arrayVal = []
-        vol_cur_testNum = 0 #电压/电流的量程数
-        m_name=''
+        vol_cur_testNum = 0  # 电压/电流的量程数
+        m_name = ''
         # isPass = True
         if type == 'AIVoltage':
-            vol_cur_testNum = 5 #电压有5种量程
-            self.volValue_array=[self.voltageTheory_1010,self.voltageTheory_0505,self.voltageTheory_0005,
-                            self.voltageTheory_0010,self.voltageTheory_0105]
-            self.volName_array=[self.arrayVol_1010,self.arrayVol_0505,self.arrayVol_0005,
-                            self.arrayVol_0010,self.arrayVol_0105]
-            self.volRange_array=[27648*2,27648*2,27648,27648,27648]
+            vol_cur_testNum = 5  # 电压有5种量程
+            self.volValue_array = [self.voltageTheory_1010, self.voltageTheory_0505, self.voltageTheory_0005,
+                                   self.voltageTheory_0010, self.voltageTheory_0105]
+            self.volName_array = [self.arrayVol_1010, self.arrayVol_0505, self.arrayVol_0005,
+                                  self.arrayVol_0010, self.arrayVol_0105]
+            self.volRange_array = [27648 * 2, 27648 * 2, 27648, 27648, 27648]
             self.pauseOption()
             if not self.is_running:
                 return False
@@ -606,7 +531,7 @@ class AIThread(QObject):
             if not self.channelZero():
                 return False
 
-            for typeNum in range(vol_cur_testNum): #对每个量程进行测试
+            for typeNum in range(vol_cur_testNum):  # 对每个量程进行测试
                 m_name = self.vol_name_array[typeNum]
                 m_valueTheory = self.volValue_array[typeNum]
                 m_arrayVal = self.volName_array[typeNum]
@@ -622,11 +547,13 @@ class AIThread(QObject):
                 for i in range(self.m_Channels):
                     if not self.setAOInputType(i + 1, type, typeNum):
                         return False
-
-                if not self.vol_cur_test(type,m_name,m_valueTheory, m_arrayVal, m_range,typeNum):
+                if not self.vol_cur_test(type, m_name, m_valueTheory, m_arrayVal, m_range, typeNum):
                     self.isAIVolPass = False
+                    if self.isCancelAll:
+                        return False
+                time.sleep(1)
         elif type == 'AICurrent':
-            vol_cur_testNum = 2 #电流有2种量程
+            vol_cur_testNum = 2  # 电流有2种量程
             self.curValue_array = [self.currentTheory_0420, self.currentTheory_0020]
             self.curName_array = [self.arrayCur_0420, self.arrayCur_0020]
             self.curRange_array = [27648, 27648]
@@ -644,7 +571,7 @@ class AIThread(QObject):
                 m_name = self.cur_name_array[typeNum]
                 m_valueTheory = self.curValue_array[typeNum]
                 m_arrayVal = self.curName_array[typeNum]
-                m_range =self.curRange_array[typeNum]
+                m_range = self.curRange_array[typeNum]
                 # #修改AI量程
                 for i in range(self.m_Channels):
                     self.pauseOption()
@@ -659,8 +586,10 @@ class AIThread(QObject):
                         return False
                     if not self.setAOInputType(i + 1, type, typeNum):
                         return False
-                if not self.vol_cur_test(type,m_name, m_valueTheory, m_arrayVal, m_range, typeNum):
+                if not self.vol_cur_test(type, m_name, m_valueTheory, m_arrayVal, m_range, typeNum):
                     self.isAICurPass = False
+                    if self.isCancelAll:
+                        return False
 
         # 数据清零
         if not self.normal_writeValuetoAO(0):
@@ -671,7 +600,7 @@ class AIThread(QObject):
         self.result_signal.emit('测试结束' + self.HORIZONTAL_LINE)
 
         testEnd_time = time.time()
-        testTest_time = round(testEnd_time - testStart_time,2)
+        testTest_time = round(testEnd_time - testStart_time, 2)
         if self.isAIVolPass and type == 'AIVoltage':
             self.pauseOption()
             if not self.is_running:
@@ -700,8 +629,7 @@ class AIThread(QObject):
         # return self.isAIPassTest
         return True
 
-
-    def vol_cur_test(self,type:str,m_name,m_valueTheory,m_arrayVal,m_range,typeNum:int)->bool:
+    def vol_cur_test(self, type: str, m_name, m_valueTheory, m_arrayVal, m_range, typeNum: int) -> bool:
         """
         单个量程测试
         :param type: str
@@ -727,93 +655,60 @@ class AIThread(QObject):
             # print(f'{m_valueTheory[i]}\n\n')
 
             self.result_signal.emit(f'等待信号稳定……\n')
-            # tt=time.time()
-            # while True:
-            #     if time.time()-tt >= int(self.waiting_time/1000):
-            #         break
-            #     waitFlag, rece_wait = self.receiveAIData()
-            #     if waitFlag == 'stopReceive':
-            #         return False
-            # recv = [0, 0, 0, 0]
-            # if type == 'AIVoltage':
-            #     self.error_value = 422
-                # self.error_value = self.vol_error_value[3]
-                # if int(m_valueTheory[i]) == 27648:
-                #     self.standardValue = self.vol_high_standardValue_array[typeNum]
-                # elif int(m_valueTheory[i]) == 0 or int(m_valueTheory[i]) == -27648:
-                #     self.standardValue = self.vol_low_standardValue_array[typeNum]
 
-            # elif type == 'AICurrent':
-            #     self.error_value = 636
-                # self.error_value = self.cur_high_error_value[0]
-                # if int(m_valueTheory[i]) == 27648:
-                #     self.error_value = self.cur_high_error_value[typeNum]
-                #     self.standardValue = self.cur_high_standardValue_array[typeNum]
-                # elif int(m_valueTheory[i]) == 0:
-                #     self.error_value = self.cur_low_error_value[typeNum]
-                #     self.standardValue = self.cur_low_standardValue_array[typeNum]
-            t_wait =time.time()
-            warning_sign = False
+            t_wait = time.time()
+            # warning_sign = False
+            re_time = 0
             while True:
-                if (time.time()-t_wait)*1000 >= self.waiting_time:
-                    self.result_signal.emit(f'规定时间内无法接收到稳定信号，请检查通道是否损坏！\n')
-                    self.result_signal.emit(f'各通道实际接收数据：{rece_wait[0]}、{rece_wait[1]}、'
-                                            f'{rece_wait[2]}、{rece_wait[3]}\n')
-                    self.result_signal.emit(f'最大差值：{abs(int(m_valueTheory[0]/1000))}')
-                    self.result_signal.emit(f'各通道实际差值：{abs(rece_wait[0] - m_valueTheory[i])}、{abs(rece_wait[1] - m_valueTheory[i])}、'
-                                            f'{abs(rece_wait[2] - m_valueTheory[i])}、{abs(rece_wait[3] - m_valueTheory[i])}\n')
-                    self.result_signal.emit(f'量程”{m_name}“的 {m_arrayVal[i]}不通过\n')
-                    warning_sign = True
-                    break
+                if (time.time() - t_wait) * 1000 >= self.waiting_time:
+                    if re_time == 5:
+                        self.result_signal.emit(f'{re_time}次重新发送数据均无法接收到稳定数据。\n')
+                        break
+                    # self.result_signal.emit(f'规定时间内无法接收到稳定信号，请检查通道是否损坏！或者CAN分析仪接收数据有误\n')
+                    self.result_signal.emit(f'规定时间内无法接收到稳定信号，第{re_time}次尝试重新发送数据\n')
+                    re_time +=1
+                    self.normal_writeValuetoAO(m_valueTheory[i])
+                    # self.result_signal.emit(f'各通道实际接收数据：{rece_wait[0]}、{rece_wait[1]}、'
+                    #                         f'{rece_wait[2]}、{rece_wait[3]}\n')
+                    # self.result_signal.emit(f'最大差值：{abs(int(m_valueTheory[0] / 1000))}')
+                    # self.result_signal.emit(
+                    #     f'各通道实际差值：{abs(rece_wait[0] - m_valueTheory[i])}、{abs(rece_wait[1] - m_valueTheory[i])}、'
+                    #     f'{abs(rece_wait[2] - m_valueTheory[i])}、{abs(rece_wait[3] - m_valueTheory[i])}\n')
+                    # self.result_signal.emit(f'量程”{m_name}“的 {m_arrayVal[i]}不通过\n')
+                    # # warning_sign = True
+                    # break
                 waitFlag, rece_wait = self.receiveAIData()
                 # print(f"rece_wait:{rece_wait}")
                 # print(f"m_valueTheory[i]:{m_valueTheory[i]}")
                 if waitFlag == 'stopReceive':
                     return False
-                if m_valueTheory[i]==0:
+                if m_valueTheory[i] == 0:
                     if (abs(rece_wait[0] - m_valueTheory[i]) <= 28 and
-                        abs(rece_wait[1] - m_valueTheory[i]) <= 28 and
-                        abs(rece_wait[2] - m_valueTheory[i]) <= 28 and
-                        abs(rece_wait[3] - m_valueTheory[i]) <= 28):
+                            abs(rece_wait[1] - m_valueTheory[i]) <= 28 and
+                            abs(rece_wait[2] - m_valueTheory[i]) <= 28 and
+                            abs(rece_wait[3] - m_valueTheory[i]) <= 28):
+                        self.result_signal.emit(f'接收信号的稳定时间：{(time.time() - t_wait) * 1000}毫秒\n')
                         break
                 else:
-                    if (abs(rece_wait[0] - m_valueTheory[i]) <= abs(int(m_valueTheory[0]/1000)) and
-                        abs(rece_wait[1] - m_valueTheory[i]) <= abs(int(m_valueTheory[0]/1000)) and
-                        abs(rece_wait[2] - m_valueTheory[i]) <= abs(int(m_valueTheory[0]/1000)) and
-                        abs(rece_wait[3] - m_valueTheory[i]) <= abs(int(m_valueTheory[0]/1000))):
+                    if (abs(rece_wait[0] - m_valueTheory[i]) <= abs(int(m_valueTheory[0] / 1000)) and
+                            abs(rece_wait[1] - m_valueTheory[i]) <= abs(int(m_valueTheory[0] / 1000)) and
+                            abs(rece_wait[2] - m_valueTheory[i]) <= abs(int(m_valueTheory[0] / 1000)) and
+                            abs(rece_wait[3] - m_valueTheory[i]) <= abs(int(m_valueTheory[0] / 1000))):
+                        self.result_signal.emit(f'接收信号的稳定时间：{(time.time() - t_wait) * 1000}毫秒\n')
                         break
                 time.sleep(0.2)
-            if warning_sign:
-                return False
-
-            # while True:
-            #     if (time.time() - t_wait)*1000 >= self.waiting_time:
-            #         self.result_signal.emit(f'规定时间内无法接收到稳定信号，请检查通道是否损坏！\n')
-            #         warning_sign=True
-            #         break
-            #     # self.receiveAIData()
-            #     bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(0x280 + self.CANAddr_AI, self.waiting_time)
-            #     for j in range(self.m_Channels):
-            #         data = bytes([self.m_can_obj.Data[j * 2], self.m_can_obj.Data[j * 2 + 1]])
-            #         # recv[i] = value = struct.unpack('<h', data)[0]
-            #         recv[j] = struct.unpack('<h', data)[0]
-            #     if ((recv[0] - m_valueTheory[i]) < self.error_value and (recv[1] - m_valueTheory[i]) < self.error_value
-            #             and (recv[2] - m_valueTheory[i]) < self.error_value and (recv[3] - m_valueTheory[i]) < self.error_value):
-            #         break
             # if warning_sign:
             #     return False
-
-
 
             time1 = time.time()
             reReceiveNum = 0
 
             while True:
-                if (time.time() - time1)*1000 > self.waiting_time:
+                if (time.time() - time1) * 1000 > self.waiting_time:
                     self.messageBox_signal.emit(['警告', '数据接收超时！'])
                     break
 
-                bool_receiveAI,usReceValue = self.receiveAIData()
+                bool_receiveAI, usReceValue = self.receiveAIData()
                 if not bool_receiveAI:
                     self.pauseOption()
                     if not self.is_running:
@@ -829,9 +724,10 @@ class AIThread(QObject):
                     self.result_signal.emit('数据接收成功!\n\n')
                     # print(f'time:{time.time()}\nusReceValue={usReceValue}\nm_valueTheory[i]={m_valueTheory[i]}\n\n')
                     break
+                time.sleep(0.2)
             # 各通道的精度数组
             chPrecision = [0 for x in range(self.m_Channels)]
-            #计算4个通道的精度
+            # 计算4个通道的精度
             for j in range(self.m_Channels):
                 # self.isPause()
                 # if not self.isStop():
@@ -839,11 +735,11 @@ class AIThread(QObject):
                 self.pauseOption()
                 if not self.is_running:
                     return False
-                #取量程中的5个点进行精度计算，正向量程的第5个点和双向量程的第3个点为0，若有一点误差收到值有可能会为在65535附近
+                # 取量程中的5个点进行精度计算，正向量程的第5个点和双向量程的第3个点为0，若有一点误差收到值有可能会为在65535附近
                 if (i == 4 and abs(usReceValue[j] - 65535) < 100) or (i == 2 and abs(usReceValue[j] - 65535) < 100):
-                    fPrecision = round(self.GetPrecision(usReceValue[j],65535, m_range), 2)
-                    #将接收到的值转换到0附近进行显示
-                    usReceValue[j] = (usReceValue[j] - 65535) -1
+                    fPrecision = round(self.GetPrecision(usReceValue[j], 65535, m_range), 2)
+                    # 将接收到的值转换到0附近进行显示
+                    usReceValue[j] = (usReceValue[j] - 65535) - 1
                 else:
                     fPrecision = round(self.GetPrecision(usReceValue[j], m_valueTheory[i], m_range), 2)
                 self.result_signal.emit(f'\n接收到AO通道 {j + 1} 数据:{usReceValue[j]}\n\n')
@@ -878,6 +774,11 @@ class AIThread(QObject):
                     if not self.is_running:
                         return False
                     self.result_signal.emit('不满足精度\n\n')
+                    self.messageBox_signal.emit(['警告',f'量程{m_name}的{m_arrayVal[i]}，通道{j+1}的精度测试不通过，是否取消后续测试。'])
+                    reply = self.result_queue.get()
+                    if reply == QMessageBox.AcceptRole:
+                        self.isCancelAll = True
+                        return False
                     if type == 'AIVoltage':
                         self.isAIVolPass &= False
                         self.pauseOption()
@@ -904,22 +805,27 @@ class AIThread(QObject):
                     self.curPrecision[typeNum][i] = chPrecision
         time.sleep(0.5)
         return True
+
     def GetPrecision(self, receValue, theoryValue, range):
         return (receValue - theoryValue) * 1000 / range
 
-    def  receiveAIData(self):
+    def receiveAIData(self):
         can_id = 0x280 + self.CANAddr_AI
-        recv = [0,0,0,0]
+        recv = [0, 0, 0, 0]
         time1 = time.time()
         while True:
-            if (time.time() - time1)*1000 > self.waiting_time:
-                return False,0
-            bool_receive,self.m_can_obj = CAN_option.receiveCANbyID(can_id, self.waiting_time,1)
+            # if (time.time() - time1) * 1000 > self.waiting_time:
+            if (time.time() - time1) * 1000 > 60000:
+                return False, recv
+
+            self.init_m_can_obj()
+            bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(can_id, self.waiting_time, 1)
             # QApplication.processEvents()
             if bool_receive == 'stopReceive':
                 return 'stopReceive', recv
             if bool_receive:
                 break
+            time.sleep(0.1)
         for i in range(self.m_Channels):
             data = bytes([self.m_can_obj.Data[i * 2], self.m_can_obj.Data[i * 2 + 1]])
             # # print(f'i= {i}')
@@ -930,7 +836,7 @@ class AIThread(QObject):
             #     return
             recv[i] = value = struct.unpack('<h', data)[0]
         # print(f'recv= {recv}')
-        return True,recv
+        return True, recv
 
     def calibrateAI(self):
         if self.isCalibrateVol == True:
@@ -938,13 +844,13 @@ class AIThread(QObject):
             if not self.is_running:
                 return False
             self.result_signal.emit('继电器切换到电压模式' + self.HORIZONTAL_LINE)
-            #每次切换电压电流量程初始化CAN分析仪
+            # 每次切换电压电流量程初始化CAN分析仪
             # self.CAN_init()
             # self.testNum = self.testNum - 1
-            self.m_transmitData = [0x01,0x01,0x00,0x00,0x00,0x00,0x00,0x00]
+            self.m_transmitData = [0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
             try:
                 bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay,
-                                                                       self.m_transmitData,1)
+                                                                       self.m_transmitData, 1)
                 if not bool_transmit:
                     return False
             except:
@@ -953,8 +859,8 @@ class AIThread(QObject):
                 return False
 
             try:
-                bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay+1,
-                                                                       self.m_transmitData,1)
+                bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay + 1,
+                                                                       self.m_transmitData, 1)
                 if not bool_transmit:
                     return False
             except:
@@ -974,7 +880,7 @@ class AIThread(QObject):
                 return False
             self.result_signal.emit(f'开始标定AI电压：' + self.HORIZONTAL_LINE)
             for typeNum in range(5):
-                bool_calibrate = self.calibrateAI_vol_cur('AIVoltage',typeNum)
+                bool_calibrate = self.calibrateAI_vol_cur('AIVoltage', typeNum)
                 if not bool_calibrate:
                     calibrateFailEnd_time = time.time()
                     calibrateFail_time = round(calibrateFailEnd_time - calibrateStart_time, 1)
@@ -989,13 +895,13 @@ class AIThread(QObject):
             if not self.is_running:
                 return False
             if bool_calibrate:
-                self.item_signal.emit([5, 2, 1,f'{calibrateTest_time}'])
+                self.item_signal.emit([5, 2, 1, f'{calibrateTest_time}'])
             else:
-                self.item_signal.emit([5, 2, 2,f'{calibrateTest_time}'])
+                self.item_signal.emit([5, 2, 2, f'{calibrateTest_time}'])
             # self.itemOperation(mTable, 5, 2, 1, f'{calibrateTest_time}')
             self.m_transmitData = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
             # time.sleep(0.5)
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay, self.m_transmitData,1)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay, self.m_transmitData, 1)
             if not bool_transmit:
                 self.pauseOption()
                 if not self.is_running:
@@ -1006,7 +912,8 @@ class AIThread(QObject):
                 # self.isStop()
                 return False
 
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay+1, self.m_transmitData,1)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay + 1, self.m_transmitData,
+                                                                   1)
             if not bool_transmit:
                 self.pauseOption()
                 if not self.is_running:
@@ -1022,7 +929,7 @@ class AIThread(QObject):
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.item_signal.emit([5,0,0,''])
+            self.item_signal.emit([5, 0, 0, ''])
 
         if self.isCalibrateCur == True:
             self.pauseOption()
@@ -1036,7 +943,7 @@ class AIThread(QObject):
             self.m_transmitData = [0x06, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
             try:
                 bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay,
-                                                                       self.m_transmitData,1)
+                                                                       self.m_transmitData, 1)
                 if not bool_transmit:
                     self.pauseOption()
                     if not self.is_running:
@@ -1050,7 +957,7 @@ class AIThread(QObject):
                 return False
             try:
                 bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay + 1,
-                                                                       self.m_transmitData,1)
+                                                                       self.m_transmitData, 1)
                 if not bool_transmit:
                     self.pauseOption()
                     if not self.is_running:
@@ -1075,7 +982,7 @@ class AIThread(QObject):
                 return False
             self.result_signal.emit(f'开始标定AI电流：' + self.HORIZONTAL_LINE)
             for typeNum in range(2):
-                bool_calibrate = self.calibrateAI_vol_cur('AICurrent',typeNum)
+                bool_calibrate = self.calibrateAI_vol_cur('AICurrent', typeNum)
                 if not bool_calibrate:
                     return False
                 self.pauseOption()
@@ -1088,12 +995,12 @@ class AIThread(QObject):
             if not self.is_running:
                 return False
             self.item_signal.emit([6, 2, 1, f'{calibrateTest_time}'])
-            #CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
-            #self.can_start()
+            # CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
+            # self.can_start()
             # time.sleep(1)
             self.m_transmitData = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
 
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay, self.m_transmitData,1)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay, self.m_transmitData, 1)
             if not bool_transmit:
                 self.pauseOption()
                 if not self.is_running:
@@ -1102,7 +1009,8 @@ class AIThread(QObject):
                 # print('QR0016#1切换错误，请停止检查设备！')
                 return False
 
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay+1, self.m_transmitData,1)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(0x200 + self.CANAddr_relay + 1, self.m_transmitData,
+                                                                   1)
             if not bool_transmit:
                 self.pauseOption()
                 if not self.is_running:
@@ -1120,7 +1028,7 @@ class AIThread(QObject):
 
         return True
 
-    def calibrateAI_vol_cur(self,type:str,typeNum:int):
+    def calibrateAI_vol_cur(self, type: str, typeNum: int):
         # [(367422 - 156866), (314993 - 209295), (314679 - 262038), (367212 - 261933),(314658 - 272545)]
         #                    -/+10V   -/+5V   0-5V   0-10V   1-5V
         self.vol_maxRange_array = [210556, 105698, 52641, 105279, 42113]
@@ -1128,10 +1036,10 @@ class AIThread(QObject):
         #                    4-20mA  0-20mA
         self.cur_maxRange_array = [42556, 53078]
 
-        self.vol_highValue_array = [0x6c00,0x6c00,0x6c00,0x6c00,0x6c00]
-        self.vol_lowValue_array = [-27648,-27648,0,0,0]
-        self.cur_highValue_array = [0x6c00,0x6c00]
-        self.cur_lowValue_array = [0,0]
+        self.vol_highValue_array = [0x6c00, 0x6c00, 0x6c00, 0x6c00, 0x6c00]
+        self.vol_lowValue_array = [-27648, -27648, 0, 0, 0]
+        self.cur_highValue_array = [0x6c00, 0x6c00]
+        self.cur_lowValue_array = [0, 0]
 
         maxRange = 0
         lowValue = 0
@@ -1139,40 +1047,40 @@ class AIThread(QObject):
         if type == 'AIVoltage':
             highValue = self.vol_highValue_array[typeNum]
             lowValue = self.vol_lowValue_array[typeNum]
-            maxRange = self.vol_maxRange_array[typeNum] #上限最大值- 下限最小值
+            maxRange = self.vol_maxRange_array[typeNum]  # 上限最大值- 下限最小值
         if type == 'AICurrent':
             highValue = self.cur_highValue_array[typeNum]
             lowValue = self.cur_lowValue_array[typeNum]
             maxRange = self.cur_maxRange_array[typeNum]  # 上限最大值- 下限最小值
 
-        #self.CAN_init()
-        #0.防止之前可能在标定模式中，先退出标定模式
+        # self.CAN_init()
+        # 0.防止之前可能在标定模式中，先退出标定模式
         self.setAIChOutCalibrate()
 
         """1.通道归零"""
         self.channelZero()
 
         """2.初始化模式"""
-        self.setAIChOutCalibrate() #退出标定模式
+        self.setAIChOutCalibrate()  # 退出标定模式
         time.sleep(0.1)
 
         """3.设置AI量程"""
         for i in range(self.m_Channels):
             channel = i + 1
-            if not self.setAIInputType(channel, type,typeNum):
+            if not self.setAIInputType(channel, type, typeNum):
                 return False
 
         """4.设置AO量程"""
         for i in range(self.m_Channels):
             channel = i + 1
-            if not self.setAOInputType(channel, type,typeNum):
+            if not self.setAOInputType(channel, type, typeNum):
                 return False
 
         """5.进入标定模式"""
         self.pauseOption()
         if not self.is_running:
             return False
-        self.result_signal.emit(f'进入标定模式\n'+self.HORIZONTAL_LINE)
+        self.result_signal.emit(f'进入标定模式\n' + self.HORIZONTAL_LINE)
         if not self.setAIChInCalibrate():
             self.pauseOption()
             if not self.is_running:
@@ -1182,7 +1090,7 @@ class AIThread(QObject):
 
         """6.向AO模块写输出值，并接收配套AI模块的测量值"""
         channelNum = 1
-        if self.oneOrAll == 2:#2:标定所有通道
+        if self.oneOrAll == 2:  # 2:标定所有通道
             channelNum = self.m_Channels
             self.pauseOption()
             if not self.is_running:
@@ -1195,41 +1103,7 @@ class AIThread(QObject):
                 return False
             self.result_signal.emit(self.HORIZONTAL_LINE + '仅标定第一个通道' + self.HORIZONTAL_LINE)
             # print(self.HORIZONTAL_LINE + '仅标定第一个通道' + self.HORIZONTAL_LINE)
-        bool_receive,usArrayHigh = self.AI_receive_WriteToAO(highValue,type,channelNum,typeNum)
-        if not bool_receive:
-            self.pauseOption()
-            if not self.is_running:
-                return False
-            self.pauseOption()
-            self.result_signal.emit('AI模块标定结束！' + self.HORIZONTAL_LINE)
-            # print(self.HORIZONTAL_LINE + 'AI模块标定结束！' + self.HORIZONTAL_LINE)
-
-
-            """.8退出标定模式"""
-            self.setAIChOutCalibrate()
-            self.pauseOption()
-            if not self.is_running:
-                return False
-            self.pauseOption()
-            self.result_signal.emit('退出标定模式！' + self.HORIZONTAL_LINE)
-            # print('退出标定模式！' + self.HORIZONTAL_LINE)
-
-            """9.通道归零"""
-            self.channelZero()
-
-            # 后续测试取消
-            self.isTest=False
-            # 这里return False会导致软件界面卡死，暂时不知道如何解决
-            #2023.11.13已解决界面卡死问题
-            return False
-        if bool_receive == 'stopReceive':
-            return False
-        self.pauseOption()
-        if not self.is_running:
-            return False
-        self.result_signal.emit(f"等待1秒……\n\n")
-        time.sleep(1)
-        bool_receive,usArrayLow = self.AI_receive_WriteToAO(lowValue,type,channelNum,typeNum)
+        bool_receive, usArrayHigh = self.AI_receive_WriteToAO(highValue, type, channelNum, typeNum)
         if not bool_receive:
             self.pauseOption()
             if not self.is_running:
@@ -1252,7 +1126,40 @@ class AIThread(QObject):
 
             # 后续测试取消
             self.isTest = False
-            #这里return False会导致软件界面卡死，暂时不知道如何解决
+            # 这里return False会导致软件界面卡死，暂时不知道如何解决
+            # 2023.11.13已解决界面卡死问题
+            return False
+        if bool_receive == 'stopReceive':
+            return False
+        self.pauseOption()
+        if not self.is_running:
+            return False
+        self.result_signal.emit(f"等待1秒……\n\n")
+        time.sleep(1)
+        bool_receive, usArrayLow = self.AI_receive_WriteToAO(lowValue, type, channelNum, typeNum)
+        if not bool_receive:
+            self.pauseOption()
+            if not self.is_running:
+                return False
+            self.pauseOption()
+            self.result_signal.emit('AI模块标定结束！' + self.HORIZONTAL_LINE)
+            # print(self.HORIZONTAL_LINE + 'AI模块标定结束！' + self.HORIZONTAL_LINE)
+
+            """.8退出标定模式"""
+            self.setAIChOutCalibrate()
+            self.pauseOption()
+            if not self.is_running:
+                return False
+            self.pauseOption()
+            self.result_signal.emit('退出标定模式！' + self.HORIZONTAL_LINE)
+            # print('退出标定模式！' + self.HORIZONTAL_LINE)
+
+            """9.通道归零"""
+            self.channelZero()
+
+            # 后续测试取消
+            self.isTest = False
+            # 这里return False会导致软件界面卡死，暂时不知道如何解决
             # 2023.11.13已解决界面卡死问题
             return False
         for i in range(channelNum):
@@ -1260,10 +1167,10 @@ class AIThread(QObject):
             # if not self.isStop():
             #     return
             if abs(usArrayHigh[i] - usArrayLow[i]) < 10 or abs(usArrayHigh[i] - usArrayLow[i] > maxRange):
-                self.messageBox_signal.emit(['警告', f'请检查通道{i+1}接线或者模块是否存在问题,并重新开始标定！'])
+                self.messageBox_signal.emit(['警告', f'请检查通道{i + 1}接线或者模块是否存在问题,并重新开始标定！'])
                 # reply = QMessageBox.warning(None, '警告', '请检查接线或者模块是否存在问题,并重新开始标定！',
                 #                             QMessageBox.AcceptRole | QMessageBox.RejectRole, QMessageBox.AcceptRole)
-                #退出标定模式并进行通道归零
+                # 退出标定模式并进行通道归零
                 self.setAIChOutCalibrate()
                 self.pauseOption()
                 if not self.is_running:
@@ -1280,28 +1187,28 @@ class AIThread(QObject):
         self.pauseOption()
         if not self.is_running:
             return False
-        self.result_signal.emit(self.HORIZONTAL_LINE+'计算AI模块零值和量程值\n\n')
+        self.result_signal.emit(self.HORIZONTAL_LINE + '计算AI模块零值和量程值\n\n')
         for i in range(channelNum):
             # self.isPause()
             # if not self.isStop():
             #     return
             usSpanValue = usArrayHigh[i]
-            usZeroValue =usArrayLow[i]
+            usZeroValue = usArrayLow[i]
             # usSpanValue = int(self.calcSpan(usArrayHigh[i],usArrayLow[i],highValue,lowValue))
             # usZeroValue = int(self.calcZero(usArrayHigh[i], usArrayLow[i], highValue, lowValue,type))
             # print(f'{i+1}.计算得到AI通道{i+1} 零值：{usZeroValue}，量程值：{usSpanValue}')
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.result_signal.emit(f'{i+1}.计算得到AI通道{i+1} 零值：{usZeroValue}，量程值：{usSpanValue}')
+            self.result_signal.emit(f'{i + 1}.计算得到AI通道{i + 1} 零值：{usZeroValue}，量程值：{usSpanValue}')
 
             """向通道写入零值与量程值"""
-            if not self.writeParaToChannel(i+1, usZeroValue, usSpanValue):
+            if not self.writeParaToChannel(i + 1, usZeroValue, usSpanValue):
                 self.pauseOption()
                 if not self.is_running:
                     return False
                 if type == 'AIVoltage':
-                    self.result_signal.emit(f'更新通道{i+1}在"{self.vol_name_array[typeNum]}"量程的标定值失败！\n\n')
+                    self.result_signal.emit(f'更新通道{i + 1}在"{self.vol_name_array[typeNum]}"量程的标定值失败！\n\n')
                 elif type == 'AICurrent':
                     self.result_signal.emit(f'更新通道{i + 1}在"{self.cur_name_array[typeNum]}"量程的标定值失败！\n\n')
             else:
@@ -1312,7 +1219,7 @@ class AIThread(QObject):
                     self.result_signal.emit(f'成功更新通道{i + 1}在"{self.vol_name_array[typeNum]}"量程的标定值！\n\n')
                 elif type == 'AICurrent':
                     self.result_signal.emit(f'成功更新通道{i + 1}在"{self.cur_name_array[typeNum]}"量程的标定值！\n\n')
-            #若只标定第一个通道，则需要把第一个通道的零值和量程值也写入其他三个通道
+            # 若只标定第一个通道，则需要把第一个通道的零值和量程值也写入其他三个通道
             if channelNum == 1:
                 self.pauseOption()
                 if not self.is_running:
@@ -1344,7 +1251,6 @@ class AIThread(QObject):
             self.channelZero()
         return True
 
-
     # 向通道写入标定参数
     def writeParaToChannel(self, AIChannel, usZero, usSpan):
         can_id = 0x600 + self.CANAddr_AI
@@ -1358,7 +1264,7 @@ class AIThread(QObject):
         self.m_transmitData[4] = (usZero & 0xff)
         self.m_transmitData[5] = ((usZero >> 8) & 0xff)
         self.m_transmitData[6] = ((usZero >> 16) & 0xff)
-        bool_transmit_low, self.m_can_obj = CAN_option.transmitCAN(can_id, self.m_transmitData,1)
+        bool_transmit_low, self.m_can_obj = CAN_option.transmitCAN(can_id, self.m_transmitData, 1)
 
         time.sleep(0.1)
 
@@ -1367,10 +1273,10 @@ class AIThread(QObject):
         self.m_transmitData[4] = (usSpan & 0xff)
         self.m_transmitData[5] = ((usSpan >> 8) & 0xff)
         self.m_transmitData[6] = ((usSpan >> 16) & 0xff)
-        bool_transmit_high, self.m_can_obj = CAN_option.transmitCAN(can_id, self.m_transmitData,1)
-        return bool_transmit_low&bool_transmit_high
+        bool_transmit_high, self.m_can_obj = CAN_option.transmitCAN(can_id, self.m_transmitData, 1)
+        return bool_transmit_low & bool_transmit_high
 
-    def AI_receive_WriteToAO(self,value,type,channelNum,typeNum):
+    def AI_receive_WriteToAO(self, value, type, channelNum, typeNum):
         self.vol_high_standardValue_array = [367002, 314573, 314573, 367002, 314573]
         self.cur_high_standardValue_array = [314777, 314777]
         self.vol_low_standardValue_array = [157286, 209715, 262144, 262144, 272630]
@@ -1380,7 +1286,7 @@ class AIThread(QObject):
         self.cur_low_error_value = [265, 214]
         # # print('写入数据并等待信号稳定………' + self.HORIZONTAL_LINE)
         if type == 'AIVoltage':
-            self.error_value=self.vol_error_value[typeNum]
+            self.error_value = self.vol_error_value[typeNum]
             if int(value) == 27648:
                 self.standardValue = self.vol_high_standardValue_array[typeNum]
             elif int(value) == 0 or int(value) == -27648:
@@ -1388,7 +1294,7 @@ class AIThread(QObject):
             # headInf = self.arrayVol_1010
         elif type == 'AICurrent':
             if int(value) == 27648:
-                self.error_value =self.cur_high_error_value[typeNum]
+                self.error_value = self.cur_high_error_value[typeNum]
                 self.standardValue = self.cur_high_standardValue_array[typeNum]
             elif int(value) == 0:
                 self.error_value = self.cur_low_error_value[typeNum]
@@ -1396,8 +1302,8 @@ class AIThread(QObject):
 
         self.pauseOption()
         if not self.is_running:
-            return False,0
-        if value >0:
+            return False, 0
+        if value > 0:
             self.pauseOption()
             if not self.is_running:
                 return False
@@ -1418,68 +1324,92 @@ class AIThread(QObject):
         inf = '接收到的AI数据：'
         inf_average = '接收到AI数据的平均值：'
         valReceive_num = self.receive_num
-        warning_flag = False
+        # warning_flag = False
+        re_transmit_num = 0
+        while True:
+            if re_transmit_num > 5:
+                return False, usRecValue
+            # 需要接收self.receive_num次数据后算平均值
+            for i in range(self.receive_num):
+                time2 = time.time()
+                # 一开始直接等 self.waiting_time ms，等待信号稳定再接收报文
+                if i == 0:
+                    while True:
+                        if (time.time() - time2) * 1000 >= self.waiting_time:
+                            self.pauseOption()
+                            if not self.is_running:
+                                return False, 0
+                            break
 
-        #需要接收self.receive_num次数据后算平均值
-        for i in range(self.receive_num):
-            time2 = time.time()
-            #一开始直接等 self.waiting_time ms，等待信号稳定再接收报文
-            if i == 0:
-                while True:
-                    if (time.time() - time2)*1000 >= self.waiting_time:
-                        self.pauseOption()
-                        if not self.is_running:
-                            return False,0
-                        break
-
-            bool_caReceive, usTmpValue = self.calibrate_receiveAIData(channelNum)
-            if not bool_caReceive:
-                self.pauseOption()
-                if not self.is_running:
-                    return False, 0
-                self.result_signal.emit(f'{i + 1}.第{i + 1}次数据未接收到！排除该次数据！\n\n')
-                valReceive_num = valReceive_num -1
-                continue
-            if bool_caReceive == 'stopReceive':
-                return False,0
-            if channelNum == 4:
-                self.pauseOption()
-                if not self.is_running:
-                    return False, 0
-                if (abs(usTmpValue[0]-self.standardValue)>200 or abs(usTmpValue[1]-self.standardValue)>200
-                        or abs(usTmpValue[2]-self.standardValue)>400 or abs(usTmpValue[3]-self.standardValue)>200):
-                    self.result_signal.emit(f'{i + 1}.第{i + 1}次数据：{usTmpValue}，误差过大！排除该次数据！\n\n')
+                bool_caReceive, usTmpValue = self.calibrate_receiveAIData(channelNum)
+                if not bool_caReceive:
+                    self.pauseOption()
+                    if not self.is_running:
+                        return False, 0
+                    self.result_signal.emit(f'{i + 1}.第{i + 1}次数据未接收到！排除该次数据！\n\n')
                     valReceive_num = valReceive_num - 1
                     continue
-            if channelNum == 1:
+                if bool_caReceive == 'stopReceive':
+                    return False, 0
+                if channelNum == 4:
+                    self.pauseOption()
+                    if not self.is_running:
+                        return False, 0
+                    error_1 = abs(usTmpValue[0] - self.standardValue)
+                    error_2 = abs(usTmpValue[1] - self.standardValue)
+                    error_3 = abs(usTmpValue[2] - self.standardValue)
+                    error_4 = abs(usTmpValue[3] - self.standardValue)
+                    if (error_1 > 500 or error_2 > 500 or error_3 > 500 or error_4 > 1500):
+                        error_channel = ''
+                        if error_1 > 500:
+                            error_channel += f'通道1的误差为{error_1}、'
+                        if error_2 > 500:
+                            error_channel += f'通道2的误差为{error_2}、'
+                        if error_3 > 500:
+                            error_channel += f'通道3的误差为{error_3}、'
+                        if error_4 > 500:
+                            error_channel += f'通道4的误差为{error_4}'
+                        # self.result_signal.emit(f'len(error_channel)={len(error_channel)}\n')
+                        if error_channel[(len(error_channel)-1)] == '、':
+                            error_channel =error_channel[:-1]
+                        self.result_signal.emit(f'{i + 1}.第{i + 1}次数据：{usTmpValue}，其中{error_channel}！排除该次数据！\n\n')
+                        valReceive_num = valReceive_num - 1
+                        continue
+                if channelNum == 1:
+                    self.pauseOption()
+                    if not self.is_running:
+                        return False, 0
+                    if (abs(usTmpValue[0] - self.standardValue) > 200):
+                        self.result_signal.emit(f'{i + 1}.第{i + 1}次数据：{usTmpValue}，'
+                                                f'通道1的误差为{abs(usTmpValue[0] - self.standardValue)}！排除该次数据！\n\n')
+                        valReceive_num = valReceive_num - 1
+                        continue
                 self.pauseOption()
                 if not self.is_running:
                     return False, 0
-                if (abs(usTmpValue[0]-self.standardValue)>200):
-                    self.result_signal.emit(f'{i + 1}.第{i + 1}次数据：{usTmpValue}，误差过大！排除该次数据！\n\n')
-                    valReceive_num = valReceive_num - 1
-                    continue
-            self.pauseOption()
-            if not self.is_running:
-                return False, 0
-            self.result_signal.emit(f'{i + 1}.第{i + 1}次{inf}{usTmpValue}  \n\n')
-            for j in range(channelNum):
-                usRecValue[j]=usRecValue[j]+usTmpValue[j]
-            #     if i == self.receive_num - 1:
-            #         usRecValue[j] = int(usRecValue[j]/valReceive_num)
-            # if i ==  self.receive_num - 1:
-            #     self.result_signal.emit(inf_average + f'{usRecValue}\n\n')
-        if valReceive_num > 0:
-            for j in range(channelNum):
-                usRecValue[j] = int(usRecValue[j] / valReceive_num)
-            self.result_signal.emit(inf_average + f'{usRecValue}\n\n')
-        elif valReceive_num == 0:
-            self.pauseOption()
-            if not self.is_running:
-                return False, 0
-            self.result_signal.emit(f'!!!!!!!!{self.receive_num}次均未接受到正常数据，请检查接线和设备!!!!!!!!\n\n')
-            return False, usRecValue
-        return True,usRecValue
+                self.result_signal.emit(f'{i + 1}.第{i + 1}次{inf}{usTmpValue}  \n\n')
+                for j in range(channelNum):
+                    usRecValue[j] = usRecValue[j] + usTmpValue[j]
+                #     if i == self.receive_num - 1:
+                #         usRecValue[j] = int(usRecValue[j]/valReceive_num)
+                # if i ==  self.receive_num - 1:
+                #     self.result_signal.emit(inf_average + f'{usRecValue}\n\n')
+            if valReceive_num > 0:
+                for j in range(channelNum):
+                    usRecValue[j] = int(usRecValue[j] / valReceive_num)
+                self.result_signal.emit(inf_average + f'{usRecValue}\n\n')
+                break
+            elif valReceive_num == 0:
+                self.pauseOption()
+                if not self.is_running:
+                    return False, 0
+                self.result_signal.emit(f'!!!!!!!!{self.receive_num}次均未接受到正常数据，请检查接线和设备!!!!!!!!\n')
+                self.result_signal.emit(f'第{re_transmit_num+1}次尝试重新写人数据点（{self.standardValue}）并等待信号稳定………' + self.HORIZONTAL_LINE)
+                self.normal_writeValuetoAO(value)
+                valReceive_num = self.receive_num
+                re_transmit_num += 1
+                # return False, usRecValue
+        return True, usRecValue
 
     def calibrate_receiveAIData(self, channelNum):
         # CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
@@ -1497,26 +1427,32 @@ class AIThread(QObject):
             self.m_transmitData[5] = 0x00
             self.m_transmitData[6] = 0x00
             self.m_transmitData[7] = 0x00
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN(can_id, self.m_transmitData,1)
+            while_start = time.time()
+            while True:
+                if time.time() - while_start > 60:
+                    self.result_signal.emit(f'通道{i+1}读取下限ADC原始采样转换值的指令发送失败。\n')
+                    return False, recv
+                bool_transmit, self.m_can_obj = CAN_option.transmitCAN(can_id, self.m_transmitData, 1)
+                if bool_transmit:
+                    break
+                time.sleep(0.2)
             # self.isPause()
             # if not self.isStop():
             #     return
             while True:
-                # self.isPause()
-                # if not self.isStop():
-                #                  return
-                bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(0x580 + self.CANAddr_AI, self.waiting_time,1)
-                # QApplication.processEvents()
+                self.init_m_can_obj()
+                bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(0x580 + self.CANAddr_AI, self.waiting_time, 1)
                 if bool_receive:
                     break
                 if bool_receive == 'stopReceive':
-                    return 'stopReceive',recv
+                    return 'stopReceive', recv
                 elif not bool_receive:
-                    return False,recv
+                    return False, recv
+                time.sleep(0.1)
             recv[i] = ((self.m_can_obj.Data[7] << 24 | self.m_can_obj.Data[6] << 16) | self.m_can_obj.Data[5] << 8) | \
                       self.m_can_obj.Data[4]
 
-        return True,recv
+        return True, recv
 
     def setAIChInCalibrate(self):
         bool_all = True
@@ -1529,7 +1465,7 @@ class AIThread(QObject):
         self.m_transmitData[6] = 0x4c
         self.m_transmitData[7] = 0x49
 
-        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + self.CANAddr_AI), self.m_transmitData,1)
+        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + self.CANAddr_AI), self.m_transmitData, 1)
         bool_all = bool_all & bool_transmit
 
         self.m_transmitData[0] = 0x23
@@ -1541,18 +1477,17 @@ class AIThread(QObject):
         self.m_transmitData[6] = 0x41
         self.m_transmitData[7] = 0x52
 
-        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + self.CANAddr_AI), self.m_transmitData,1)
+        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + self.CANAddr_AI), self.m_transmitData, 1)
         bool_all = bool_all & bool_transmit
 
         return bool_all
 
-    def clearList(self,array):
+    def clearList(self, array):
         for i in range(len(array)):
             array[i] = 0x00
 
-
     # 检查待检AO模块输入类型是否正确
-    def setAOInputType(self, AOChannel, type:str, typeNum:int):
+    def setAOInputType(self, AOChannel, type: str, typeNum: int):
         if AOChannel == 1:
             self.pauseOption()
             if not self.is_running:
@@ -1569,23 +1504,24 @@ class AIThread(QObject):
         self.clearList(self.m_can_obj.Data)
 
         if type == 'AOVoltage' or type == 'AIVoltage':
-            self.m_transmitData[4] = self.vol_AORangeArray[2*typeNum]
-            self.m_transmitData[5] = self.vol_AORangeArray[2*typeNum+1]
+            self.m_transmitData[4] = self.vol_AORangeArray[2 * typeNum]
+            self.m_transmitData[5] = self.vol_AORangeArray[2 * typeNum + 1]
             while True:
                 # self.isPause()
                 # if not self.isStop():
                 #                  return
                 # QApplication.processEvents()
-                if CAN_option.transmitCAN(0x600 + self.CANAddr_AO, self.m_transmitData,1)[0]:
+                if CAN_option.transmitCAN(0x600 + self.CANAddr_AO, self.m_transmitData, 1)[0]:
+                    self.init_m_can_obj()
                     bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(0x580 + self.CANAddr_AO,
-                                                                             self.waiting_time,1)
+                                                                             self.waiting_time, 1)
                     if bool_receive:
                         # # print(f'm_can_obj.Data[4]:{self.m_can_obj.Data[4]}')
                         # # print(f'm_can_obj.Data[5]:{self.m_can_obj.Data[5]}')
                         # # print(f'AORangeArray[0]:{self.AORangeArray[0]}')
                         # # print(f'AORangeArray[1]:{self.AORangeArray[1]}')
-                        if hex(self.m_can_obj.Data[4]) == hex(self.vol_AORangeArray[2*typeNum]) and hex(
-                                self.m_can_obj.Data[5]) == hex(self.vol_AORangeArray[2*typeNum+1]):
+                        if hex(self.m_can_obj.Data[4]) == hex(self.vol_AORangeArray[2 * typeNum]) and hex(
+                                self.m_can_obj.Data[5]) == hex(self.vol_AORangeArray[2 * typeNum + 1]):
                             # print(f'{AOChannel}.成功设置AO通道{AOChannel}的量程为”{self.vol_name_array[typeNum]}“。\n\n')
                             self.pauseOption()
                             if not self.is_running:
@@ -1610,23 +1546,24 @@ class AIThread(QObject):
                     return False
                     # # print(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”电压+/-10V“。\n\n')
         elif type == 'AOCurrent' or type == 'AICurrent':
-            self.m_transmitData[4] = self.cur_AORangeArray[2*typeNum]
-            self.m_transmitData[5] = self.cur_AORangeArray[2*typeNum+1]
+            self.m_transmitData[4] = self.cur_AORangeArray[2 * typeNum]
+            self.m_transmitData[5] = self.cur_AORangeArray[2 * typeNum + 1]
             while True:
                 # self.isPause()
                 # if not self.isStop():
                 #                  return
                 # QApplication.processEvents()
-                if CAN_option.transmitCAN(0x600 + self.CANAddr_AO, self.m_transmitData,1)[0]:
+                if CAN_option.transmitCAN(0x600 + self.CANAddr_AO, self.m_transmitData, 1)[0]:
+                    self.init_m_can_obj()
                     bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(0x580 + self.CANAddr_AO,
-                                                                             self.waiting_time,1)
+                                                                             self.waiting_time, 1)
                     if bool_receive:
                         # # print(f'm_can_obj.Data[4]:{self.m_can_obj.Data[4]}')
                         # # print(f'm_can_obj.Data[5]:{self.m_can_obj.Data[5]}')
                         # # print(f'AORangeArray[0]:{self.AORangeArray[0]}')
                         # # print(f'AORangeArray[1]:{self.AORangeArray[1]}')
-                        if hex(self.m_can_obj.Data[4]) == hex(self.cur_AORangeArray[2*typeNum]) and hex(
-                                self.m_can_obj.Data[5]) == hex(self.cur_AORangeArray[2*typeNum+1]):
+                        if hex(self.m_can_obj.Data[4]) == hex(self.cur_AORangeArray[2 * typeNum]) and hex(
+                                self.m_can_obj.Data[5]) == hex(self.cur_AORangeArray[2 * typeNum + 1]):
                             # print(f'{AOChannel}.成功设置AO通道{AOChannel}的量程为”{self.cur_name_array[typeNum]}“。\n\n')
                             self.pauseOption()
                             if not self.is_running:
@@ -1659,7 +1596,7 @@ class AIThread(QObject):
         return True
 
     # 检查配套AI模块输入类型是否正确
-    def setAIInputType(self, AIChannel, type:str, typeNum:int):
+    def setAIInputType(self, AIChannel, type: str, typeNum: int):
         # CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
         # self.can_start()
         if AIChannel == 1:
@@ -1678,20 +1615,20 @@ class AIThread(QObject):
         self.clearList(self.m_can_obj.Data)
 
         if type == 'AOVoltage' or type == 'AIVoltage':
-            self.m_transmitData[4] = self.vol_AIRangeArray[2*typeNum]
-            self.m_transmitData[5] = self.vol_AIRangeArray[2*typeNum + 1]
+            self.m_transmitData[4] = self.vol_AIRangeArray[2 * typeNum]
+            self.m_transmitData[5] = self.vol_AIRangeArray[2 * typeNum + 1]
             while True:
                 # QApplication.processEvents()
-                if CAN_option.transmitCAN(0x600 + self.CANAddr_AI, self.m_transmitData,1)[0]:
+                if CAN_option.transmitCAN(0x600 + self.CANAddr_AI, self.m_transmitData, 1)[0]:
                     bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(0x580 + self.CANAddr_AI,
-                                                                             self.waiting_time,1)
+                                                                             self.waiting_time, 1)
                     if bool_receive:
                         # # print(f'm_can_obj.Data[4]:{self.m_can_obj.Data[4]}')
                         # # print(f'm_can_obj.Data[5]:{self.m_can_obj.Data[5]}')
                         # # print(f'self.vol_AIRangeArray[2*typeNum]:{self.vol_AIRangeArray[2*typeNum]')
                         # # print(f'self.vol_AIRangeArray[2*typeNum]+1:self.vol_AIRangeArray[2*typeNum+1]')
-                        if hex(self.m_can_obj.Data[4]) == hex(self.vol_AIRangeArray[2*typeNum]) and hex(
-                                self.m_can_obj.Data[5]) == hex(self.vol_AIRangeArray[2*typeNum+1]):
+                        if hex(self.m_can_obj.Data[4]) == hex(self.vol_AIRangeArray[2 * typeNum]) and hex(
+                                self.m_can_obj.Data[5]) == hex(self.vol_AIRangeArray[2 * typeNum + 1]):
                             # print(f'{AIChannel}.成功设置AI通道{AIChannel}的量程为"{self.vol_name_array[typeNum]}"。\n\n')
 
                             self.pauseOption()
@@ -1716,23 +1653,23 @@ class AIThread(QObject):
                     return False
                     # # print(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”电压+/-10V“。\n\n')
         elif type == 'AOCurrent' or type == 'AICurrent':
-            self.m_transmitData[4] = self.cur_AIRangeArray[2*typeNum]
-            self.m_transmitData[5] = self.cur_AIRangeArray[2*typeNum + 1]
+            self.m_transmitData[4] = self.cur_AIRangeArray[2 * typeNum]
+            self.m_transmitData[5] = self.cur_AIRangeArray[2 * typeNum + 1]
             while True:
                 # self.isPause()
                 # if not self.isStop():
                 #                  return
                 QApplication.processEvents()
-                if CAN_option.transmitCAN(0x600 + self.CANAddr_AI, self.m_transmitData,1)[0]:
+                if CAN_option.transmitCAN(0x600 + self.CANAddr_AI, self.m_transmitData, 1)[0]:
                     bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(0x580 + self.CANAddr_AI,
-                                                                             self.waiting_time,1)
+                                                                             self.waiting_time, 1)
                     if bool_receive:
                         # # print(f'm_can_obj.Data[4]:{self.m_can_obj.Data[4]}')
                         # # print(f'm_can_obj.Data[5]:{self.m_can_obj.Data[5]}')
                         # # print(f'AIRangeArray[0]:{self.AIRangeArray[0]}')
                         # # print(f'AIRangeArray[1]:{self.AIRangeArray[1]}')
-                        if hex(self.m_can_obj.Data[4]) == hex(self.cur_AIRangeArray[2*typeNum]) and hex(
-                                self.m_can_obj.Data[5]) == hex(self.cur_AIRangeArray[2*typeNum+1]):
+                        if hex(self.m_can_obj.Data[4]) == hex(self.cur_AIRangeArray[2 * typeNum]) and hex(
+                                self.m_can_obj.Data[5]) == hex(self.cur_AIRangeArray[2 * typeNum + 1]):
                             # print(f'{AIChannel}.成功设置AI通道{AIChannel}的量程为”{self.cur_name_array[typeNum]}“。\n\n')
 
                             self.pauseOption()
@@ -1768,19 +1705,29 @@ class AIThread(QObject):
         bool_all = True
         self.m_transmitData = [0x23, 0x3f, 0x64, 0x00, 0x45, 0x58, 0x49, 0x54]
 
-        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + self.CANAddr_AI), self.m_transmitData,1)
+        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + self.CANAddr_AI), self.m_transmitData, 1)
         bool_all = bool_all & bool_transmit
 
         return bool_all
 
-    def normal_writeValuetoAO(self,value):
+    def normal_writeValuetoAO(self, value):
         bool_all = True
+        bool_transmit = False
         for i in range(self.m_Channels):
-            self.m_transmitData = [0x2b,0x11,0x64,i+1,(value & 0xff),((value >> 8) & 0xff),0x00,0x00]
-
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600+self.CANAddr_AO), self.m_transmitData,1)
-            bool_all = bool_all & bool_transmit
-
+            self.m_transmitData = [0x2b, 0x11, 0x64, i + 1, (value & 0xff), ((value >> 8) & 0xff), 0x00, 0x00]
+            while_start = time.time()
+            while bool_all:
+                if (time.time() - while_start) > 5:
+                    self.result_signal.emit(f'规定时间内模块AQ0016通道{i+1}的输出值修改失败，取消后续测试！\n')
+                    bool_transmit = False
+                    break
+                bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + self.CANAddr_AO), self.m_transmitData, 1)
+                if bool_transmit:
+                    break
+                time.sleep(0.2)
+            bool_all &= bool_transmit
+            if not bool_all:
+                break
         return bool_all
 
     def channelZero(self):
@@ -1810,7 +1757,7 @@ class AIThread(QObject):
             #     return
         return True
 
-    def testRunErr(self,addr):
+    def testRunErr(self, addr):
         self.testNum -= 1
         self.isLEDRunOK = True
         self.isLEDErrOK = True
@@ -1819,10 +1766,10 @@ class AIThread(QObject):
         self.pauseOption()
         if not self.is_running:
             return False
-        self.item_signal.emit([1,1,0,''])
-            # mTable.item(1, i).setBackground(QtGui.QColor(255, 255, 0))
-            # if i == 1:
-            #     mTable.item(1, i).setText('正在检测')
+        self.item_signal.emit([1, 1, 0, ''])
+        # mTable.item(1, i).setBackground(QtGui.QColor(255, 255, 0))
+        # if i == 1:
+        #     mTable.item(1, i).setText('正在检测')
         runStart_time = time.time()
 
         self.pauseOption()
@@ -1836,9 +1783,9 @@ class AIThread(QObject):
         self.m_transmitData[2] = 0x5f
         self.m_transmitData[3] = 0x01
         self.m_transmitData[4] = 0x01
-        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr),self.m_transmitData,1)
+        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData, 1)
         runEnd_time = time.time()
-        runTest_time = round(runEnd_time - runStart_time,2)
+        runTest_time = round(runEnd_time - runStart_time, 2)
         time.sleep(0.1)
         # reply = QMessageBox.question(None, '检测RUN &ERROR', 'RUN指示灯是否点亮？',
         #                              QMessageBox.AcceptRole | QMessageBox.RejectRole,
@@ -1861,11 +1808,11 @@ class AIThread(QObject):
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.item_signal.emit([1,2,1,f'{runTest_time}'])
+            self.item_signal.emit([1, 2, 1, f'{runTest_time}'])
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.result_signal.emit("LED RUN 测试通过\n关闭LED RUN\n"+self.HORIZONTAL_LINE)
+            self.result_signal.emit("LED RUN 测试通过\n关闭LED RUN\n" + self.HORIZONTAL_LINE)
             # print("LED RUN 测试通过\n关闭LED RUN\n"+self.HORIZONTAL_LINE)
             self.clearList(self.m_transmitData)
             self.m_transmitData[0] = 0x2f
@@ -1873,7 +1820,7 @@ class AIThread(QObject):
             self.m_transmitData[2] = 0x5f
             self.m_transmitData[3] = 0x01
             self.m_transmitData[4] = 0x00
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData, 1)
             time.sleep(1)
             self.isLEDRunOK = True
             # self.result_signal.emit(f'self.isLEDRunOK:{self.isLEDRunOK}')
@@ -1882,7 +1829,7 @@ class AIThread(QObject):
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.item_signal.emit([1,2,2,f'{runTest_time}'])
+            self.item_signal.emit([1, 2, 2, f'{runTest_time}'])
             # for i in range(4):
             #     item = mTable.item(1, i)
             #     item.setBackground(QtGui.QColor(255, 0, 0))
@@ -1926,9 +1873,9 @@ class AIThread(QObject):
         self.m_transmitData[3] = 0x02
         self.m_transmitData[4] = 0x01
 
-        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
+        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData, 1)
         errorEnd_time = time.time()
-        errorTest_time = round(errorEnd_time-errorStart_time,2)
+        errorTest_time = round(errorEnd_time - errorStart_time, 2)
         time.sleep(0.1)
         image_ERR = self.current_dir + '/AE_ERROR.png'
         self.pic_messageBox_signal.emit(['检测RUN &ERROR', 'ERROR指示灯是否如图所示点亮（红灯）？', image_ERR])
@@ -1952,11 +1899,11 @@ class AIThread(QObject):
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.item_signal.emit([2,2,1,f'{errorTest_time}'])
+            self.item_signal.emit([2, 2, 1, f'{errorTest_time}'])
             self.pauseOption()
             if not self.is_running:
                 return False
-            self.result_signal.emit("LED ERROR 测试通过\n关闭LED ERROR\n"+self.HORIZONTAL_LINE)
+            self.result_signal.emit("LED ERROR 测试通过\n关闭LED ERROR\n" + self.HORIZONTAL_LINE)
             # print("LED ERROR 测试通过\n关闭LED ERROR\n"+self.HORIZONTAL_LINE)
             self.clearList(self.m_transmitData)
             self.m_transmitData[0] = 0x2f
@@ -1964,7 +1911,7 @@ class AIThread(QObject):
             self.m_transmitData[2] = 0x5f
             self.m_transmitData[3] = 0x02
             self.m_transmitData[4] = 0x00
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData, 1)
             time.sleep(1)
             self.isLEDErrOK = True
         elif reply == QMessageBox.RejectRole:
@@ -1988,9 +1935,9 @@ class AIThread(QObject):
     def testCANRunErr(self, addr):
         self.testNum -= 1
         # 关闭CAN设备
-        #CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
+        # CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
         # 启动CAN设备并打开CAN通道
-        #self.can_start()
+        # self.can_start()
         self.isLEDCANRunOK = True
         self.isLEDCANErrOK = True
         self.isLEDCANPass = True
@@ -2008,7 +1955,7 @@ class AIThread(QObject):
         self.pauseOption()
         if not self.is_running:
             return False
-        self.item_signal.emit([3,1,0,''])
+        self.item_signal.emit([3, 1, 0, ''])
 
         self.pauseOption()
         if not self.is_running:
@@ -2021,9 +1968,9 @@ class AIThread(QObject):
         self.m_transmitData[2] = 0x5f
         self.m_transmitData[3] = 0x03
         self.m_transmitData[4] = 0x01
-        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
+        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData, 1)
         CANRunEnd_time = time.time()
-        CANRunTest_time = round(CANRunEnd_time - CANRunStart_time,2)
+        CANRunTest_time = round(CANRunEnd_time - CANRunStart_time, 2)
         time.sleep(0.1)
         self.messageBox_signal.emit(['检测CAN_RUN &CAN_ERROR', 'CAN_RUN指示灯是否点亮（绿灯）？'])
         reply = self.result_queue.get()
@@ -2048,7 +1995,7 @@ class AIThread(QObject):
             self.m_transmitData[2] = 0x5f
             self.m_transmitData[3] = 0x03
             self.m_transmitData[4] = 0x00
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData, 1)
             time.sleep(1)
             self.isLEDCANRunOK = True
         elif reply == QMessageBox.RejectRole:
@@ -2083,9 +2030,9 @@ class AIThread(QObject):
         self.m_transmitData[2] = 0x5f
         self.m_transmitData[3] = 0x04
         self.m_transmitData[4] = 0x01
-        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
+        bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData, 1)
         CANErrEnd_time = time.time()
-        CANErrTest_time = round(CANErrEnd_time - CANErrStart_time,2)
+        CANErrTest_time = round(CANErrEnd_time - CANErrStart_time, 2)
         time.sleep(0.1)
         self.messageBox_signal.emit(['检测CAN_RUN &CAN_ERROR', 'CAN_ERROR指示灯是否点亮（红灯）？'])
         reply = self.result_queue.get()
@@ -2110,7 +2057,7 @@ class AIThread(QObject):
             self.m_transmitData[2] = 0x5f
             self.m_transmitData[3] = 0x04
             self.m_transmitData[4] = 0x00
-            bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData,1)
+            bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + addr), self.m_transmitData, 1)
             time.sleep(1)
             self.isLEDCANErrOK = True
         elif reply == QMessageBox.RejectRole:
@@ -2130,8 +2077,7 @@ class AIThread(QObject):
 
         return True
 
-
-    def fillInAIData(self,station, book, sheet):
+    def fillInAIData(self, station, book, sheet):
         self.generalTest_row = 4
         # 通过单元格样式
         # 为样式创建字体
@@ -2313,11 +2259,11 @@ class AIThread(QObject):
         self.cur_excelName_array = ["4mA～20mA", "0mA～20mA"]
         # 填写信号类型、通道号、测试点数据
         if self.isAITestVol:
-            all_row = 9 + 4 + 4 + (2 + self.AI_Channels*5) + 2  # CPU + DI + DO + AI + AO
-            sheet.write_merge(self.AI_row + 2, self.AI_row + 1 + self.AI_Channels*5, 1, 1, '电压', pass_style)
+            all_row = 9 + 4 + 4 + (2 + self.AI_Channels * 5) + 2  # CPU + DI + DO + AI + AO
+            sheet.write_merge(self.AI_row + 2, self.AI_row + 1 + self.AI_Channels * 5, 1, 1, '电压', pass_style)
             for typeNum in range(5):
-                sheet.write_merge(self.AI_row + 2 + self.AI_Channels*typeNum,
-                                  self.AI_row + 1 + self.AI_Channels*(typeNum+1),2, 2,
+                sheet.write_merge(self.AI_row + 2 + self.AI_Channels * typeNum,
+                                  self.AI_row + 1 + self.AI_Channels * (typeNum + 1), 2, 2,
                                   f'{self.vol_excelName_array[typeNum]}', pass_style)
                 for i in range(5):
                     for j in range(self.AI_Channels):
@@ -2354,25 +2300,25 @@ class AIThread(QObject):
                             # 测试值
                             sheet.write(self.AI_row + 2 + j + self.AI_Channels * typeNum, 4 + 3 * i + 1,
                                         f'{self.volReceValue[typeNum][i][j]}', fail_style)
-                            sheet.write(self.AI_row + 2 + j+ self.AI_Channels * typeNum, 5 + 3 * i + 1,
+                            sheet.write(self.AI_row + 2 + j + self.AI_Channels * typeNum, 5 + 3 * i + 1,
                                         f'{self.volPrecision[typeNum][i][j]}‰', fail_style)
         if self.isAITestVol and self.isAITestCur:
             all_row = 9 + 4 + 4 + (2 + 7 * self.AI_Channels) + 2  # CPU + DI + DO + AI + AO
-            sheet.write_merge(self.AI_row + 2 + self.AI_Channels*5, self.AI_row + 1 + 7 * self.AI_Channels, 1, 1,
+            sheet.write_merge(self.AI_row + 2 + self.AI_Channels * 5, self.AI_row + 1 + 7 * self.AI_Channels, 1, 1,
                               '电流', pass_style)
             # sheet.write_merge(self.AI_row + 2, self.AI_row + 1 + self.AI_Channels * 5, 1, 1, '电压', pass_style)
             for typeNum in range(2):
-                sheet.write_merge(self.AI_row + 2 + self.AI_Channels * 5 + self.AI_Channels*typeNum,
-                                  self.AI_row + 1 + self.AI_Channels * 5 + self.AI_Channels*(typeNum+1),2, 2,
+                sheet.write_merge(self.AI_row + 2 + self.AI_Channels * 5 + self.AI_Channels * typeNum,
+                                  self.AI_row + 1 + self.AI_Channels * 5 + self.AI_Channels * (typeNum + 1), 2, 2,
                                   f'{self.cur_excelName_array[typeNum]}', pass_style)
                 for i in range(5):
                     for j in range(self.AI_Channels):
                         # 通道号
-                        sheet.write(self.AI_row + 2 + 5*self.AI_Channels + j + self.AI_Channels*typeNum,
-                                    3,f'CH{j + 1}',pass_style)
+                        sheet.write(self.AI_row + 2 + 5 * self.AI_Channels + j + self.AI_Channels * typeNum,
+                                    3, f'CH{j + 1}', pass_style)
                         # 理论值
-                        sheet.write(self.AI_row + 2 + 5*self.AI_Channels + j + self.AI_Channels*typeNum,
-                                    3 + 3 * i + 1,f'{int(self.curValue_array[typeNum][i])}',pass_style)
+                        sheet.write(self.AI_row + 2 + 5 * self.AI_Channels + j + self.AI_Channels * typeNum,
+                                    3 + 3 * i + 1, f'{int(self.curValue_array[typeNum][i])}', pass_style)
                         # # 测试值
                         # sheet.write(self.AI_row + 2 + 5*self.AI_Channels + j + self.AI_Channels*typeNum,
                         #             4 + 3 * i + 1,f'{self.curReceValue[typeNum][i][j]}',pass_style)
@@ -2383,8 +2329,8 @@ class AIThread(QObject):
                             sheet.write(self.AI_row + 2 + 5 * self.AI_Channels + j + self.AI_Channels * typeNum,
                                         4 + 3 * i + 1, f'{self.curReceValue[typeNum][i][j]}', pass_style)
                             # 精度
-                            sheet.write(self.AI_row + 2 + 5*self.AI_Channels + j + self.AI_Channels*typeNum,
-                                        5 + 3 * i + 1,f'{self.curPrecision[typeNum][i][j]}‰', pass_style)
+                            sheet.write(self.AI_row + 2 + 5 * self.AI_Channels + j + self.AI_Channels * typeNum,
+                                        5 + 3 * i + 1, f'{self.curPrecision[typeNum][i][j]}‰', pass_style)
                         elif isinstance(self.curPrecision[typeNum][i][j], str) and \
                                 self.curPrecision[typeNum][i][j] == '-':
                             # 测试值
@@ -2392,7 +2338,7 @@ class AIThread(QObject):
                                         4 + 3 * i + 1, f'{self.curReceValue[typeNum][i][j]}', warning_style)
                             # 精度
                             sheet.write(self.AI_row + 2 + 5 * self.AI_Channels + j + self.AI_Channels * typeNum,
-                                        5 + 3 * i + 1,f'{self.curPrecision[typeNum][i][j]}', warning_style)
+                                        5 + 3 * i + 1, f'{self.curPrecision[typeNum][i][j]}', warning_style)
                             self.errorNum += 1
                             self.errorInf += f'\n{self.errorNum})AI模块量程"{self.cur_excelName_array[typeNum]}"' \
                                              f'的测试点{i + 1}在通道{j + 1}的数据接收有误'
@@ -2404,10 +2350,10 @@ class AIThread(QObject):
                             # 测试值
                             sheet.write(self.AI_row + 2 + 5 * self.AI_Channels + j + self.AI_Channels * typeNum,
                                         4 + 3 * i + 1, f'{self.curReceValue[typeNum][i][j]}', fail_style)
-                            sheet.write(self.AI_row + 2 + 5*self.AI_Channels + j + self.AI_Channels*typeNum,
-                                        5 + 3 * i + 1,f'{self.curPrecision[typeNum][i][j]}‰', fail_style)
+                            sheet.write(self.AI_row + 2 + 5 * self.AI_Channels + j + self.AI_Channels * typeNum,
+                                        5 + 3 * i + 1, f'{self.curPrecision[typeNum][i][j]}‰', fail_style)
         if not self.isAITestVol and self.isAITestCur:
-            all_row = 9 + 4 + 4 + (2 + 2*self.AI_Channels) + 2  # CPU + DI + DO + AI + AO
+            all_row = 9 + 4 + 4 + (2 + 2 * self.AI_Channels) + 2  # CPU + DI + DO + AI + AO
             sheet.write_merge(self.AI_row + 2, self.AI_row + 1 + 2 * self.AI_Channels, 1, 1, '电流', pass_style)
             for typeNum in range(2):
                 sheet.write_merge(self.AI_row + 2 + self.AI_Channels * typeNum,
@@ -2474,7 +2420,7 @@ class AIThread(QObject):
             sheet.write(self.generalTest_row + all_row + 1, 4, '■ 合格', pass_style)
             sheet.write(self.generalTest_row + all_row + 1, 6,
                         '------------------ 全部项目测试通过！！！ ------------------', pass_style)
-            self.label_signal.emit(['pass','全部通过'])
+            self.label_signal.emit(['pass', '全部通过'])
             self.print_signal.emit([f'/{name_save}{self.module_type}_{time.strftime("%Y%m%d%H%M%S")}', 'PASS', ''])
             # self.label.setStyleSheet(self.testState_qss['pass'])
             # self.label.setText('全部通过')
@@ -2497,48 +2443,56 @@ class AIThread(QObject):
             # self.label.setStyleSheet(self.testState_qss['fail'])
             # self.label.setText('未通过')
 
-        self.saveExcel_signal.emit([book,f'/{name_save}{self.module_type}_{time.strftime("%Y%m%d%H%M%S")}.xls'])
+        self.saveExcel_signal.emit([book, f'/{name_save}{self.module_type}_{time.strftime("%Y%m%d%H%M%S")}.xls'])
         # book.save(self.saveDir + f'/{name_save}{self.module_type}_{time.strftime("%Y%m%d%H%M%S")}.xls')
 
     def initPara_array(self):
         # 5个量程 -> 每个量程5个点 -> 每个点4个通道
         self.volReceValue = [[['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'],
-                         ['-', '-', '-', '-']],
-                        [['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'],
-                         ['-', '-', '-', '-']],
-                        [['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'],
-                         ['-', '-', '-', '-']],
-                        [['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'],
-                         ['-', '-', '-', '-']],
-                        [['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'],
-                         ['-', '-', '-', '-']]]
+                              ['-', '-', '-', '-']],
+                             [['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'],
+                              ['-', '-', '-', '-']],
+                             [['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'],
+                              ['-', '-', '-', '-']],
+                             [['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'],
+                              ['-', '-', '-', '-']],
+                             [['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'],
+                              ['-', '-', '-', '-']]]
 
         self.volPrecision = [[['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'],
-                         ['-', '-', '-', '-']],
-                        [['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'],
-                         ['-', '-', '-', '-']],
-                        [['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'],
-                         ['-', '-', '-', '-']],
-                        [['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'],
-                         ['-', '-', '-', '-']],
-                        [['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'],
-                         ['-', '-', '-', '-']]]
+                              ['-', '-', '-', '-']],
+                             [['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'],
+                              ['-', '-', '-', '-']],
+                             [['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'],
+                              ['-', '-', '-', '-']],
+                             [['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'],
+                              ['-', '-', '-', '-']],
+                             [['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'],
+                              ['-', '-', '-', '-']]]
         # 2个量程 -> 每个量程5个点 -> 每个点4个通道
         self.curReceValue = [[['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'],
-                         ['-', '-', '-', '-']],
-                        [['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'],
-                         ['-', '-', '-', '-']]]
+                              ['-', '-', '-', '-']],
+                             [['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'],
+                              ['-', '-', '-', '-']]]
 
         self.curPrecision = [[['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'],
-                         ['-', '-', '-', '-']],
-                        [['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'],
-                         ['-', '-', '-', '-']]]
+                              ['-', '-', '-', '-']],
+                             [['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'], ['-', '-', '-', '-'],
+                              ['-', '-', '-', '-']]]
+
+    def init_m_can_obj(self):
+        ubyte_array_8 = c_ubyte * 8
+        DATA = ubyte_array_8(0, 0, 0, 0, 0, 0, 0, 0)
+        ubyte_array_3 = c_ubyte * 3
+        RESERVED_3 = ubyte_array_3(0, 0, 0)
+        self.m_can_obj = CAN_option.VCI_CAN_OBJ(RECEIVE_ID, TIME_STAMP, TIME_FLAG, RECEIVE_SEND_TYPE,
+                                                REMOTE_FLAG, EXTERN_FLAG, DATA_LEN, DATA, RESERVED_3)
     def pause_work(self):
         self.is_pause = True
 
     def resume_work(self):
         self.is_pause = False
-        
+
     def pauseOption(self):
         if self.is_pause:
             while True:
@@ -2548,634 +2502,10 @@ class AIThread(QObject):
                 if not self.is_pause:
                     self.pause_num = 1
                     break
-                
+
     def stop_work(self):
         self.resume_work()
         self.is_running = False
         self.setAIChOutCalibrate()
         self.label_signal.emit(['fail', '测试停止'])
 
-    # def generateExcel(self, station, module):
-    #     book = xlwt.Workbook(encoding='utf-8')
-    #     sheet = book.add_sheet('校准校验表', cell_overwrite_ok=True)
-    #     # 如果出现报错：Exception: Attempt to overwrite cell: sheetname='sheet1' rowx=0 colx=0
-    #     # 需要加上：cell_overwrite_ok=True)
-    #     # 这是因为重复操作一个单元格导致的
-    #     sheet.col(0).width = 256 * 12
-    #     for i in range(99):
-    #         #     sheet.w
-    #         #     tall_style = xlwt.easyxf('font:height 240;')  # 36pt,类型小初的字号
-    #         first_row = sheet.row(i)
-    #         first_row.height_mismatch = True
-    #         first_row.height = 20 * 20
-    #
-    #     # 为样式创建字体
-    #     title_font = xlwt.Font()
-    #     # 字体类型
-    #     title_font.name = '宋'
-    #     # 字体颜色
-    #     title_font.colour_index = 0
-    #     # 字体大小，11为字号，20为衡量单位
-    #     title_font.height = 20 * 20
-    #     # 字体加粗
-    #     title_font.bold = True
-    #
-    #     # 设置单元格对齐方式
-    #     title_alignment = xlwt.Alignment()
-    #     # 0x01(左端对齐)、0x02(水平方向上居中对齐)、0x03(右端对齐)
-    #     title_alignment.horz = 0x02
-    #     # 0x00(上端对齐)、 0x01(垂直方向上居中对齐)、0x02(底端对齐)
-    #     title_alignment.vert = 0x01
-    #     # 设置自动换行
-    #     title_alignment.wrap = 1
-    #
-    #     # 设置边框
-    #     title_borders = xlwt.Borders()
-    #     # 细实线:1，小粗实线:2，细虚线:3，中细虚线:4，大粗实线:5，双线:6，细点虚线:7
-    #     # 大粗虚线:8，细点划线:9，粗点划线:10，细双点划线:11，粗双点划线:12，斜点划线:13
-    #     title_borders.left = 0
-    #     title_borders.right = 0
-    #     title_borders.top = 0
-    #     title_borders.bottom = 0
-    #
-    #     # # 设置背景颜色
-    #     # pattern = xlwt.Pattern()
-    #     # # 设置背景颜色的模式
-    #     # pattern.pattern = xlwt.Pattern.SOLID_PATTERN
-    #     # # 背景颜色
-    #     # pattern.pattern_fore_colour = i
-    #
-    #     # # 初始化样式
-    #     title_style = xlwt.XFStyle()
-    #     title_style.borders = title_borders
-    #     title_style.alignment = title_alignment
-    #     title_style.font = title_font
-    #     # # 设置文字模式
-    #     # font.num_format_str = '#,##0.00'
-    #
-    #     # sheet.write(i, 0, u'字体', style0)
-    #     # sheet.write(i, 1, u'背景', style1)
-    #     # sheet.write(i, 2, u'对齐方式', style2)
-    #     # sheet.write(i, 3, u'边框', style3)
-    #
-    #     # 合并单元格，合并第1行到第2行的第1列到第19列
-    #     sheet.write_merge(0, 1, 0, 18, u'整机检验记录单V1.1', title_style)
-    #
-    #     # row3
-    #     # 为样式创建字体
-    #     row3_font = xlwt.Font()
-    #     # 字体类型
-    #     row3_font.name = '宋'
-    #     # 字体颜色
-    #     row3_font.colour_index = 0
-    #     # 字体大小，11为字号，20为衡量单位
-    #     row3_font.height = 10 * 20
-    #     # 字体加粗
-    #     row3_font.bold = False
-    #
-    #     # 设置单元格对齐方式
-    #     row3_alignment = xlwt.Alignment()
-    #     # 0x01(左端对齐)、0x02(水平方向上居中对齐)、0x03(右端对齐)
-    #     row3_alignment.horz = 0x02
-    #     # 0x00(上端对齐)、 0x01(垂直方向上居中对齐)、0x02(底端对齐)
-    #     row3_alignment.vert = 0x01
-    #     # 设置自动换行
-    #     row3_alignment.wrap = 1
-    #
-    #     # 设置边框
-    #     row3_borders = xlwt.Borders()
-    #     # 细实线:1，小粗实线:2，细虚线:3，中细虚线:4，大粗实线:5，双线:6，细点虚线:7
-    #     # 大粗虚线:8，细点划线:9，粗点划线:10，细双点划线:11，粗双点划线:12，斜点划线:13
-    #     row3_borders.left = 0
-    #     row3_borders.right = 0
-    #     row3_borders.top = 0
-    #     row3_borders.bottom = 0
-    #
-    #     # # 设置背景颜色
-    #     # pattern = xlwt.Pattern()
-    #     # # 设置背景颜色的模式
-    #     # pattern.pattern = xlwt.Pattern.SOLID_PATTERN
-    #     # # 背景颜色
-    #     # pattern.pattern_fore_colour = i
-    #
-    #     # # 初始化样式
-    #     row3_style = xlwt.XFStyle()
-    #     row3_style.borders = row3_borders
-    #     row3_style.alignment = row3_alignment
-    #     row3_style.font = row3_font
-    #     # # 设置文字模式
-    #     # font.num_format_str = '#,##0.00'
-    #
-    #     # sheet.write(i, 0, u'字体', style0)
-    #     # sheet.write(i, 1, u'背景', style1)
-    #     # sheet.write(i, 2, u'对齐方式', style2)
-    #     # sheet.write(i, 3, u'边框', style3)
-    #
-    #     sheet.write_merge(2, 2, 0, 2, 'PN：', row3_style)
-    #     sheet.write_merge(2, 2, 3, 5, f'{self.module_pn}', row3_style)
-    #     sheet.write_merge(2, 2, 6, 8, 'SN：', row3_style)
-    #     sheet.write_merge(2, 2, 9, 11, f'{self.module_sn}', row3_style)
-    #     sheet.write_merge(2, 2, 12, 14, 'REV：', row3_style)
-    #     sheet.write_merge(2, 2, 15, 17, f'{self.module_rev}', row3_style)
-    #
-    #     # leftTitle
-    #     # 为样式创建字体
-    #     leftTitle_font = xlwt.Font()
-    #     # 字体类型
-    #     leftTitle_font.name = '宋'
-    #     # 字体颜色
-    #     leftTitle_font.colour_index = 0
-    #     # 字体大小，11为字号，20为衡量单位
-    #     leftTitle_font.height = 12 * 20
-    #     # 字体加粗
-    #     leftTitle_font.bold = True
-    #
-    #     # 设置单元格对齐方式
-    #     leftTitle_alignment = xlwt.Alignment()
-    #     # 0x01(左端对齐)、0x02(水平方向上居中对齐)、0x03(右端对齐)
-    #     leftTitle_alignment.horz = 0x02
-    #     # 0x00(上端对齐)、 0x01(垂直方向上居中对齐)、0x02(底端对齐)
-    #     leftTitle_alignment.vert = 0x01
-    #     # 设置自动换行
-    #     leftTitle_alignment.wrap = 1
-    #
-    #     # 设置边框
-    #     leftTitle_borders = xlwt.Borders()
-    #     # 细实线:1，小粗实线:2，细虚线:3，中细虚线:4，大粗实线:5，双线:6，细点虚线:7
-    #     # 大粗虚线:8，细点划线:9，粗点划线:10，细双点划线:11，粗双点划线:12，斜点划线:13
-    #     leftTitle_borders.left = 5
-    #     leftTitle_borders.right = 5
-    #     leftTitle_borders.top = 5
-    #     leftTitle_borders.bottom = 5
-    #
-    #     # # 设置背景颜色
-    #     # pattern = xlwt.Pattern()
-    #     # # 设置背景颜色的模式
-    #     # pattern.pattern = xlwt.Pattern.SOLID_PATTERN
-    #     # # 背景颜色
-    #     # pattern.pattern_fore_colour = i
-    #
-    #     # # 初始化样式
-    #     leftTitle_style = xlwt.XFStyle()
-    #     leftTitle_style.borders = leftTitle_borders
-    #     leftTitle_style.alignment = leftTitle_alignment
-    #     leftTitle_style.font = leftTitle_font
-    #     self.generalTest_row = 4
-    #     sheet.write_merge(self.generalTest_row, self.generalTest_row + 1, 0, 0, '常规检测', leftTitle_style)
-    #     self.CPU_row = 6
-    #     sheet.write_merge(self.CPU_row, self.CPU_row + 7, 0, 0, 'CPU检测', leftTitle_style)
-    #     self.DI_row = 14
-    #     sheet.write_merge(self.DI_row, self.DI_row + 3, 0, 0, 'DI信号', leftTitle_style)
-    #     self.DO_row = 18
-    #     sheet.write_merge(self.DO_row, self.DO_row + 3, 0, 0, 'DO信号', leftTitle_style)
-    #     self.AI_row = 22
-    #     if (self.isAITestVol and not self.isAITestCur):
-    #         sheet.write_merge(self.AI_row, self.AI_row + 1 + self.AI_Channels*5, 0, 0, 'AI信号', leftTitle_style)
-    #         self.AO_row = self.AI_row + 2 + self.AI_Channels*5
-    #     elif  not self.isAITestVol and self.isAITestCur:
-    #         sheet.write_merge(self.AI_row, self.AI_row + 1 + self.AI_Channels * 2, 0, 0, 'AO信号', leftTitle_style)
-    #         self.AO_row = self.AI_row + 2 + self.AI_Channels * 2
-    #     elif self.isAITestVol and self.isAITestCur:
-    #         sheet.write_merge(self.AI_row, self.AI_row + 1 + 7 * self.AI_Channels, 0, 0, 'AI信号', leftTitle_style)
-    #         self.AO_row = self.AI_row + 2 + 7 * self.AI_Channels
-    #     elif not self.isAITestVol and not self.isAITestCur:
-    #         sheet.write_merge(self.AI_row, self.AI_row + 1, 0, 0, 'AI信号', leftTitle_style)
-    #         self.AO_row = self.AI_row + 2
-    #
-    #     # sheet.write_merge(self.AO_row, self.AO_row + 1 + self.AO_Channels, 0, 0, 'AO信号', leftTitle_style)
-    #     sheet.write_merge(self.AO_row, self.AO_row + 1, 0, 0, 'AO信号', leftTitle_style)
-    #     self.result_row = self.AO_row + 2
-    #     sheet.write_merge(self.result_row, self.result_row + 1, 0, 3, '整机检测结果', leftTitle_style)
-    #
-    #     # contentTitle
-    #     # 为样式创建字体
-    #     contentTitle_font = xlwt.Font()
-    #     # 字体类型
-    #     contentTitle_font.name = '宋'
-    #     # 字体颜色
-    #     contentTitle_font.colour_index = 0
-    #     # 字体大小，11为字号，20为衡量单位
-    #     contentTitle_font.height = 10 * 20
-    #     # 字体加粗
-    #     contentTitle_font.bold = False
-    #
-    #     # 设置单元格对齐方式
-    #     contentTitle_alignment = xlwt.Alignment()
-    #     # 0x01(左端对齐)、0x02(水平方向上居中对齐)、0x03(右端对齐)
-    #     contentTitle_alignment.horz = 0x02
-    #     # 0x00(上端对齐)、 0x01(垂直方向上居中对齐)、0x02(底端对齐)
-    #     contentTitle_alignment.vert = 0x01
-    #     # 设置自动换行
-    #     contentTitle_alignment.wrap = 1
-    #
-    #     # 设置边框
-    #     contentTitle_borders = xlwt.Borders()
-    #     # 细实线:1，小粗实线:2，细虚线:3，中细虚线:4，大粗实线:5，双线:6，细点虚线:7
-    #     # 大粗虚线:8，细点划线:9，粗点划线:10，细双点划线:11，粗双点划线:12，斜点划线:13
-    #     contentTitle_borders.left = 5
-    #     contentTitle_borders.right = 5
-    #     contentTitle_borders.top = 5
-    #     contentTitle_borders.bottom = 5
-    #
-    #     # # 设置背景颜色
-    #     # pattern = xlwt.Pattern()
-    #     # # 设置背景颜色的模式
-    #     # pattern.pattern = xlwt.Pattern.SOLID_PATTERN
-    #     # # 背景颜色
-    #     # pattern.pattern_fore_colour = i
-    #
-    #     # # 初始化样式
-    #     contentTitle_style = xlwt.XFStyle()
-    #     contentTitle_style.borders = contentTitle_borders
-    #     contentTitle_style.alignment = contentTitle_alignment
-    #     contentTitle_style.font = contentTitle_font
-    #
-    #     sheet.write_merge(self.generalTest_row, self.generalTest_row, 1, 2, '外观', contentTitle_style)
-    #     sheet.write(self.generalTest_row, 3, '---', contentTitle_style)
-    #     sheet.write_merge(self.generalTest_row, self.generalTest_row, 4, 5, 'Run指示灯', contentTitle_style)
-    #     sheet.write(self.generalTest_row, 6, '---', contentTitle_style)
-    #     sheet.write_merge(self.generalTest_row, self.generalTest_row, 7, 8, 'Error指示灯', contentTitle_style)
-    #     sheet.write(self.generalTest_row, 9, '---', contentTitle_style)
-    #     sheet.write_merge(self.generalTest_row, self.generalTest_row, 10, 11, 'CAN_Run指示灯', contentTitle_style)
-    #     sheet.write(self.generalTest_row, 12, '---', contentTitle_style)
-    #     sheet.write_merge(self.generalTest_row, self.generalTest_row, 13, 14, 'CAN_Error指示灯', contentTitle_style)
-    #     sheet.write(self.generalTest_row, 15, '---', contentTitle_style)
-    #     sheet.write_merge(self.generalTest_row, self.generalTest_row, 16, 17, '拨码（预留）', contentTitle_style)
-    #     sheet.write(self.generalTest_row, 18, '---', contentTitle_style)
-    #     sheet.write_merge(self.generalTest_row + 1, self.generalTest_row + 1, 1, 2, '非测试项', contentTitle_style)
-    #     sheet.write(self.generalTest_row + 1, 3, '---', contentTitle_style)
-    #     sheet.write_merge(self.generalTest_row + 1, self.generalTest_row + 1, 4, 5, '------', contentTitle_style)
-    #     sheet.write(self.generalTest_row + 1, 6, '---', contentTitle_style)
-    #     sheet.write_merge(self.generalTest_row + 1, self.generalTest_row + 1, 7, 8, '------', contentTitle_style)
-    #     sheet.write(self.generalTest_row + 1, 9, '---', contentTitle_style)
-    #     sheet.write_merge(self.generalTest_row + 1, self.generalTest_row + 1, 10, 11, '------', contentTitle_style)
-    #     sheet.write(self.generalTest_row + 1, 12, '---', contentTitle_style)
-    #     sheet.write_merge(self.generalTest_row + 1, self.generalTest_row + 1, 13, 14, '------', contentTitle_style)
-    #     sheet.write(self.generalTest_row + 1, 15, '---', contentTitle_style)
-    #     sheet.write_merge(self.generalTest_row + 1, self.generalTest_row + 1, 16, 17, '------', contentTitle_style)
-    #     sheet.write(self.generalTest_row + 1, 18, '---', contentTitle_style)
-    #
-    #     sheet.write_merge(self.CPU_row, self.CPU_row, 1, 2, '片外Flash读写', contentTitle_style)
-    #     sheet.write(self.CPU_row, 3, '---', contentTitle_style)
-    #     sheet.write_merge(self.CPU_row, self.CPU_row, 4, 5, 'MAC&序列号', contentTitle_style)
-    #     sheet.write(self.CPU_row, self.CPU_row, '---', contentTitle_style)
-    #     sheet.write_merge(self.CPU_row, self.CPU_row, 7, 8, '多功能按钮', contentTitle_style)
-    #     sheet.write(self.CPU_row, 9, '---', contentTitle_style)
-    #     sheet.write_merge(self.CPU_row, self.CPU_row, 10, 11, 'R/S拨杆', contentTitle_style)
-    #     sheet.write(self.CPU_row, 12, '---', contentTitle_style)
-    #     sheet.write_merge(self.CPU_row, self.CPU_row, 13, 14, '实时时钟', contentTitle_style)
-    #     sheet.write(self.CPU_row, 15, '---', contentTitle_style)
-    #     sheet.write_merge(self.CPU_row, self.CPU_row, 16, 17, 'SRAM', contentTitle_style)
-    #     sheet.write(self.CPU_row, 18, '---', contentTitle_style)
-    #     sheet.write_merge(self.CPU_row + 1, self.CPU_row + 1, 1, 2, '掉电保存', contentTitle_style)
-    #     sheet.write(self.CPU_row + 1, 3, '---', contentTitle_style)
-    #     sheet.write_merge(self.CPU_row + 1, self.CPU_row + 1, 4, 5, 'U盘', contentTitle_style)
-    #     sheet.write(self.CPU_row + 1, 6, '---', contentTitle_style)
-    #     sheet.write_merge(self.CPU_row + 1, self.CPU_row + 1, 7, 8, 'type-C', contentTitle_style)
-    #     sheet.write(self.CPU_row + 1, 9, '---', contentTitle_style)
-    #     sheet.write_merge(self.CPU_row + 1, self.CPU_row + 1, 10, 11, 'RS232通讯', contentTitle_style)
-    #     sheet.write(self.CPU_row + 1, 12, '---', contentTitle_style)
-    #     sheet.write_merge(self.CPU_row + 1, self.CPU_row + 1, 13, 14, 'RS485通讯', contentTitle_style)
-    #     sheet.write(self.CPU_row + 1, 15, '---', contentTitle_style)
-    #     sheet.write_merge(self.CPU_row + 1, self.CPU_row + 1, 16, 17, 'CAN通讯(预留)', contentTitle_style)
-    #     sheet.write(self.CPU_row + 1, 18, '---', contentTitle_style)
-    #
-    #     sheet.write_merge(self.CPU_row + 2, self.CPU_row + 4, 1, 2, '输入通道', contentTitle_style)
-    #     sheet.write(self.CPU_row + 2, 3, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 2, 4, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 2, 5, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 2, 6, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 2, 7, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 2, 8, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 2, 9, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 2, 10, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 2, 11, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 2, 12, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 2, 13, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 2, 14, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 2, 15, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 2, 16, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 2, 17, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 2, 18, '---', contentTitle_style)
-    #
-    #     sheet.write(self.CPU_row + 3, 3, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 3, 4, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 3, 5, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 3, 6, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 3, 7, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 3, 8, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 3, 9, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 3, 10, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 3, 11, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 3, 12, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 3, 13, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 3, 14, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 3, 15, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 3, 16, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 3, 17, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 3, 18, '---', contentTitle_style)
-    #
-    #     sheet.write(self.CPU_row + 4, 3, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 4, 4, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 4, 5, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 4, 6, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 4, 7, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 4, 8, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 4, 9, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 4, 10, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 4, 11, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 4, 12, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 4, 13, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 4, 14, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 4, 15, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 4, 16, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 4, 17, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 4, 18, '---', contentTitle_style)
-    #
-    #     sheet.write_merge(self.CPU_row + 5, self.CPU_row + 7, 1, 2, '输出通道', contentTitle_style)
-    #     sheet.write(self.CPU_row + 5, 3, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 5, 4, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 5, 5, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 5, 6, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 5, 7, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 5, 8, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 5, 9, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 5, 10, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 5, 11, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 5, 12, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 5, 13, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 5, 14, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 5, 15, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 5, 16, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 5, 17, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 5, 18, '---', contentTitle_style)
-    #
-    #     sheet.write(self.CPU_row + 6, 3, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 6, 4, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 6, 5, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 6, 6, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 6, 7, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 6, 8, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 6, 9, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 6, 10, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 6, 11, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 6, 12, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 6, 13, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 6, 14, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 6, 15, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 6, 16, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 6, 17, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 6, 18, '---', contentTitle_style)
-    #
-    #     sheet.write(self.CPU_row + 7, 3, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 7, 4, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 7, 5, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 7, 6, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 7, 7, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 7, 8, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 7, 9, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 7, 10, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 7, 11, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 7, 12, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 7, 13, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 7, 14, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 7, 15, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 7, 16, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 7, 17, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 7, 18, '---', contentTitle_style)
-    #     # DO
-    #     sheet.write_merge(self.DO_row, self.DO_row, 1, 2, '通道号', contentTitle_style)
-    #     sheet.write(self.DO_row, 3, 'CH1', contentTitle_style)
-    #     sheet.write(self.DO_row, 4, 'CH2', contentTitle_style)
-    #     sheet.write(self.DO_row, 5, 'CH3', contentTitle_style)
-    #     sheet.write(self.DO_row, 6, 'CH4', contentTitle_style)
-    #     sheet.write(self.DO_row, 7, 'CH5', contentTitle_style)
-    #     sheet.write(self.DO_row, 8, 'CH6', contentTitle_style)
-    #     sheet.write(self.DO_row, 9, 'CH7', contentTitle_style)
-    #     sheet.write(self.DO_row, 10, 'CH8', contentTitle_style)
-    #     sheet.write(self.DO_row, 11, 'CH9', contentTitle_style)
-    #     sheet.write(self.DO_row, 12, 'CH10', contentTitle_style)
-    #     sheet.write(self.DO_row, 13, 'CH11', contentTitle_style)
-    #     sheet.write(self.DO_row, 14, 'CH12', contentTitle_style)
-    #     sheet.write(self.DO_row, 15, 'CH13', contentTitle_style)
-    #     sheet.write(self.DO_row, 16, 'CH14', contentTitle_style)
-    #     sheet.write(self.DO_row, 17, 'CH15', contentTitle_style)
-    #     sheet.write(self.DO_row, 18, 'CH16', contentTitle_style)
-    #     sheet.write_merge(self.DO_row + 1, self.DO_row + 1, 1, 2, '是否合格', contentTitle_style)
-    #     sheet.write(self.DO_row + 1, 3, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 1, 4, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 1, 5, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 1, 6, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 1, 7, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 1, 8, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 1, 9, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 1, 10, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 1, 11, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 1, 12, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 1, 13, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 1, 14, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 1, 15, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 1, 16, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 1, 17, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 1, 18, '---', contentTitle_style)
-    #     sheet.write_merge(self.DO_row + 2, self.DO_row + 2, 1, 2, '通道号', contentTitle_style)
-    #     sheet.write(self.DO_row + 2, 3, 'CH17', contentTitle_style)
-    #     sheet.write(self.DO_row + 2, 4, 'CH18', contentTitle_style)
-    #     sheet.write(self.DO_row + 2, 5, 'CH19', contentTitle_style)
-    #     sheet.write(self.DO_row + 2, 6, 'CH20', contentTitle_style)
-    #     sheet.write(self.DO_row + 2, 7, 'CH21', contentTitle_style)
-    #     sheet.write(self.DO_row + 2, 8, 'CH22', contentTitle_style)
-    #     sheet.write(self.DO_row + 2, 9, 'CH23', contentTitle_style)
-    #     sheet.write(self.DO_row + 2, 10, 'CH24', contentTitle_style)
-    #     sheet.write(self.DO_row + 2, 11, 'CH25', contentTitle_style)
-    #     sheet.write(self.DO_row + 2, 12, 'CH26', contentTitle_style)
-    #     sheet.write(self.DO_row + 2, 13, 'CH27', contentTitle_style)
-    #     sheet.write(self.DO_row + 2, 14, 'CH28', contentTitle_style)
-    #     sheet.write(self.DO_row + 2, 15, 'CH29', contentTitle_style)
-    #     sheet.write(self.DO_row + 2, 16, 'CH30', contentTitle_style)
-    #     sheet.write(self.DO_row + 2, 17, 'CH31', contentTitle_style)
-    #     sheet.write(self.DO_row + 2, 18, 'CH32', contentTitle_style)
-    #     sheet.write_merge(self.DO_row + 3, self.DO_row + 3, 1, 2, '是否合格', contentTitle_style)
-    #     sheet.write(self.DO_row + 3, 3, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 3, 4, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 3, 5, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 3, 6, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 3, 7, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 3, 8, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 3, 9, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 3, 10, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 3, 11, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 3, 12, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 3, 13, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 3, 14, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 3, 15, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 3, 16, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 3, 17, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 3, 18, '---', contentTitle_style)
-    #
-    #     # DI
-    #     sheet.write_merge(self.DI_row, self.DI_row, 1, 2, '通道号', contentTitle_style)
-    #     sheet.write(self.DI_row, 3, 'CH1', contentTitle_style)
-    #     sheet.write(self.DI_row, 4, 'CH2', contentTitle_style)
-    #     sheet.write(self.DI_row, 5, 'CH3', contentTitle_style)
-    #     sheet.write(self.DI_row, 6, 'CH4', contentTitle_style)
-    #     sheet.write(self.DI_row, 7, 'CH5', contentTitle_style)
-    #     sheet.write(self.DI_row, 8, 'CH6', contentTitle_style)
-    #     sheet.write(self.DI_row, 9, 'CH7', contentTitle_style)
-    #     sheet.write(self.DI_row, 10, 'CH8', contentTitle_style)
-    #     sheet.write(self.DI_row, 11, 'CH9', contentTitle_style)
-    #     sheet.write(self.DI_row, 12, 'CH10', contentTitle_style)
-    #     sheet.write(self.DI_row, 13, 'CH11', contentTitle_style)
-    #     sheet.write(self.DI_row, 14, 'CH12', contentTitle_style)
-    #     sheet.write(self.DI_row, 15, 'CH13', contentTitle_style)
-    #     sheet.write(self.DI_row, 16, 'CH14', contentTitle_style)
-    #     sheet.write(self.DI_row, 17, 'CH15', contentTitle_style)
-    #     sheet.write(self.DI_row, 18, 'CH16', contentTitle_style)
-    #     sheet.write_merge(self.DI_row + 1, self.DI_row + 1, 1, 2, '是否合格', contentTitle_style)
-    #     sheet.write(self.DI_row + 1, 3, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 1, 4, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 1, 5, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 1, 6, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 1, 7, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 1, 8, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 1, 9, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 1, 10, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 1, 11, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 1, 12, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 1, 13, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 1, 14, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 1, 15, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 1, 16, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 1, 17, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 1, 18, '---', contentTitle_style)
-    #     sheet.write_merge(self.DI_row + 2, self.DI_row + 2, 1, 2, '通道号', contentTitle_style)
-    #     sheet.write(self.DI_row + 2, 3, 'CH17', contentTitle_style)
-    #     sheet.write(self.DI_row + 2, 4, 'CH18', contentTitle_style)
-    #     sheet.write(self.DI_row + 2, 5, 'CH19', contentTitle_style)
-    #     sheet.write(self.DI_row + 2, 6, 'CH20', contentTitle_style)
-    #     sheet.write(self.DI_row + 2, 7, 'CH21', contentTitle_style)
-    #     sheet.write(self.DI_row + 2, 8, 'CH22', contentTitle_style)
-    #     sheet.write(self.DI_row + 2, 9, 'CH23', contentTitle_style)
-    #     sheet.write(self.DI_row + 2, 10, 'CH24', contentTitle_style)
-    #     sheet.write(self.DI_row + 2, 11, 'CH25', contentTitle_style)
-    #     sheet.write(self.DI_row + 2, 12, 'CH26', contentTitle_style)
-    #     sheet.write(self.DI_row + 2, 13, 'CH27', contentTitle_style)
-    #     sheet.write(self.DI_row + 2, 14, 'CH28', contentTitle_style)
-    #     sheet.write(self.DI_row + 2, 15, 'CH29', contentTitle_style)
-    #     sheet.write(self.DI_row + 2, 16, 'CH30', contentTitle_style)
-    #     sheet.write(self.DI_row + 2, 17, 'CH31', contentTitle_style)
-    #     sheet.write(self.DI_row + 2, 18, 'CH32', contentTitle_style)
-    #     sheet.write_merge(self.DI_row + 3, self.DI_row + 3, 1, 2, '是否合格', contentTitle_style)
-    #     sheet.write(self.DI_row + 3, 3, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 3, 4, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 3, 5, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 3, 6, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 3, 7, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 3, 8, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 3, 9, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 3, 10, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 3, 11, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 3, 12, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 3, 13, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 3, 14, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 3, 15, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 3, 16, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 3, 17, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 3, 18, '---', contentTitle_style)
-    #
-    #     # AI
-    #     sheet.write_merge(self.AI_row, self.AI_row + 1, 1, 1, '信号类型', contentTitle_style)
-    #     sheet.write_merge(self.AI_row, self.AI_row + 1, 2, 2, '量程', contentTitle_style)
-    #     sheet.write_merge(self.AI_row, self.AI_row + 1, 3, 3, '通道号', contentTitle_style)
-    #     sheet.write_merge(self.AI_row, self.AI_row, 3 + 1, 5 + 1, '测试点1(100%)', contentTitle_style)
-    #     sheet.write(self.AI_row + 1, 3 + 1, '理论值', contentTitle_style)
-    #     sheet.write(self.AI_row + 1, 4 + 1, '测试值', contentTitle_style)
-    #     sheet.write(self.AI_row + 1, 5 + 1, '精度', contentTitle_style)
-    #
-    #     sheet.write_merge(self.AI_row, self.AI_row, 6 + 1, 8 + 1, '测试点2(75%)', contentTitle_style)
-    #     sheet.write(self.AI_row + 1, 6 + 1, '理论值', contentTitle_style)
-    #     sheet.write(self.AI_row + 1, 7 + 1, '测试值', contentTitle_style)
-    #     sheet.write(self.AI_row + 1, 8 + 1, '精度', contentTitle_style)
-    #
-    #     sheet.write_merge(self.AI_row, self.AI_row, 9 + 1, 11 + 1, '测试点3(50%)', contentTitle_style)
-    #     sheet.write(self.AI_row + 1, 9 + 1, '理论值', contentTitle_style)
-    #     sheet.write(self.AI_row + 1, 10 + 1, '测试值', contentTitle_style)
-    #     sheet.write(self.AI_row + 1, 11 + 1, '精度', contentTitle_style)
-    #
-    #     sheet.write_merge(self.AI_row, self.AI_row, 12 + 1, 14 + 1, '测试点4(25%)', contentTitle_style)
-    #     sheet.write(self.AI_row + 1, 12 + 1, '理论值', contentTitle_style)
-    #     sheet.write(self.AI_row + 1, 13 + 1, '测试值', contentTitle_style)
-    #     sheet.write(self.AI_row + 1, 14 + 1, '精度', contentTitle_style)
-    #
-    #     sheet.write_merge(self.AI_row, self.AI_row, 15 + 1, 17 + 1, '测试点5(0%)', contentTitle_style)
-    #
-    #     sheet.write(self.AI_row + 1, 15 + 1, '理论值', contentTitle_style)
-    #     sheet.write(self.AI_row + 1, 16 + 1, '测试值', contentTitle_style)
-    #     sheet.write(self.AI_row + 1, 17 + 1, '精度', contentTitle_style)
-    #     # sheet.write(self.AI_row, 18, '', contentTitle_style)
-    #     # sheet.write(self.AI_row + 1, 18, '', contentTitle_style)
-    #
-    #     # AO
-    #     sheet.write_merge(self.AO_row, self.AO_row + 1, 1, 1, '信号类型', contentTitle_style)
-    #     sheet.write_merge(self.AO_row, self.AO_row + 1, 2, 2 + 1, '通道号', contentTitle_style)
-    #     sheet.write_merge(self.AO_row, self.AO_row, 3 + 1, 5 + 1, '测试点1', contentTitle_style)
-    #     sheet.write(self.AO_row + 1, 3 + 1, '理论值', contentTitle_style)
-    #     sheet.write(self.AO_row + 1, 4 + 1, '测试值', contentTitle_style)
-    #     sheet.write(self.AO_row + 1, 5 + 1, '精度', contentTitle_style)
-    #
-    #     sheet.write_merge(self.AO_row, self.AO_row, 6 + 1, 8 + 1, '测试点2', contentTitle_style)
-    #     sheet.write(self.AO_row + 1, 6 + 1, '理论值', contentTitle_style)
-    #     sheet.write(self.AO_row + 1, 7 + 1, '测试值', contentTitle_style)
-    #     sheet.write(self.AO_row + 1, 8 + 1, '精度', contentTitle_style)
-    #
-    #     sheet.write_merge(self.AO_row, self.AO_row, 9 + 1, 11 + 1, '测试点3', contentTitle_style)
-    #     sheet.write(self.AO_row + 1, 9 + 1, '理论值', contentTitle_style)
-    #     sheet.write(self.AO_row + 1, 10 + 1, '测试值', contentTitle_style)
-    #     sheet.write(self.AO_row + 1, 11 + 1, '精度', contentTitle_style)
-    #
-    #     sheet.write_merge(self.AO_row, self.AO_row, 12 + 1, 14 + 1, '测试点4', contentTitle_style)
-    #     sheet.write(self.AO_row + 1, 12 + 1, '理论值', contentTitle_style)
-    #     sheet.write(self.AO_row + 1, 13 + 1, '测试值', contentTitle_style)
-    #     sheet.write(self.AO_row + 1, 14 + 1, '精度', contentTitle_style)
-    #
-    #     sheet.write_merge(self.AO_row, self.AO_row, 15 + 1, 17 + 1, '测试点5', contentTitle_style)
-    #     sheet.write(self.AO_row + 1, 15 + 1, '理论值', contentTitle_style)
-    #     sheet.write(self.AO_row + 1, 16 + 1, '测试值', contentTitle_style)
-    #     sheet.write(self.AO_row + 1, 17 + 1, '精度', contentTitle_style)
-    #     # sheet.write(self.AO_row, 18, '', contentTitle_style)
-    #     # sheet.write(self.AO_row + 1, 18, '', contentTitle_style)
-    #
-    #     # 结果
-    #     sheet.write_merge(self.result_row, self.result_row, 4, 5, '□ 合格', contentTitle_style)
-    #     sheet.write_merge(self.result_row, self.result_row, 6, 18, ' ', contentTitle_style)
-    #     sheet.write_merge(self.result_row + 1, self.result_row + 1, 4, 5, '□ 不合格', contentTitle_style)
-    #     sheet.write_merge(self.result_row + 1, self.result_row + 1, 6, 18, ' ', contentTitle_style)
-    #
-    #     # 补充说明
-    #     sheet.write(self.result_row + 2, 0, '补充说明：', contentTitle_style)
-    #     sheet.write_merge(self.result_row + 2, self.result_row + 2, 1, 18,
-    #                       'AI/AO信号检验要记录数据，电压和电流的精度为1‰以下为合格；其他测试项合格打“√”，否则打“×”',
-    #                       contentTitle_style)
-    #
-    #     # 检测信息
-    #     sheet.write_merge(self.result_row + 3, self.result_row + 3, 0, 1, '检验员：', contentTitle_style)
-    #     sheet.write_merge(self.result_row + 3, self.result_row + 3, 2, 3, '555', contentTitle_style)
-    #     sheet.write_merge(self.result_row + 3, self.result_row + 3, 4, 5, '检验日期：', contentTitle_style)
-    #     sheet.write_merge(self.result_row + 3, self.result_row + 3, 6, 8, f'{time.strftime("%Y-%m-%d %H：%M：%S")}',
-    #                       contentTitle_style)
-    #     sheet.write_merge(self.result_row + 3, self.result_row + 3, 9, 10, '审核：', contentTitle_style)
-    #     sheet.write_merge(self.result_row + 3, self.result_row + 3, 11, 13, ' ', contentTitle_style)
-    #     sheet.write_merge(self.result_row + 3, self.result_row + 3, 14, 15, '审核日期：', contentTitle_style)
-    #     sheet.write_merge(self.result_row + 3, self.result_row + 3, 16, 18, ' ', contentTitle_style)
-    #
-    #     self.fillInAIData(station, book, sheet)
-    #     # if module == 'DI':
-    #     #     self.fillInDIData(station, book, sheet)
-    #     # elif module == 'DO':
-    #     #     self.fillInDOData(station, book, sheet)
-    #     # elif module == 'AI':
-    #     #     # # print('打印AI检测结果')
-    #     #     self.fillInAIData(station, book, sheet)
-    #     # elif module == 'AO':
-    #     #     # # print('打印AI检测结果')
-    #     #     self.fillInAOData(station, book, sheet)

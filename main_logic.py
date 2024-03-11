@@ -12,7 +12,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from CAN_option import *
-from abc import ABCMeta,abstractmethod
+from abc import ABCMeta, abstractmethod
 # from workThread import WorkThread
 from new1440_all import Ui_Form
 
@@ -25,12 +25,14 @@ import threading
 import queue
 import serial.tools.list_ports
 import traceback
-
+import gif_QMessageBox
 
 q = queue.Queue()
 event_canInit = threading.Event()
 isMainRunning = True
-class Ui_Control(QMainWindow,Ui_Form):
+
+
+class Ui_Control(QMainWindow, Ui_Form):
     #                -/+10V       0-10V       0-5V        1-5V       4-20mA      0-20mA      -/+5V
     AORangeArray = [0x0b, 0x00, 0xe8, 0x03, 0xe9, 0x03, 0xea, 0x03, 0x15, 0x00, 0xeb, 0x03, 0xec, 0x03]
     AIRangeArray = [0x29, 0x00, 0x2a, 0x00, 0x10, 0x27, 0x11, 0x27, 0x33, 0x00, 0x34, 0x00, 0x12, 0x27]
@@ -68,27 +70,25 @@ class Ui_Control(QMainWindow,Ui_Form):
     waiting_time = 5000
     # 标定接收信号次数
     receive_num = 8
-    #循环次数
+    # 循环次数
     loop_num = 1
     pause_num = 1
 
-    #生成表格的相关标识
-    #DI测试是否通过
+    # 生成表格的相关标识
+    # DI测试是否通过
     isDIPassTest = True
-    #DO测试是否通过
+    # DO测试是否通过
     isDOPassTest = True
-    #DO通道数据初始化
+    # DO通道数据初始化
     DO_channelData = 0
-    #DI通道数据初始化
+    # DI通道数据初始化
     DI_channelData = 0
     # DO通道错误数据记录
     DODataCheck = [True for i in range(32)]
     # DI通道错误数据记录
     DIDataCheck = [True for i in range(32)]
 
-
-
-    #是否标定
+    # 是否标定
     isCalibrate = False
     # 是否标定电压
     isCalibrateVol = False
@@ -122,7 +122,7 @@ class Ui_Control(QMainWindow,Ui_Form):
     isLEDErrOK = True
     isLEDPass = True
 
-    #CAN帧结构体
+    # CAN帧结构体
     # 发送帧ID
     TRANSMIT_ID = 0x602
 
@@ -166,23 +166,23 @@ class Ui_Control(QMainWindow,Ui_Form):
     m_can_obj = CAN_option.VCI_CAN_OBJ(RECEIVE_ID, TIME_STAMP, TIME_FLAG, RECEIVE_SEND_TYPE,
                                        REMOTE_FLAG, EXTERN_FLAG, DATA_LEN, DATA, RESERVED_3)
 
-    #测试总数
+    # 测试总数
     testNum = 0
-    #测试类型
+    # 测试类型
     testType = {}
-    #模块信息
-    inf = {'AO2':'待检AO模块', 'AI1':'配套AI模块', 'AI2':'待检AI模块', 'AO1':'配套AO模块',
-           'DO2':'待检DO模块', 'DI1':'配套DI模块', 'DI2':'待检DI模块', 'DO1':'配套DO模块'}
+    # 模块信息
+    inf = {'AO2': '待检AO模块', 'AI1': '配套AI模块', 'AI2': '待检AI模块', 'AO1': '配套AO模块',
+           'DO2': '待检DO模块', 'DI1': '配套DI模块', 'DI2': '待检DI模块', 'DO1': '配套DO模块'}
     module_1 = ''
     module_2 = ''
-    #通道数
+    # 通道数
     m_Channels = 0
     AI_Channels = 0
     AO_Channels = 0
-    #发送的数据
+    # 发送的数据
     ubyte_array_transmit = c_ubyte * 8
     m_transmitData = ubyte_array_transmit(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
-    #接收的数据
+    # 接收的数据
     ubyte_array_receive = c_ubyte * 8
     m_receiveData = ubyte_array_receive(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
     CAN_errorLED = True
@@ -202,21 +202,22 @@ class Ui_Control(QMainWindow,Ui_Form):
     # 创建队列用于主线程和子线程之间的通信
     result_queue = Queue()
 
-    #停止CAN接收信号
+    # 停止CAN接收信号
     stop_signal = pyqtSignal(bool)
 
-    #3码转换后的ASCII码
+    # 3码转换后的ASCII码
     asciiCode_pn = []
     asciiCode_sn = []
     asciiCode_rev = []
     testFlag = ''
 
-    config_param = { }
+    config_param = {}
 
-    current_dir = os.getcwd().replace('\\','/')+"/_internal"
+    current_dir = os.getcwd().replace('\\', '/') + "/_internal"
+
     # current_dir = os.getcwd().replace('\\', '/')
-    def __init__(self,parent = None):
-        super(Ui_Control,self).__init__(parent)
+    def __init__(self, parent=None):
+        super(Ui_Control, self).__init__(parent)
         self.setupUi(self)
         self.pushButton_13.setVisible(False)
         # self.label_11.setPixmap(QtGui.QPixmap(f"{current_dir}/beast5.png"))
@@ -226,26 +227,26 @@ class Ui_Control(QMainWindow,Ui_Form):
                                    self.lineEdit_37, self.lineEdit_38]
         self.CPU_lineEditName_array = ["CPU_IP", "工装1", "工装2", "工装3", "工装4", "工装5"]
         self.CPU_checkBox_array = [self.checkBox_50, self.checkBox_51, self.checkBox_52, self.checkBox_53,
-                                    self.checkBox_55, self.checkBox_56, self.checkBox_57,
+                                   self.checkBox_55, self.checkBox_56, self.checkBox_57,
                                    self.checkBox_58, self.checkBox_59, self.checkBox_60, self.checkBox_61,
                                    self.checkBox_62, self.checkBox_63, self.checkBox_64, self.checkBox_65,
-                                   self.checkBox_66,self.checkBox_54, self.checkBox_67, self.checkBox_68,
-                                   self.checkBox_71,self.checkBox_73]
+                                   self.checkBox_66, self.checkBox_54, self.checkBox_67, self.checkBox_68,
+                                   self.checkBox_71, self.checkBox_73]
         self.CPU_checkBoxName_array = ["外观检测", "型号检查", "SRAM", "FLASH", "拨杆测试",
-                                       "MFK按键","掉电保存", "RTC测试", "FPGA",
-                                        "各指示灯", "本体IN", "本体OUT", "以太网", "RS-232C",
+                                       "MFK按键", "掉电保存", "RTC测试", "FPGA",
+                                       "各指示灯", "本体IN", "本体OUT", "以太网", "RS-232C",
                                        "RS-485",
-                                       "右扩CAN", "MAC/三码写入",  "MA0202", "测试报告", "修改参数","全选"]
+                                       "右扩CAN", "MAC/三码写入", "MA0202", "测试报告", "修改参数", "全选"]
 
         self.setWindowFlags(Qt.FramelessWindowHint)  # 无边框窗口
         self.label_6.mousePressEvent = self.label_mousePressEvent
         self.label_6.mouseMoveEvent = self.label_mouseMoveEvent
         self.label.setStyleSheet(self.testState_qss['stop'])
         self.label.setText('UNTESTED')
-        self.label_41.setAlignment(QtCore.Qt.AlignLeft|Qt.AlignVCenter)
-        #屏蔽pushbutton_9
+        self.label_41.setAlignment(QtCore.Qt.AlignLeft | Qt.AlignVCenter)
+        # 屏蔽pushbutton_9
         self.pushButton_9.setVisible(False)
-        self.getSerialInf(0,type = 'CPU')
+        self.getSerialInf(0, type='CPU')
         # 读页面配置
         # self.loadConfig()必须放在类似comboBox.currentIndexChanged.connect(self.saveConfig)的代码之前
         # 某则一修改参数就会触发saveConfig，导致还没修改的参数被默认参数覆盖。
@@ -255,7 +256,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         else:
             self.checkBox_73.setText("全选")
 
-        #显示当前时间
+        # 显示当前时间
         self.update_time()
         # self.lineEdit_PN = 'PRDr9HPA06Mz-00'
         # self.lineEdit_SN = 'S1223-001083'
@@ -277,16 +278,14 @@ class Ui_Control(QMainWindow,Ui_Form):
         #                         }
         #                     """)
 
-
-
-
-        for tW in [self.tableWidget_AI, self.tableWidget_AO, self.tableWidget_DIDO,self.tableWidget_CPU]:
+        for tW in [self.tableWidget_AI, self.tableWidget_AO, self.tableWidget_DIDO, self.tableWidget_CPU]:
             tW.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
-        #批量设置lineEdit只读
-        lE_arr = [self.lineEdit,self.lineEdit_3,self.lineEdit_5,self.lineEdit_20,self.lineEdit_21,self.lineEdit_22,
-                  self.lineEdit_45,self.lineEdit_46,self.lineEdit_47,self.lineEdit_30,self.lineEdit_31,self.lineEdit_32
-                  ,self.lineEdit_33,self.lineEdit_MA0202_SN,self.lineEdit_MA0202_PN,self.lineEdit_MA0202_REV]
+        # 批量设置lineEdit只读
+        lE_arr = [self.lineEdit, self.lineEdit_3, self.lineEdit_5, self.lineEdit_20, self.lineEdit_21, self.lineEdit_22,
+                  self.lineEdit_45, self.lineEdit_46, self.lineEdit_47, self.lineEdit_30, self.lineEdit_31,
+                  self.lineEdit_32
+            , self.lineEdit_33, self.lineEdit_MA0202_SN, self.lineEdit_MA0202_PN, self.lineEdit_MA0202_REV]
         for lE in lE_arr:
             lE.setReadOnly(True)
 
@@ -308,7 +307,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                         padding: 8px;
                         width: 105px; 
                         height: 17px;
-                        
+
                     }}
                     QTabBar::tab:!selected {{
                         background-color: #11826C;
@@ -351,7 +350,7 @@ class Ui_Control(QMainWindow,Ui_Form):
 
         # 设置按钮悬停时的样式
         self.hover_color = QColor("#11826C").lighter(150)
-        listPushButton = [self.pushButton_5,self.pushButton_6,self.pushButton_10,self.pushButton_CPU_renewSerial]
+        listPushButton = [self.pushButton_5, self.pushButton_6, self.pushButton_10, self.pushButton_CPU_renewSerial]
         for pB in listPushButton:
             pB.setStyleSheet(f"""
                         QPushButton {{
@@ -367,13 +366,12 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.dragging = False
         self.offset = QPoint()
 
-
         self.lineEdit_PN.setReadOnly(True)
         self.pushButton_8.clicked.connect(self.killUi)
         self.pushButton_11.clicked.connect(self.showMinimized)
         self.pushButton_11.clicked.connect(self.saveConfig)
-        self.tableWidget_array=[self.tableWidget_DIDO,self.tableWidget_AI,
-                                self.tableWidget_AO,self.tableWidget_CPU]
+        self.tableWidget_array = [self.tableWidget_DIDO, self.tableWidget_AI,
+                                  self.tableWidget_AO, self.tableWidget_CPU]
         for tW in self.tableWidget_array:
             tW.setStyleSheet("background-color: rgb(255, 255, 255);")
         # self.tableWidget_AI.setStyleSheet("background-color: rgb(255, 255, 255);")
@@ -381,7 +379,6 @@ class Ui_Control(QMainWindow,Ui_Form):
         # self.tableWidget_CPU.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.pushButton_4.clicked.connect(self.start_button)
         self.pushButton_3.clicked.connect(self.stop_button)
-
 
         self.pushButton_pause.clicked.connect(self.pause_button)
 
@@ -465,7 +462,6 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.pushButton_5.clicked.connect(self.changeSaveDir)
         self.pushButton_6.clicked.connect(self.openSaveDir)
 
-        # self.pushButton.clicked.connect(self.stopAll)
         self.tabIndex = self.tabWidget.currentIndex()
         if self.tabIndex == 0:
             self.tableWidget_DIDO.setVisible(True)
@@ -473,11 +469,11 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.tableWidget_AO.setVisible(False)
             self.tableWidget_CPU.setVisible(False)
             self.label_7.setText("DI/DO")
-            if self.comboBox.currentIndex()==1:
+            if self.comboBox.currentIndex() == 1:
                 self.lineEdit_PN.setText('P0000010391877')
-            elif self.comboBox.currentIndex()==4:
+            elif self.comboBox.currentIndex() == 4:
                 self.lineEdit_PN.setText('P0000010392086')
-            elif self.comboBox.currentIndex()==5:
+            elif self.comboBox.currentIndex() == 5:
                 self.lineEdit_PN.setText('P0000010392121')
             self.lineEdit.setText(self.lineEdit_PN.text())
         elif self.tabIndex == 1:
@@ -486,7 +482,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.tableWidget_AO.setVisible(False)
             self.tableWidget_CPU.setVisible(False)
             self.label_7.setText("AI")
-            if self.comboBox_3.currentIndex()==0:
+            if self.comboBox_3.currentIndex() == 0:
                 self.lineEdit_PN.setText('P0000010392361')
             self.lineEdit_22.setText(self.lineEdit_PN.text())
         elif self.tabIndex == 2:
@@ -495,7 +491,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.tableWidget_AO.setVisible(True)
             self.tableWidget_CPU.setVisible(False)
             self.label_7.setText("AO")
-            if self.comboBox_5.currentIndex()==0:
+            if self.comboBox_5.currentIndex() == 0:
                 self.lineEdit_PN.setText('P0000010392365')
             self.lineEdit_47.setText(self.lineEdit_PN.text())
         elif self.tabIndex == 3:
@@ -504,7 +500,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.tableWidget_AO.setVisible(False)
             self.tableWidget_CPU.setVisible(True)
             self.label_7.setText("CPU")
-            if self.comboBox_20.currentIndex()==0:
+            if self.comboBox_20.currentIndex() == 0:
                 self.lineEdit_PN.setText('P0000010390631')
             self.lineEdit_30.setText(self.lineEdit_PN.text())
         elif self.tabIndex == 4:
@@ -654,17 +650,15 @@ class Ui_Control(QMainWindow,Ui_Form):
                                              }}
                                          """)
 
-
         self.pushbutton_allScreen.clicked.connect(self.allScreen)
 
         self.pushbutton_cancelAllScreen.setEnabled(False)
         self.pushbutton_cancelAllScreen.setVisible(False)
         self.pushbutton_cancelAllScreen.clicked.connect(self.cancelAllScreen)
 
-
-        #CPU页面初始化
-        self.CPU_comboBox_array = [self.comboBox_20,self.comboBox_21,self.comboBox_22,self.comboBox_23,
-                                   self.comboBox_24,self.comboBox_25,self.comboBox_26]
+        # CPU页面初始化
+        self.CPU_comboBox_array = [self.comboBox_20, self.comboBox_21, self.comboBox_22, self.comboBox_23,
+                                   self.comboBox_24, self.comboBox_25, self.comboBox_power]
         for comboBox in self.CPU_comboBox_array:
             comboBox.currentIndexChanged.connect(self.saveConfig)
         for lineEdit in self.CPU_lineEdit_array:
@@ -675,7 +669,6 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.checkBox_71.stateChanged.connect(self.CPU_paramChanged)
         self.checkBox_73.stateChanged.connect(self.testAllorNot)
         self.lineEdit_33.setText('11-22-33-44-55-66')
-
 
         # self.lineEdit_PN.setPlaceholderText('请输入PN码')
         self.lineEdit_SN.setPlaceholderText('请输入SN码')
@@ -755,6 +748,10 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.lineEdit_44.textChanged.connect(self.saveConfig)
         self.tabWidget.currentChanged.connect(self.saveConfig)
         self.pushButton.clicked.connect(self.saveConfig)
+        self.pushButton.clicked.connect(self.generateLabel_userName)
+        self.pushButton.clicked.connect(self.generateCheckBox_admin)
+        self.pushButton.clicked.connect(self.userLogin)
+
         self.pushButton_2.clicked.connect(self.saveConfig)
         self.pushButton_3.clicked.connect(self.saveConfig)
         self.pushButton_4.clicked.connect(self.saveConfig)
@@ -764,16 +761,119 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.pushButton_12.clicked.connect(self.uiRecovery)
         self.pushButton_13.clicked.connect(self.option_pushButton13)
 
-        #MA0202界面初始化
+        # MA0202界面初始化
         self.radioButton_MA0202.setChecked(True)
         self.MA0202_paramChanged()
         self.checkBox_MA0202_para.stateChanged.connect(self.MA0202_paramChanged)
 
-        #更新串口
-        self.pushButton_CPU_renewSerial.clicked.connect(lambda:self.getSerialInf(1,type = 'CPU'))
-        self.pushButton_MA0202_renewSerial.clicked.connect(lambda: self.getSerialInf(1, type = 'MA0202'))
-        global isMainRunning# 程序运行标志
+        # 更新串口
+        self.pushButton_CPU_renewSerial.clicked.connect(lambda: self.getSerialInf(1, type='CPU'))
+        self.pushButton_MA0202_renewSerial.clicked.connect(lambda: self.getSerialInf(1, type='MA0202'))
+        global isMainRunning  # 程序运行标志
         isMainRunning = True
+
+        # 可编程电源参数
+        self.power_off = [0x01, 0x06, 0x00, 0x01, 0x00, 0x00, 0xD8, 0x0A]
+        self.power_on = [0x01, 0x06, 0x00, 0x01, 0x00, 0x01, 0x19, 0xCA]
+        self.vol_24v = [0x01, 0x10, 0x00, 0x20, 0x00, 0x02, 0x04, 0x00, 0x00, 0x5D, 0xC0, 0xC9, 0x77]
+        self.cur_2a = [0x01, 0x10, 0x00, 0x22, 0x00, 0x02, 0x04, 0x00, 0x00, 0x4E, 0x20, 0x44, 0x16]
+        self.appearance = True
+        #CPU外观无需检测
+        self.checkBox_50.setEnabled(False)
+
+        #启动时提示员工登录信息
+        self.workerChange(['start','测试人员登录', '请输入员工编号：'])
+        self.group_list = [self.groupBox,self.groupBox_3,self.groupBox_4,self.groupBox_5,
+                           self.groupBox_7,self.groupBox_10,self.groupBox_11,self.groupBox_12,
+                           self.groupBox_13,
+                           self.groupBox_8,self.groupBox_14,self.groupBox_15,self.groupBox_16,
+                           self.groupBox_17,
+                           self.groupBox_18,self.groupBox_19,
+                           self.groupBox_20]
+        self.adminState = False
+        # 启动时默认不允许操作
+        for g in self.group_list:
+            g.setEnabled(False)
+
+    def generateLabel_userName(self):
+        # 员工登录账号
+        self.label_userName = QLabel(f'<h2>123456<h2>')
+
+    def generateCheckBox_admin(self):
+        # 管理员权限
+        self.checkBox_admin = QCheckBox('管理员权限')
+
+    def generateCheckBox_messageBox_widget(self,list):
+        self.checkBox_messageBox_widget = QWidget()
+        self.checkBoxs = [0,0,0,0,
+                          0,0,0,0,
+                          0,0,0,0,
+                          0,0,0,0]
+        self.checkBox_status = [True, True, True, True,
+                                True, True, True, True,
+                                True, True, True, True,
+                                True, True, True, True]
+
+        # 创建四个QHBoxLayout布局管理器
+        layout1 = QHBoxLayout()
+        layout2 = QHBoxLayout()
+        layout3 = QHBoxLayout()
+        layout4 = QHBoxLayout()
+
+        # 添加16个checkBox，分成4组，每组4个，左右分布
+        for i in range(0, 7, 2):
+            button = QCheckBox('0' + str(i))
+            button.setObjectName('通道' + str(i))  # 通道0，2，4，6
+            if list[2] == 'odd':
+                button.setEnabled(False)
+            self.checkBoxs[i]=button
+            # self.checkBox_messageBox_widget.append(button)
+            layout1.addWidget(button)
+        for i in range(1, 8, 2):
+            button = QCheckBox('0' + str(i))
+            button.setObjectName('通道' + str(i))  # 通道1，3，5，7
+            if list[2] == 'even':
+                button.setEnabled(False)
+            self.checkBoxs[i]=button
+            # self.checkBox_messageBox_widget.append(button)
+            layout2.addWidget(button)
+        for i in range(10, 17, 2):
+            button = QCheckBox(str(i))
+            button.setObjectName('通道' + str(i))  # 通道10，12，14，16
+            if list[2] == 'odd':
+                button.setEnabled(False)
+            self.checkBoxs[i-2]=button
+            # self.checkBox_messageBox_widget.append(button)
+            layout3.addWidget(button)
+        for i in range(11, 18, 2):
+            button = QCheckBox(str(i))
+            button.setObjectName('通道' + str(i))  # 通道11，13，15，17
+            if list[2] == 'even':
+                button.setEnabled(False)
+            self.checkBoxs[i-2]=button
+            # self.checkBox_messageBox_widget.append(button)
+            layout4.addWidget(button)
+
+        # 创建一个QWidget对象，并将四个QHBoxLayout布局管理器添加到该对象中
+        # widget = QWidget()
+        layout = QVBoxLayout()
+
+        layout.addLayout(layout1)
+        layout.addLayout(layout2)
+        layout.addLayout(layout3)
+        layout.addLayout(layout4)
+
+        self.checkBox_messageBox_widget.setLayout(layout)
+
+        for element in self.checkBoxs:
+            element.toggled.connect(self.update_checkBox_status)
+
+    def update_checkBox_status(self):
+        for i in range(len(self.checkBoxs)):
+            if self.checkBoxs[i].isChecked():
+                self.checkBox_status[i] = False
+            else:
+                self.checkBox_status[i] = True
 
     def generateDefaultConfigFile(self):
         config_str = "{'savePath': 'D:/MyData/wujun89/Desktop/EX300_x64_python',\n" \
@@ -834,10 +934,10 @@ class Ui_Control(QMainWindow,Ui_Form):
                      "'CPU_485COM': 4,\n" \
                      "'CPU_typecCOM': 3,\n" \
                      "'工装1': '1',\n" \
-                    "'工装2': '2',\n" \
-                    "'工装3': '3',\n" \
-                    "'工装4': '4',\n" \
-                    "'工装5': '5',\n" \
+                     "'工装2': '2',\n" \
+                     "'工装3': '3',\n" \
+                     "'工装4': '4',\n" \
+                     "'工装5': '5',\n" \
                      "'外观检测': False,\n" \
                      "'型号检查': False,\n" \
                      "'SRAM': False,\n" \
@@ -861,20 +961,21 @@ class Ui_Control(QMainWindow,Ui_Form):
                      "'U盘读写': False,\n" \
                      "'修改参数': False,\n" \
                      "'全选': False,\n" \
-                    "'选项板232':0,\n" \
-                    "'选项板485':0,\n" \
-                    "'可编程电源':0}"
+                     "'选项板232':0,\n" \
+                     "'选项板485':0,\n" \
+                     "'可编程电源':0}"
         self.configFile = open(f'{self.current_dir}/config.txt', 'w', encoding='utf-8')
         self.configFile.write(config_str)
         self.configFile.close()
+
     def loadConfig(self):
         try:
-            with open(f'{self.current_dir}/config.txt','r+',encoding='utf-8') as file:
+            with open(f'{self.current_dir}/config.txt', 'r+', encoding='utf-8') as file:
                 config_content = file.read()
         except:
-            self.showInf("配置文件不存在，初始化界面！"+self.HORIZONTAL_LINE)
+            self.showInf("配置文件不存在，初始化界面！" + self.HORIZONTAL_LINE)
             self.generateDefaultConfigFile()
-            with open(f'{self.current_dir}/config.txt','r+',encoding='utf-8') as file:
+            with open(f'{self.current_dir}/config.txt', 'r+', encoding='utf-8') as file:
                 config_content = file.read()
 
         self.config_param = eval(config_content)
@@ -942,12 +1043,10 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.comboBox_23.setCurrentIndex(self.config_param["CPU_typecCOM"])
         self.comboBox_24.setCurrentIndex(self.config_param["选项板232"])
         self.comboBox_25.setCurrentIndex(self.config_param["选项板485"])
-        self.comboBox_26.setCurrentIndex(self.config_param["可编程电源"])
-
+        self.comboBox_power.setCurrentIndex(self.config_param["可编程电源"])
 
         for i in range(len(self.CPU_lineEdit_array)):
             self.CPU_lineEdit_array[i].setText(self.config_param[self.CPU_lineEditName_array[i]])
-
 
         for i in range(len(self.CPU_checkBox_array)):
             self.CPU_checkBox_array[i].setChecked(self.config_param[self.CPU_checkBoxName_array[i]])
@@ -1010,7 +1109,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.config_param["DIDO_检测CAN"] = self.checkBox.isChecked()
         self.config_param["DIDO_检测run"] = self.checkBox_2.isChecked()
 
-        #CPU页面配置
+        # CPU页面配置
         for i in range(len(self.CPU_lineEdit_array)):
             self.config_param[self.CPU_lineEditName_array[i]] = self.CPU_lineEdit_array[i].text()
         self.config_param["CPU_型号"] = self.comboBox_20.currentIndex()
@@ -1019,20 +1118,20 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.config_param["CPU_typecCOM"] = self.comboBox_23.currentIndex()
         self.config_param["选项板232"] = self.comboBox_24.currentIndex()
         self.config_param["选项板485"] = self.comboBox_25.currentIndex()
-        self.config_param["可编程电源"] = self.comboBox_26.currentIndex()
+        self.config_param["可编程电源"] = self.comboBox_power.currentIndex()
         for i in range(len(self.CPU_checkBox_array)):
             self.config_param[self.CPU_checkBoxName_array[i]] = self.CPU_checkBox_array[i].isChecked()
 
-        #save
+        # save
         config_str = str(self.config_param)
-        config_str1=''
-        pos=0
-        while pos>=0:
-            pos=config_str.find(',')
-            config_str1=config_str1+config_str[:pos+1]+'\n'
-            config_str=config_str[pos+1:]
-        config_str=config_str1+config_str
-        self.configFile = open(f'{self.current_dir}/config.txt', 'w',encoding='utf-8')
+        config_str1 = ''
+        pos = 0
+        while pos >= 0:
+            pos = config_str.find(',')
+            config_str1 = config_str1 + config_str[:pos + 1] + '\n'
+            config_str = config_str[pos + 1:]
+        config_str = config_str1 + config_str
+        self.configFile = open(f'{self.current_dir}/config.txt', 'w', encoding='utf-8')
         self.configFile.write(config_str)
         self.configFile.close()
 
@@ -1071,7 +1170,6 @@ class Ui_Control(QMainWindow,Ui_Form):
         except OSError as e:
             self.showInf(f"无法杀死当前进程: {e}\n")
 
-
     def label_mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             self.dragging = True
@@ -1086,8 +1184,8 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.dragging = False
 
     def uiResize(self):
-        self.resize(740,872)
-        self.label_6.resize(740,30)
+        self.resize(740, 872)
+        self.label_6.resize(740, 30)
         self.pushButton_11.setGeometry(QtCore.QRect(680, 0, 30, 30))
         self.pushButton_8.setGeometry(QtCore.QRect(710, 0, 30, 30))
 
@@ -1141,7 +1239,6 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.lineEdit_45.clear()
         self.pushButton_4.setEnabled(False)
         self.pushButton_4.setStyleSheet(self.topButton_qss['off'])
-
 
     def inputPN(self):
         if len(self.lineEdit_PN.text()) == 15:
@@ -1219,7 +1316,7 @@ class Ui_Control(QMainWindow,Ui_Form):
     def changeSaveDir(self):
         self.saveDir = self.label_41.text()
         self.saveDir = QFileDialog.getExistingDirectory(self, '修改路径', self.saveDir)
-        if self.saveDir !='':
+        if self.saveDir != '':
             self.label_41.setText(self.saveDir)
             # print(self.saveDir)
 
@@ -1307,13 +1404,8 @@ class Ui_Control(QMainWindow,Ui_Form):
         global isMainRunning
         isMainRunning = True
 
-
-
-
         if not self.startTest():
             self.PassOrFail(False)
-
-
 
     def pause_button(self):
         CAN_option.receivePause()
@@ -1335,7 +1427,6 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.pushButton_resume.setVisible(True)
 
         # self.work_thread.pause()
-
 
     def resume_button(self):
         CAN_option.receiveResume()
@@ -1381,9 +1472,9 @@ class Ui_Control(QMainWindow,Ui_Form):
     def startTest(self):
         try:
             # 启动CAN分析仪
-            list_canInit=CAN_init([1])
+            list_canInit = CAN_init([1])
             if not list_canInit[0]:
-                self.showMessageBox(list_canInit[1])
+                self.showMessageBox_oneButton(list_canInit[1])
                 self.CANFail()
                 return False
 
@@ -1391,42 +1482,41 @@ class Ui_Control(QMainWindow,Ui_Form):
             CAN_option.receiveResume()
             self.pushButton_10.setEnabled(False)
             self.pushButton_10.setStyleSheet('color: rgb(255, 255, 255);background-color: rgb(197, 197, 197);')
-            # try:#开电源
-                # # 可编程电源开断电
-                # power_off = [0x01, 0x06, 0x00, 0x01, 0x00, 0x00, 0xD8, 0x0A]
-                # power_on = [0x01, 0x06, 0x00, 0x01, 0x00, 0x01, 0x19, 0xCA]
-                # vol_24v = [0x01, 0x10, 0x00, 0x20, 0x00, 0x02, 0x04, 0x00, 0x00, 0x5D, 0xC0, 0xC9, 0x77]
-                # cur_2a = [0x01, 0x10, 0x00, 0x22, 0x00, 0x02, 0x04, 0x00, 0x00, 0x4E, 0x20, 0x44, 0x16]
-                # self.powerControl(baudRate=9600, transmitData=power_off)
-                # if not self.isCancelAllTest:
-                #     self.result_signal.emit('设备已断电。等待3秒后自动重新上电。\n')
-                #     for dd in range(3):
-                #         self.result_signal.emit(f'剩余等待{3 - dd}秒……\n')
-                #         time.sleep(1)
-                #     self.powerControl(baudRate=9600, transmitData=vol_24v)
-                #     if not self.isCancelAllTest:
-                #         self.result_signal.emit('设置电压为24V。\n')
-                #         self.powerControl(baudRate=9600, transmitData=cur_2a)
-                #         if not self.isCancelAllTest:
-                #             self.result_signal.emit('设置电压为2A。\n')
-                #             self.powerControl(baudRate=9600, transmitData=power_on)
-                #             if not self.isCancelAllTest:
-                #                 self.result_signal.emit('设备重新上电。\n')
-                #                 if not self.isCancelAllTest:
-                #                     time.sleep(6)
-
             try:
-                if not self.sendMessage():#测试参数确定
+                if not self.sendMessage():  # 测试参数确定
                     return False
             except Exception as e:
                 self.showInf(f"sendMessageError:{e}{self.HORIZONTAL_LINE}")
                 # 捕获异常并输出详细的错误信息
                 traceback.print_exc()
                 return False
-
             QApplication.processEvents()
 
-            #检查三码信息
+            # 控制可编程电源自动上电
+            if self.powerControl(baudRate=9600, transmitData=self.vol_24v):
+                self.showInf('成功设置电压为24V。\n')
+                if self.powerControl(baudRate=9600, transmitData=self.cur_2a):
+                    self.showInf('成功设置电流为2A。\n')
+                    if self.powerControl(baudRate=9600, transmitData=self.power_on):
+                        self.showInf('成功上电，等待设备初始化。\n')
+                        if self.tabIndex == 0 or self.tabIndex == 1 or self.tabIndex == 2:
+                            waitTime = 3
+                        elif self.tabIndex == 3 or self.tabIndex == 4:
+                            waitTime = 6
+                        for i in range(waitTime):
+                            self.showInf(f'剩余等待时间：{waitTime-i}秒……\n')
+                            # time.sleep(1)
+                    else:
+                        self.showInf('上电失败，测试取消。\n')
+                        return False
+                else:
+                    self.showInf('电流设置失败，测试取消。\n')
+                    return False
+            else:
+                self.showInf('电压设置失败，测试取消。\n')
+                return False
+
+            # 检查三码信息
             if not mainThreadRunning():
                 return False
             if len(self.module_pn) == 0 or len(self.module_sn) == 0 or len(self.module_rev) == 0:
@@ -1437,28 +1527,28 @@ class Ui_Control(QMainWindow,Ui_Form):
                                             QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
                 return False
             self.tabIndex = self.tabWidget.currentIndex()
-            #节点分配+心跳检测
+            # 节点分配+心跳检测
             if self.tabIndex == 0:
                 if not self.configCANAddr([int(self.lineEdit_6.text()), int(self.lineEdit_7.text()), '', '', '']):
                     return False
                 # DI/DO心跳检测
-                if not self.isModulesOnline([self.CAN1, self.CAN2],[self.module_1,self.module_2]):
+                if not self.isModulesOnline([self.CAN1, self.CAN2], [self.module_1, self.module_2]):
                     return False
             elif self.tabIndex == 1:
-                if not self.configCANAddr([int(self.lineEdit_18.text()),int(self.lineEdit_23.text()),
-                                          int(self.lineEdit_23.text())+1, int(self.lineEdit_19.text()), '']):
+                if not self.configCANAddr([int(self.lineEdit_18.text()), int(self.lineEdit_23.text()),
+                                           int(self.lineEdit_23.text()) + 1, int(self.lineEdit_19.text()), '']):
                     return False
                 # AI心跳检测
-                if not self.isModulesOnline([self.CAN1,self.CANAddr_relay,self.CANAddr_relay+1, self.CAN2],
-                                     [self.module_1, '继电器QR0016#1', '继电器QR0016#2', self.module_2]):
+                if not self.isModulesOnline([self.CAN1, self.CANAddr_relay, self.CANAddr_relay + 1, self.CAN2],
+                                            [self.module_1, '继电器QR0016#1', '继电器QR0016#2', self.module_2]):
                     return False
             elif self.tabIndex == 2:
-                if not self.configCANAddr([int(self.lineEdit_39.text()),int(self.lineEdit_41.text()),
-                                          int(self.lineEdit_41.text())+1, int(self.lineEdit_40.text()), '']):
+                if not self.configCANAddr([int(self.lineEdit_39.text()), int(self.lineEdit_41.text()),
+                                           int(self.lineEdit_41.text()) + 1, int(self.lineEdit_40.text()), '']):
                     return False
                 # AO心跳检测
                 if not self.isModulesOnline([self.CAN1, self.CANAddr_relay, self.CANAddr_relay + 1, self.CAN2],
-                                     [self.module_1, '继电器QR0016#1', '继电器QR0016#2', self.module_2]):
+                                            [self.module_1, '继电器QR0016#1', '继电器QR0016#2', self.module_2]):
                     return False
             elif self.tabIndex == 3:
                 if not self.configCANAddr([int(self.lineEdit_34.text()), int(self.lineEdit_35.text()),
@@ -1493,9 +1583,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             #                          QMessageBox.AcceptRole)
             #     return False
 
-
-
-            #开始时间
+            # 开始时间
             self.allStart_time = time.time()
             if not mainThreadRunning():
                 return False
@@ -1508,7 +1596,7 @@ class Ui_Control(QMainWindow,Ui_Form):
 
             if self.tabWidget.currentIndex() == 0:
                 self.testFlag = 'DIDO'
-                self.appearanceTest(self.testFlag)
+                # self.appearanceTest(self.testFlag)
                 mTable = self.tableWidget_DIDO
                 if self.comboBox.currentIndex() == 0 or self.comboBox.currentIndex() == 1 \
                         or self.comboBox.currentIndex() == 2:
@@ -1528,11 +1616,15 @@ class Ui_Control(QMainWindow,Ui_Form):
                 # self.DIDO_option.CANRunErr_signal.connect(self.testCANRunErr)
                 self.DIDO_option.messageBox_signal.connect(self.showMessageBox)
                 self.DIDO_option.pic_messageBox_signal.connect(self.pic_MessageBox)
+                self.DIDO_option.messageBox_oneButton_signal.connect(self.showMessageBox_oneButton)
+                self.DIDO_option.gif_messageBox_signal.connect(self.gif_MessageBox)
+                self.DIDO_option.checkBox_messageBox_signal.connect(self.generateCheckBox_messageBox_widget)#widget在QMessageBox关闭后也会消失，因此需要每次重新生成新的。
+                self.DIDO_option.checkBox_messageBox_signal.connect(self.checkBox_MessageBox)
                 # self.DIDO_option.excel_signal.connect(self.generateExcel)
                 self.DIDO_option.allFinished_signal.connect(self.allFinished)
                 self.DIDO_option.label_signal.connect(self.labelChange)
                 self.DIDO_option.saveExcel_signal.connect(self.saveExcel)
-                self.DIDO_option.print_signal.connect(self.printResult)
+                # self.DIDO_option.print_signal.connect(self.printResult)
 
                 self.pushButton_3.clicked.connect(self.DIDO_option.stop_work)
                 self.pushButton_pause.clicked.connect(self.DIDO_option.pause_work)
@@ -1542,16 +1634,13 @@ class Ui_Control(QMainWindow,Ui_Form):
                 self.DIDO_thread.started.connect(self.DIDO_option.DIDOOption)
                 self.DIDO_thread.start()
 
-
-
-
             if self.tabWidget.currentIndex() == 1:
                 # self.lineEdit_PN = 'PRDr9HPA06Mz-00'
                 # self.lineEdit_SN = 'S1223-001083'
                 # self.lineEdit_REV = '06'
 
                 self.testFlag = 'AI'
-                self.appearanceTest(self.testFlag)
+                # self.appearanceTest(self.testFlag)
                 # self.appearance = True
                 # self.showInf(f'self.tabWidget.currentIndex()={self.tabWidget.currentIndex()}\n\n')
                 mTable = self.tableWidget_AI
@@ -1594,10 +1683,8 @@ class Ui_Control(QMainWindow,Ui_Form):
                             return False
                         self.AI_itemOperation([8, 0, 0, ''])
 
-
-
                 # if self.isCalibrate:
-                    # self.calibrateAI(mTable)
+                # self.calibrateAI(mTable)
                 self.AI_thread = None
                 self.worker = None
                 if not self.AI_thread or not self.worker_thread.isRunning():
@@ -1606,7 +1693,7 @@ class Ui_Control(QMainWindow,Ui_Form):
 
                     self.AI_thread = QThread()
                     from thread_AI import AIThread
-                    self.AI_option = AIThread(self.inf_AIlist,self.result_queue,self.appearance)
+                    self.AI_option = AIThread(self.inf_AIlist, self.result_queue, self.appearance)
 
                     self.AI_option.result_signal.connect(self.showInf)
                     self.AI_option.item_signal.connect(self.AI_itemOperation)
@@ -1615,10 +1702,11 @@ class Ui_Control(QMainWindow,Ui_Form):
                     # self.AI_option.CANRunErr_signal.connect(self.testCANRunErr)
                     self.AI_option.messageBox_signal.connect(self.showMessageBox)
                     self.AI_option.pic_messageBox_signal.connect(self.pic_MessageBox)
+                    self.AI_option.messageBox_oneButton_signal.connect(self.showMessageBox_oneButton)
                     # self.AI_option.excel_signal.connect(self.generateExcel)
                     self.AI_option.allFinished_signal.connect(self.allFinished)
                     self.AI_option.label_signal.connect(self.labelChange)
-                    self.AI_option.saveExcel_signal.connect(self.saveExcel)#保存测试报告
+                    self.AI_option.saveExcel_signal.connect(self.saveExcel)  # 保存测试报告
                     # self.AI_option.print_signal.connect(self.printResult)#打印测试标签
 
                     self.pushButton_3.clicked.connect(self.AI_option.stop_work)
@@ -1635,7 +1723,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                 self.testFlag = 'AO'
                 mTable = self.tableWidget_AO
 
-                self.appearanceTest(self.testFlag)
+                # self.appearanceTest(self.testFlag)
                 self.AO_thread = None
                 self.worker = None
                 if not self.AO_thread or not self.worker_thread.isRunning():
@@ -1652,6 +1740,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                     # self.AO_option.CANRunErr_signal.connect(self.testCANRunErr)
                     self.AO_option.messageBox_signal.connect(self.showMessageBox)
                     self.AO_option.pic_messageBox_signal.connect(self.pic_MessageBox)
+                    self.AO_option.messageBox_oneButton_signal.connect(self.showMessageBox_oneButton)
                     # self.AO_option.excel_signal.connect(self.generateExcel)
                     self.AO_option.allFinished_signal.connect(self.allFinished)
                     self.AO_option.label_signal.connect(self.labelChange)
@@ -1669,8 +1758,8 @@ class Ui_Control(QMainWindow,Ui_Form):
             elif self.tabWidget.currentIndex() == 3:
                 self.testFlag = 'CPU'
                 mTable = self.tableWidget_CPU
-                #CPU的外观检测选项放在子线程里进行并且可选
-                #self.appearanceTest(self.testFlag)
+                # CPU的外观检测选项放在子线程里进行并且可选
+                # self.appearanceTest(self.testFlag)
                 self.CPU_thread = None
                 self.worker = None
                 if not self.CPU_thread or not self.worker_thread.isRunning():
@@ -1688,6 +1777,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                     # self.CPU_option.CANRunErr_signal.connect(self.testCANRunErr)
                     self.CPU_option.messageBox_signal.connect(self.showMessageBox)
                     self.CPU_option.pic_messageBox_signal.connect(self.pic_MessageBox)
+                    self.CPU_option.messageBox_oneButton_signal.connect(self.showMessageBox_oneButton)
                     self.CPU_option.moveToRow_signal.connect(self.CPU_moveToRow)
                     # self.CPU_option.excel_signal.connect(self.generateExcel)
                     self.CPU_option.allFinished_signal.connect(self.allFinished)
@@ -1714,15 +1804,15 @@ class Ui_Control(QMainWindow,Ui_Form):
                     # # 创建队列用于主线程和子线程之间的通信
                     # self.result_queue = Queue()
                     self.inf_MA0202_test = [False for x in range(18)]
-                    self.inf_MA0202_test[17] =True
-                    self.inf_CPUlist = [['','','','',self.moduleName_1,self.moduleName_2,1],
-                                        [self.radioButton_MA0202.text(),self.lineEdit_MA0202_PN.text(),
-                                         self.lineEdit_MA0202_SN.text(),self.lineEdit_MA0202_REV.text(),'',0,0],
-                                        ['','','',int(self.lineEdit_MA0202_AE.text()),
+                    self.inf_MA0202_test[17] = True
+                    self.inf_CPUlist = [['', '', '', '', self.moduleName_1, self.moduleName_2, 1],
+                                        [self.radioButton_MA0202.text(), self.lineEdit_MA0202_PN.text(),
+                                         self.lineEdit_MA0202_SN.text(), self.lineEdit_MA0202_REV.text(), '', 0, 0],
+                                        ['', '', '', int(self.lineEdit_MA0202_AE.text()),
                                          int(self.lineEdit_MA0202_AQ.text())],
-                                        ['','',self.comboBox_MA0202_typeC.currentText(),self.saveDir,'','',''],
-                                        [self.inf_MA0202_test,''],
-                                        self.current_dir,'MA0202']
+                                        ['', '', self.comboBox_MA0202_typeC.currentText(), self.saveDir, '', '', ''],
+                                        [self.inf_MA0202_test, ''],
+                                        self.current_dir, 'MA0202']
                     self.CPU_thread = QThread()
                     from thread_CPU import CPUThread
                     self.CPU_option = CPUThread(self.inf_CPUlist, self.result_queue)
@@ -1734,6 +1824,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                     # self.CPU_option.CANRunErr_signal.connect(self.testCANRunErr)
                     self.CPU_option.messageBox_signal.connect(self.showMessageBox)
                     self.CPU_option.pic_messageBox_signal.connect(self.pic_MessageBox)
+                    self.CPU_option.messageBox_oneButton_signal.connect(self.showMessageBox_oneButton)
                     self.CPU_option.moveToRow_signal.connect(self.CPU_moveToRow)
                     # self.CPU_option.excel_signal.connect(self.generateExcel)
                     self.CPU_option.allFinished_signal.connect(self.allFinished)
@@ -1748,8 +1839,6 @@ class Ui_Control(QMainWindow,Ui_Form):
                     self.CPU_option.moveToThread(self.CPU_thread)
                     self.CPU_thread.started.connect(self.CPU_option.CPU_start)
                     self.CPU_thread.start()
-
-
         except Exception as e:
             self.showInf(f"startTestError:{e}{self.HORIZONTAL_LINE}")
             # 捕获异常并输出详细的错误信息
@@ -1758,8 +1847,28 @@ class Ui_Control(QMainWindow,Ui_Form):
 
         return True
 
-
-    def appearanceTest(self,testFlag):
+    def powerControl(self,baudRate:int,transmitData:list):
+        isReceiveTrueData:bool = True
+        try:
+            m_port = ' '
+            #打开串口
+            m_port = self.comboBox_power.currentText()
+            m_serial = serial.Serial(port=m_port, baudrate=baudRate, timeout=1)
+            for i in range(5):#每条指令发送5遍，确保能正常控制可编程电源
+                # 发送数据
+                m_serial.write(bytes(transmitData))
+                time.sleep(0.1)
+        except serial.SerialException as e:
+            self.showMessageBox_oneButton(['错误警告', f'串口{m_port}打开失败，请检查该串口是否被占用。'])
+            isReceiveTrueData &= False
+            # 关闭串口
+            m_serial.close()
+            # return isReceiveTrueData
+        finally:
+            # 关闭串口
+            m_serial.close()
+            return isReceiveTrueData
+    def appearanceTest(self, testFlag):
         if testFlag == 'DIDO':
             mTable = self.tableWidget_DIDO
         elif testFlag == 'AI':
@@ -1773,11 +1882,12 @@ class Ui_Control(QMainWindow,Ui_Form):
         if not mainThreadRunning():
             return False
 
-        self.itemOperation(mTable,0, 1, 0, '')
+        self.itemOperation(mTable, 0, 1, 0, '')
 
         if not mainThreadRunning():
             return False
-        reply = QMessageBox.question(None, '外观检测', '请检查：\n（1）外壳字体是否清晰?\n（2）型号是否正确？\n（3）外壳是否完好？',
+        reply = QMessageBox.question(None, '外观检测',
+                                     '请检查：\n（1）外壳字体是否清晰?\n（2）型号是否正确？\n（3）外壳是否完好？',
                                      QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
         if reply == QMessageBox.Yes:
             self.appearance = True
@@ -1799,7 +1909,7 @@ class Ui_Control(QMainWindow,Ui_Form):
 
         return True
 
-    def labelChange(self,list):
+    def labelChange(self, list):
         self.label.setStyleSheet(self.testState_qss[list[0]])
         self.label.setText(list[1])
 
@@ -1834,7 +1944,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.lineEdit_SN.setFocus()
         self.endOfTest()
 
-    def showMessageBox(self,list):
+    def showMessageBox(self, list):
         # # 在主线程中创建消息框并显示
         # reply = QMessageBox.question(None, list[0], list[1],
         #                              QMessageBox.AcceptRole | QMessageBox.RejectRole,
@@ -1862,7 +1972,34 @@ class Ui_Control(QMainWindow,Ui_Form):
         else:
             # 将弹窗结果放入队列
             self.result_queue.put(QMessageBox.RejectRole)
+    def showMessageBox_oneButton(self, list):
+        # # 在主线程中创建消息框并显示
+        # reply = QMessageBox.question(None, list[0], list[1],
+        #                              QMessageBox.AcceptRole | QMessageBox.RejectRole,
+        #                              QMessageBox.AcceptRole)
+        #
+        # # 将弹窗结果放入队列
+        # self.result_queue.put(reply)
+        global isMainRunning
+        if isMainRunning:
+            msg_box = QMessageBox()
+            # 设置消息
+            msg_box.setText(list[1])
+            # msg_box.setInformativeText(list[1])
+            msg_box.setWindowTitle(list[0])
+            # 设置样式表
+            msg_box.setStyleSheet('QLabel{font-size: 18px;}')
+            # 添加按钮
+            msg_box.addButton('确定', QMessageBox.AcceptRole)
+            # msg_box.addButton('否', QMessageBox.RejectRole)
 
+            # 显示消息框
+            reply = msg_box.exec_()
+            # 将弹窗结果放入队列
+            self.result_queue.put(reply)
+        else:
+            # 将弹窗结果放入队列
+            self.result_queue.put(QMessageBox.RejectRole)
 
     def pic_MessageBox(self, list):
         global isMainRunning
@@ -1886,17 +2023,83 @@ class Ui_Control(QMainWindow,Ui_Form):
 
             # 显示消息框
             reply = msg_box.exec_()
+
             # 将弹窗结果放入队列
+            self.result_queue.put(reply)
+            # # 创建一个定时器，3秒后关闭提示框
+            # timer = QTimer()
+            # timer.setInterval(3000)  # 3000毫秒即3秒
+            # timer.timeout.connect(msg_box.close)
+            # timer.start()
+        else:
+            # 将弹窗结果放入队列
+            self.result_queue.put(QMessageBox.RejectRole)
+
+    def gif_MessageBox(self, list):
+        global isMainRunning
+        if isMainRunning:
+            msg_box = gif_QMessageBox.MyMessageBox()
+            # 设置gif图标
+            msg_box.movie = QMovie(list[2])
+            # 设置gif图标尺寸
+            size = QSize(400, 300)
+            msg_box.movie.setScaledSize(size)
+            msg_box.label.setMovie(msg_box.movie)
+
+            # 设置消息
+            msg_box.label_text.setText(list[1])
+            # msg_box.setText(list[1])
+            msg_box.setWindowTitle(list[0])
+            # 设置样式表
+            msg_box.setStyleSheet('QLabel{font-size: 18px;}')
+
+            # 添加按钮
+            msg_box.addButton('是', QMessageBox.AcceptRole)
+            msg_box.addButton('否', QMessageBox.RejectRole)
+
+            # 显示消息框
+            reply = msg_box.exec_()
+
+            # # 将弹窗结果放入队列
             self.result_queue.put(reply)
         else:
             # 将弹窗结果放入队列
             self.result_queue.put(QMessageBox.RejectRole)
 
-    def CPU_moveToRow(self,list):
-        self.tableWidget_CPU.setCurrentCell(list[0],list[1])
+    def checkBox_MessageBox(self, list):
+        global isMainRunning
+
+        if isMainRunning:
+            msg_box = QMessageBox()
+
+            # 将QWidget对象添加到QMessageBox中
+            msg_box.layout().addWidget(self.checkBox_messageBox_widget)
+
+            # 设置QMessageBox的文本和标准按钮
+            msg_box.setText(list[1])
+            # 添加按钮
+            msg_box.addButton('确定', QMessageBox.AcceptRole)
+            msg_box.setWindowTitle(list[0])
+            # 设置样式表
+            msg_box.setStyleSheet('QLabel{font-size: 18px;}')
+
+            # 显示消息框
+            reply = msg_box.exec_()
 
 
-    def PassOrFail(self,isPass):
+            # # 将弹窗结果放入队列
+            self.result_queue.put([reply,self.checkBox_status])
+        else:
+            # 将弹窗结果放入队列
+            self.result_queue.put([QMessageBox.RejectRole,self.checkBox_status])
+
+    def CPU_moveToRow(self, list):
+        self.tableWidget_CPU.setCurrentCell(list[0], list[1])
+
+    def PassOrFail(self, isPass):
+        #控制可编程电源断电
+        if not self.powerControl(baudRate=9600, transmitData=self.power_off):
+            self.showMessageBox_oneButton(['操作提示','自动断电失败，请手动断电后再取下待测模块。'])
         if not isPass:
             self.endOfTest()
             self.initPara()
@@ -1934,7 +2137,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                                         }}
                                     """)
 
-    def  stop_subThread(self):
+    def stop_subThread(self):
         try:
             if self.testFlag == 'AI':
                 if self.AI_thread and self.AI_thread.isRunning():
@@ -1965,7 +2168,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             elif self.testFlag == 'CPU':
                 if self.CPU_thread and self.CPU_thread.isRunning():
                     try:
-                    # self.showInf(f'结束CPU子线程' + self.HORIZONTAL_LINE)
+                        # self.showInf(f'结束CPU子线程' + self.HORIZONTAL_LINE)
                         self.CPU_thread.quit()
                         self.CPU_thread.wait()
                     except Exception as e:
@@ -1985,8 +2188,6 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.lineEdit_SN.setReadOnly(False)
             self.lineEdit_REV.setReadOnly(False)
 
-        
-
     def DIDOCANAddr_stateChanged(self):
         self.lineEdit_6.setEnabled(self.checkBox_27.isChecked())
         self.label_16.setEnabled(self.checkBox_27.isChecked())
@@ -2004,6 +2205,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.label_25.setEnabled(self.checkBox_28.isChecked())
         self.label_24.setEnabled(self.checkBox_28.isChecked())
         # self.saveConfig()
+
     """
 
     AI
@@ -2031,30 +2233,30 @@ class Ui_Control(QMainWindow,Ui_Form):
         # self.saveConfig()
 
     def CPU_paramChanged(self):
-        CPU_param_array=[ self.lineEdit_34, self.lineEdit_35, self.lineEdit_36,
-                         self.lineEdit_37, self.lineEdit_38,self.comboBox_20,self.comboBox_21,
-                         self.comboBox_22,self.comboBox_23,self.comboBox_24,self.comboBox_25,
-                          self.comboBox_26,self.label_59,self.label_60,self.label_62,
-                         self.label_64,self.label_65,self.label_66,self.label_67,self.label_68,self.label_69,
-                         self.label_70,self.label_71,self.label_72,self.label_90,self.pushButton_CPU_renewSerial]
+        CPU_param_array = [self.lineEdit_34, self.lineEdit_35, self.lineEdit_36,
+                           self.lineEdit_37, self.lineEdit_38, self.comboBox_20, self.comboBox_21,
+                           self.comboBox_22, self.comboBox_23, self.comboBox_24, self.comboBox_25,
+                           self.comboBox_power, self.label_59, self.label_60, self.label_62,
+                           self.label_64, self.label_65, self.label_66, self.label_67, self.label_68, self.label_69,
+                           self.label_70, self.label_71, self.label_72, self.label_90, self.pushButton_CPU_renewSerial]
         for Cparam in CPU_param_array:
             Cparam.setEnabled(self.checkBox_71.isChecked())
 
     def MA0202_paramChanged(self):
-        MA0202_param_array=[ self.label_21, self.radioButton_MA0202, self.label_105,
-                         self.comboBox_MA0202_typeC, self.pushButton_MA0202_renewSerial,self.label_116,self.label_113,
-                         self.lineEdit_MA0202_AE,self.label_114,self.lineEdit_MA0202_AQ]
+        MA0202_param_array = [self.label_21, self.radioButton_MA0202, self.label_105,
+                              self.comboBox_MA0202_typeC, self.pushButton_MA0202_renewSerial, self.label_116,
+                              self.label_113,
+                              self.lineEdit_MA0202_AE, self.label_114, self.lineEdit_MA0202_AQ]
         for Mparam in MA0202_param_array:
             Mparam.setEnabled(self.checkBox_MA0202_para.isChecked())
 
-
     def testAllorNot(self):
         CPU_test_array = [self.checkBox_50, self.checkBox_51, self.checkBox_52, self.checkBox_53,
-                                self.checkBox_55, self.checkBox_56, self.checkBox_57,
-                               self.checkBox_58, self.checkBox_59, self.checkBox_60, self.checkBox_61,
-                               self.checkBox_62, self.checkBox_63, self.checkBox_64, self.checkBox_65,
-                               self.checkBox_66,self.checkBox_54, self.checkBox_67
-                               ]
+                          self.checkBox_55, self.checkBox_56, self.checkBox_57,
+                          self.checkBox_58, self.checkBox_59, self.checkBox_60, self.checkBox_61,
+                          self.checkBox_62, self.checkBox_63, self.checkBox_64, self.checkBox_65,
+                          self.checkBox_66, self.checkBox_54, self.checkBox_67
+                          ]
         if self.checkBox_73.isChecked():
             self.checkBox_73.setText("取消全选")
             for i in range(len(CPU_test_array)):
@@ -2063,6 +2265,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.checkBox_73.setText("全选")
             for i in range(len(CPU_test_array)):
                 CPU_test_array[i].setChecked(False)
+
     def AI_NotCalibrate(self):
         self.checkBox_5.setEnabled(False)
         self.checkBox_6.setEnabled(False)
@@ -2139,7 +2342,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.pushbutton_allScreen.setEnabled(False)
         self.pushbutton_allScreen.setVisible(False)
         self.label_28.setGeometry(10, 210, 192, 30)
-        self.textBrowser_5.setMaximumSize(711,800)
+        self.textBrowser_5.setMaximumSize(711, 800)
         self.textBrowser_5.setGeometry(10, 240, 711, 601)
 
         self.pushbutton_cancelAllScreen.setEnabled(True)
@@ -2167,11 +2370,10 @@ class Ui_Control(QMainWindow,Ui_Form):
         elif self.tabIndex == 3:
             self.tableWidget_CPU.setVisible(True)
         QApplication.processEvents()
-    
-    
+
     def sendMessage(self):
         self.textBrowser_5.clear()
-        #清空ASCII码列表
+        # 清空ASCII码列表
         self.asciiCode_pn = []
         self.asciiCode_sn = []
         self.asciiCode_rev = []
@@ -2196,15 +2398,12 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.CAN_runLED = True
         self.CAN_errorLED = True
 
-        # self.label.setStyleSheet(self.testState_qss['stop'])
-        # self.label.setText('UNTESTED')
-
-
-        if self.tabIndex == 0:#DI/DO界面
+        self.tabIndex = self.tabWidget.currentIndex()
+        if self.tabIndex == 0:  # DI/DO界面
             mTable = self.tableWidget_DIDO
             # print(f'tabIndex={self.tabIndex}')
 
-            self.testNum = 2#外观检测 + CAN_RunErr检测 + RunErr检测 + 通道检测
+            self.testNum = 2  # 外观检测 + CAN_RunErr检测 + RunErr检测 + 通道检测
             # 获取产品信息
             self.module_type = self.comboBox.currentText()
             if self.module_type == 'ET0800' or self.module_type == 'ET1600' or \
@@ -2223,8 +2422,8 @@ class Ui_Control(QMainWindow,Ui_Form):
 
             if self.comboBox.currentIndex() == 0 or self.comboBox.currentIndex() == 1 \
                     or self.comboBox.currentIndex() == 2:
-                self.module_1 = self.inf['模块QP(N)0016']
-                self.module_2 = self.inf['模块ET1600']
+                self.module_1 = '模块QP(N)0016'
+                self.module_2 = '模块ET1600'
                 self.m_Channels = int(self.module_type[2:4])
                 # self.inf_param = [mTable, self.module_1, self.module_2, self.testNum]
                 # 获取CAN地址
@@ -2235,13 +2434,13 @@ class Ui_Control(QMainWindow,Ui_Form):
 
             if self.comboBox.currentIndex() == 3 or self.comboBox.currentIndex() == 4 \
                     or self.comboBox.currentIndex() == 5:
-                self.module_1 = self.inf['模块ET1600']
+                self.module_1 = '模块ET1600'
                 if self.comboBox.currentIndex() == 3:
-                    self.module_2 = self.inf['模块QN0008']
+                    self.module_2 = '模块QN0008'
                 elif self.comboBox.currentIndex() == 4:
-                    self.module_2 = self.inf['模块QN0016']
+                    self.module_2 = '模块QN0016'
                 elif self.comboBox.currentIndex() == 5:
-                    self.module_2 = self.inf['模块QP0016']
+                    self.module_2 = '模块QP0016'
                 self.m_Channels = int(self.module_type[4:])
                 # self.inf_param = [mTable, self.module_1, self.module_2, self.testNum]
 
@@ -2261,28 +2460,27 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.isTestCANRunErr = self.checkBox.isChecked()
             self.isTestRunErr = self.checkBox_2.isChecked()
 
-            self.itemOperation(mTable, 0, 3, 0, '')
-            self.itemOperation(mTable, 5, 3, 0, '')
+            # self.itemOperation(mTable, 0, 3, 0, '')
+            self.itemOperation(mTable, 4, 3, 0, '')
             if self.isTestRunErr:
+                self.itemOperation(mTable, 0, 3, 0, '')
                 self.itemOperation(mTable, 1, 3, 0, '')
-                self.itemOperation(mTable, 2, 3, 0, '')
             elif not self.isTestRunErr:
+                self.itemOperation(mTable, 0, 0, 0, '')
                 self.itemOperation(mTable, 1, 0, 0, '')
-                self.itemOperation(mTable, 2, 0, 0, '')
             if self.isTestCANRunErr:
+                self.itemOperation(mTable, 2, 3, 0, '')
                 self.itemOperation(mTable, 3, 3, 0, '')
-                self.itemOperation(mTable, 4, 3, 0, '')
             elif not self.isTestCANRunErr:
+                self.itemOperation(mTable, 2, 0, 0, '')
                 self.itemOperation(mTable, 3, 0, 0, '')
-                self.itemOperation(mTable, 4, 0, 0, '')
-
 
             self.inf_param = [mTable, self.module_1, self.module_2, self.testNum]
             self.inf_product = [self.module_type, self.module_pn, self.module_sn, self.module_rev, self.m_Channels]
             self.inf_CANAdrr = [self.CANAddr_DI, self.CANAddr_DO]
             self.inf_additional = [self.baud_rate, self.waiting_time, self.loop_num, self.saveDir]
             self.inf_test = [self.isTestCANRunErr, self.isTestRunErr]
-            self.inf_DIDOlist = [self.inf_param, self.inf_product, self.inf_CANAdrr,self.inf_additional, self.inf_test]
+            self.inf_DIDOlist = [self.inf_param, self.inf_product, self.inf_CANAdrr, self.inf_additional, self.inf_test]
             # self.textBrowser_5.clear()
             # self.textBrowser_5.insertPlainText(f'产品信息下发成功，可以开始测试。' + self.HORIZONTAL_LINE)
             # self.pushButton_4.setEnabled(True)
@@ -2291,13 +2489,13 @@ class Ui_Control(QMainWindow,Ui_Form):
             #                                 "background-color: rgb(76, 165, 132);")
 
 
-        elif self.tabIndex == 1:#AI界面
+        elif self.tabIndex == 1:  # AI界面
             mTable = self.tableWidget_AI
             # # print(f'tabIndex={self.tabIndex}')
             self.module_1 = self.inf['AO1']
             self.module_2 = self.inf['AI2']
             self.testNum = 4  # CAN_RunErr检测 + RunErr检测 + 电流检测 + 电压检测
-            self.inf_param = [mTable, self.module_1,self.module_2,self.testNum]
+            self.inf_param = [mTable, self.module_1, self.module_2, self.testNum]
             # 获取产品信息
             self.module_type = self.comboBox_3.currentText()
             self.m_Channels = int(self.module_type[2:4])
@@ -2306,7 +2504,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.module_sn = self.lineEdit_21.text()
             self.module_rev = self.lineEdit_20.text()
 
-            self.inf_product = [self.module_type,self.module_pn,self.module_sn,self.module_rev,self.m_Channels]
+            self.inf_product = [self.module_type, self.module_pn, self.module_sn, self.module_rev, self.m_Channels]
             # # print(f'{self.module_type},{self.module_pn},{self.module_sn},{self.module_rev},{self.m_Channels}')
             # 获取CAN地址
             self.CANAddr_AI = int(self.lineEdit_19.text())
@@ -2315,14 +2513,14 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.CAN2 = self.CANAddr_AI
             self.CANAddr_relay = int(self.lineEdit_23.text())
             # self.CANAddr_relay = 0x203
-            self.inf_CANAdrr = [self.CANAddr_AI,self.CANAddr_AO,self.CANAddr_relay]
+            self.inf_CANAdrr = [self.CANAddr_AI, self.CANAddr_AO, self.CANAddr_relay]
             # 获取附加参数
             self.baud_rate = int(self.lineEdit_16.text())
             self.waiting_time = int(self.lineEdit_17.text())
             self.receive_num = int(self.lineEdit_15.text())
             self.saveDir = self.label_41.text()  # 保存路径
             # # print(f'{self.module_type},{self.module_pn},{self.module_sn},{self.module_rev},{self.CANAddr_AI}')
-            self.inf_additional = [self.baud_rate, self.waiting_time, self.receive_num,self.saveDir]
+            self.inf_additional = [self.baud_rate, self.waiting_time, self.receive_num, self.saveDir]
             # 获取标定信息
             if (self.radioButton.isChecked()):
                 self.isCalibrate = False
@@ -2338,9 +2536,9 @@ class Ui_Control(QMainWindow,Ui_Form):
                 self.isCalibrateCur = self.checkBox_6.isChecked()
                 # print(f'isCalibrateCur:{self.isCalibrateCur}')
                 if self.radioButton_2.isChecked():
-                    self.inf_calibrate = [self.isCalibrate,self.isCalibrateVol,self.isCalibrateCur,1]
+                    self.inf_calibrate = [self.isCalibrate, self.isCalibrateVol, self.isCalibrateCur, 1]
                 elif self.radioButton_3.isChecked():
-                    self.inf_calibrate = [self.isCalibrate, self.isCalibrateVol, self.isCalibrateCur,2]
+                    self.inf_calibrate = [self.isCalibrate, self.isCalibrateVol, self.isCalibrateCur, 2]
                 # elif not self.radioButton_2.isChecked() and not self.radioButton_3.isChecked():
                 #     self.inf_calibrate = [self.isCalibrate, self.isCalibrateVol, self.isCalibrateCur,0]
             else:
@@ -2371,7 +2569,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                 self.isAITestCur = False
                 self.isTestCANRunErr = False
                 self.isTestRunErr = False
-            self.inf_test = [self.isTest,self.isAITestVol,self.isAITestCur,self.isTestCANRunErr,self.isTestRunErr]
+            self.inf_test = [self.isTest, self.isAITestVol, self.isAITestCur, self.isTestCANRunErr, self.isTestRunErr]
 
             self.itemOperation(mTable, 0, 3, 0, '')
             if self.isTestRunErr:
@@ -2406,14 +2604,14 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.inf_AIlist = [self.inf_param, self.inf_product, self.inf_CANAdrr,
                                self.inf_additional, self.inf_calibrate, self.inf_test]
 
-        elif self.tabIndex == 2:#AO界面
+        elif self.tabIndex == 2:  # AO界面
             mTable = self.tableWidget_AO
             # print(f'tabIndex={self.tabIndex}')
             self.module_1 = self.inf['AI1']
             self.module_2 = self.inf['AO2']
             self.testNum = 4  # CAN_RunErr检测 + RunErr检测 + 电流检测 + 电压检测
             self.inf_param = [mTable, self.module_1, self.module_2, self.testNum]
-            #获取产品信息
+            # 获取产品信息
             self.module_type = self.comboBox_5.currentText()
             self.m_Channels = int(self.module_type[4:])
             self.AO_Channels = self.m_Channels
@@ -2423,7 +2621,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             # print(f'{self.module_type},{self.module_pn},{self.module_sn},{self.module_rev},{self.m_Channels}')
             self.inf_product = [self.module_type, self.module_pn, self.module_sn, self.module_rev, self.m_Channels]
 
-            #获取CAN地址
+            # 获取CAN地址
             self.CANAddr_AI = int(self.lineEdit_39.text())
             self.CANAddr_AO = int(self.lineEdit_40.text())
             self.CAN1 = self.CANAddr_AI
@@ -2431,21 +2629,21 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.CANAddr_relay = int(self.lineEdit_41.text())
             # self.CANAddr_relay = 0x203
             self.inf_CANAdrr = [self.CANAddr_AI, self.CANAddr_AO, self.CANAddr_relay]
-            #获取附加参数
+            # 获取附加参数
             self.baud_rate = int(self.lineEdit_42.text())
             self.waiting_time = int(self.lineEdit_43.text())
             self.receive_num = int(self.lineEdit_44.text())
             self.saveDir = self.label_41.text()  # 保存路径
             # # print(f'{self.module_type},{self.module_pn},{self.module_sn},{self.module_rev},{self.CANAddr_AI}')
             self.inf_additional = [self.baud_rate, self.waiting_time, self.receive_num, self.saveDir]
-            #获取标定信息
-            if(self.radioButton_18.isChecked()):
+            # 获取标定信息
+            if (self.radioButton_18.isChecked()):
                 self.isCalibrate = False
                 # # print(f'isCalibrate:{self.isCalibrate}')
                 self.isCalibrateVol = False
                 self.isCalibrateCur = False
                 self.inf_calibrate = [self.isCalibrate, self.isCalibrateVol, self.isCalibrateCur, 0]
-            elif(self.radioButton_19.isChecked() or self.radioButton_20.isChecked()):
+            elif (self.radioButton_19.isChecked() or self.radioButton_20.isChecked()):
                 self.isCalibrate = True
                 # print(f'isCalibrate:{self.isCalibrate}')
                 self.isCalibrateVol = self.checkBox_35.isChecked()
@@ -2453,9 +2651,9 @@ class Ui_Control(QMainWindow,Ui_Form):
                 self.isCalibrateCur = self.checkBox_36.isChecked()
                 # print(f'isCalibrateCur:{self.isCalibrateCur}')
                 if self.radioButton_19.isChecked():
-                    self.inf_calibrate = [self.isCalibrate,self.isCalibrateVol,self.isCalibrateCur,1]
+                    self.inf_calibrate = [self.isCalibrate, self.isCalibrateVol, self.isCalibrateCur, 1]
                 elif self.radioButton_20.isChecked():
-                    self.inf_calibrate = [self.isCalibrate, self.isCalibrateVol, self.isCalibrateCur,2]
+                    self.inf_calibrate = [self.isCalibrate, self.isCalibrateVol, self.isCalibrateCur, 2]
             else:
                 self.inf_calibrate = [self.isCalibrate, self.isCalibrateVol, self.isCalibrateCur, 0]
             # 获取检测信息
@@ -2520,7 +2718,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                                self.inf_additional, self.inf_calibrate, self.inf_test]
 
 
-        elif self.tabIndex == 3:#CPU界面
+        elif self.tabIndex == 3:  # CPU界面
             mTable = self.tableWidget_CPU
             # print(f'tabIndex={self.tabIndex}')
             self.module_1 = '工装1（ET1600）'
@@ -2529,12 +2727,12 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.module_4 = '工装4（AE0400）'
             self.module_5 = '工装5（AQ0004）'
             self.testNum = 18  # ["外观检测", "型号检查", "SRAM", "FLASH", "拨杆测试", "MFK按键",
-                                  #  "掉电保存", "RTC测试", "FPGA","各指示灯", "本体IN", "本体OUT", "以太网",
-                                    # "RS-232C", "RS-485","右扩CAN", "MAC/三码写入", "MA0202"]
+            #  "掉电保存", "RTC测试", "FPGA","各指示灯", "本体IN", "本体OUT", "以太网",
+            # "RS-232C", "RS-485","右扩CAN", "MAC/三码写入", "MA0202"]
 
             self.inf_param = [mTable, self.module_1, self.module_2, self.module_3,
-                              self.module_4,self.module_5,self.testNum]
-            #获取产品信息
+                              self.module_4, self.module_5, self.testNum]
+            # 获取产品信息
             self.module_type = self.comboBox_20.currentText()
             self.in_Channels = int(self.module_type[5:7])
             self.out_Channels = int(self.module_type[7:9])
@@ -2544,9 +2742,9 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.module_MAC = self.lineEdit_33.text()
             # print(f'{self.module_type},{self.module_pn},{self.module_sn},{self.module_rev},{self.m_Channels}')
             self.inf_product = [self.module_type, self.module_pn, self.module_sn,
-                                self.module_rev, self.module_MAC, self.in_Channels,self.out_Channels]
+                                self.module_rev, self.module_MAC, self.in_Channels, self.out_Channels]
 
-            #获取CAN与IP地址
+            # 获取CAN与IP地址
             self.CANAddr1 = int(self.lineEdit_34.text())
             self.CANAddr2 = int(self.lineEdit_35.text())
             self.CANAddr3 = int(self.lineEdit_36.text())
@@ -2554,14 +2752,14 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.CANAddr5 = int(self.lineEdit_38.text())
 
             # self.IPAddr = '192.168.1.66'
-            self.inf_CANIPAdrr = [self.CANAddr1,self.CANAddr2,self.CANAddr3,self.CANAddr4,
+            self.inf_CANIPAdrr = [self.CANAddr1, self.CANAddr2, self.CANAddr3, self.CANAddr4,
                                   self.CANAddr5]
-            #获取串口信息
+            # 获取串口信息
             self.serialPort_232 = self.comboBox_21.currentText()
             self.serialPort_485 = self.comboBox_22.currentText()
             self.serialPort_typeC = self.comboBox_23.currentText()
             self.saveDir = self.label_41.text()  # 保存路径
-            self.serialPort_power = self.comboBox_26.currentText()
+            self.serialPort_power = self.comboBox_power.currentText()
             self.serialPort_Op232 = self.comboBox_24.currentText()
             self.serialPort_Op485 = self.comboBox_25.currentText()
             # # print(f'{self.module_type},{self.module_pn},{self.module_sn},{self.module_rev},{self.CANAddr_AI}')
@@ -2569,22 +2767,22 @@ class Ui_Control(QMainWindow,Ui_Form):
                                    self.serialPort_typeC, self.saveDir,
                                    self.serialPort_power, self.serialPort_Op232,
                                    self.serialPort_Op485]
-            #获取检测信息
+            # 获取检测信息
 
-            self.CPU_test_array = [self.checkBox_50, self.checkBox_51, self.checkBox_52,self.checkBox_53,
-                                    self.checkBox_55, self.checkBox_56, self.checkBox_57,
+            self.CPU_test_array = [self.checkBox_50, self.checkBox_51, self.checkBox_52, self.checkBox_53,
+                                   self.checkBox_55, self.checkBox_56, self.checkBox_57,
                                    self.checkBox_58, self.checkBox_59, self.checkBox_60, self.checkBox_61,
                                    self.checkBox_62, self.checkBox_63, self.checkBox_64, self.checkBox_65,
                                    self.checkBox_66, self.checkBox_54, self.checkBox_67
                                    ]
-            self.CPU_testName_array = [ "外观检测", "型号检查", "SRAM", "FLASH","拨杆测试","MFK按键",
-                                        "掉电保存", "RTC测试", "FPGA", "各指示灯", "本体IN", "本体OUT",
-                                        "以太网","RS-232C","RS-485","右扩CAN", "MAC/三码写入", "MA0202"]
+            self.CPU_testName_array = ["外观检测", "型号检查", "SRAM", "FLASH", "拨杆测试", "MFK按键",
+                                       "掉电保存", "RTC测试", "FPGA", "各指示灯", "本体IN", "本体OUT",
+                                       "以太网", "RS-232C", "RS-485", "右扩CAN", "MAC/三码写入", "MA0202"]
             self.inf_CPU_test = [False for x in range(len(self.CPU_test_array))]
             for i in range(len(self.CPU_test_array)):
                 self.inf_CPU_test[i] = self.CPU_test_array[i].isChecked()
                 # print(f' self.CPU_test_array[{i}].isChecked():{ self.CPU_test_array[i].isChecked()}')
-            self.inf_test = [self.inf_CPU_test,self.checkBox_68.isChecked()]
+            self.inf_test = [self.inf_CPU_test, self.checkBox_68.isChecked()]
             # :param
             # mTable: 进行操作的表格
             # :param
@@ -2601,9 +2799,9 @@ class Ui_Control(QMainWindow,Ui_Form):
                     self.itemOperation(mTable, i, 3, 0, '')
                 else:
                     self.itemOperation(mTable, i, 0, 0, '')
-            self.inf_CPUlist = [self.inf_param,self.inf_product, self.inf_CANIPAdrr,
-                                self.inf_serialPort, self.inf_test,self.current_dir,'CPU']
-        elif self.tabIndex == 4:#MA0202界面
+            self.inf_CPUlist = [self.inf_param, self.inf_product, self.inf_CANIPAdrr,
+                                self.inf_serialPort, self.inf_test, self.current_dir, 'CPU']
+        elif self.tabIndex == 4:  # MA0202界面
             # mTable = self.tableWidget_CPU
             self.module_pn = self.lineEdit_MA0202_PN.text()
             self.module_sn = self.lineEdit_MA0202_SN.text()
@@ -2618,24 +2816,23 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.testModuleType = self.radioButton_MA0202.text()
             self.serialPort_typeC = self.comboBox_MA0202_typeC.currentText()
 
-            self.inf_MA0202list = [self.MA0202_isChangePara,self.moduleName_1,self.moduleName_2,self.MA0202_CANAddr1,
-                                   self.MA0202_CANAddr2,self.isTestModule,self.testModuleType,self.serialPort_typeC]
+            self.inf_MA0202list = [self.MA0202_isChangePara, self.moduleName_1, self.moduleName_2, self.MA0202_CANAddr1,
+                                   self.MA0202_CANAddr2, self.isTestModule, self.testModuleType, self.serialPort_typeC]
 
         if self.tabIndex == 0 or self.tabIndex == 1 or self.tabIndex == 2:
-            #三码转换
+            # 三码转换
             self.asciiCode_pn = (strToASCII(self.lineEdit_PN.text()))
             self.asciiCode_sn = (strToASCII(self.lineEdit_SN.text()))
             self.asciiCode_rev = (strToASCII(self.lineEdit_REV.text()))
 
-            #三码写入PLC
-            if not write3codeToPLC(self.CAN2,[self.asciiCode_pn,self.asciiCode_sn,self.asciiCode_rev]):
+            # 三码写入PLC
+            if not write3codeToPLC(self.CAN2, [self.asciiCode_pn, self.asciiCode_sn, self.asciiCode_rev]):
                 return False
             else:
                 self.showInf('三码写入成功！\n\n')
 
         self.textBrowser_5.clear()
         self.textBrowser_5.insertPlainText(f'产品信息下发成功，开始测试。' + self.HORIZONTAL_LINE)
-
 
         # self.pushButton_pause.setEnabled(True)
         # self.pushButton_pause.setVisible(True)
@@ -2644,25 +2841,24 @@ class Ui_Control(QMainWindow,Ui_Form):
         # self.pushButton_resume.setVisible(False)
         return True
 
-
-    def clearList(self,array):
+    def clearList(self, array):
         for i in range(len(array)):
             array[i] = 0x00
 
-    #自动分配节点
-    def configCANAddr(self,list):
+    # 自动分配节点
+    def configCANAddr(self, list):
         if self.tabIndex == 1 or self.tabIndex == 2:
-            list =[list[0],list[1],list[2],list[3]]
+            list = [list[0], list[1], list[2], list[3]]
         elif self.tabIndex == 3:
-            list = [list[0],list[1],list[2]]
+            list = [list[0], list[1], list[2]]
         elif self.tabIndex == 4:
-            list = [list[0],list[1]]
+            list = [list[0], list[1]]
         else:
-            list = [list[0],list[1]]
+            list = [list[0], list[1]]
         for a in list:
-            self.m_transmitData=[0xac, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+            self.m_transmitData = [0xac, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
             self.m_transmitData[2] = a
-            boola = CAN_option.transmitCAN(0x0,self.m_transmitData,1)[0]
+            boola = CAN_option.transmitCAN(0x0, self.m_transmitData, 1)[0]
             time.sleep(0.01)
             if not boola:
                 self.showInf(f'节点{a}分配失败' + self.HORIZONTAL_LINE)
@@ -2670,8 +2866,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.showInf(f'所有节点分配成功' + self.HORIZONTAL_LINE)
         return True
 
-
-    def isModulesOnline(self,can_list,module_list):
+    def isModulesOnline(self, can_list, module_list):
         # 检测设备心跳
         for i in range(len(can_list)):
             if not self.check_heartbeat(can_list[i], module_list[i], self.waiting_time):
@@ -2686,8 +2881,6 @@ class Ui_Control(QMainWindow,Ui_Form):
         #         return False
         #     if self.check_heartbeat(self.CANAddr_relay+1, '继电器QR0016#2', self.waiting_time) == False:
         #         return False
-
-
 
     def check_heartbeat(self, can_addr, inf, max_waiting):
         can_id = 0x700 + can_addr
@@ -2712,20 +2905,17 @@ class Ui_Control(QMainWindow,Ui_Form):
         #
         #     self.showInf(f'发现{inf}：收到心跳帧：{hex(self.m_can_obj.ID)}\n\n')
 
-
-
-
-    def getSerialInf(self, num:int,type):
+    def getSerialInf(self, num: int, type):
         # self.textBrowser_5.clear()
-        if type =="CPU":
-            #清空串口选项
+        if type == "CPU":
+            # 清空串口选项
             for i in range(self.comboBox_21.count()):
                 self.comboBox_21.removeItem(i)
                 self.comboBox_22.removeItem(i)
                 self.comboBox_23.removeItem(i)
                 self.comboBox_24.removeItem(i)
                 self.comboBox_25.removeItem(i)
-                self.comboBox_26.removeItem(i)
+                self.comboBox_power.removeItem(i)
             # 获取电脑上可用的串口列表
             ports = serial.tools.list_ports.comports()
 
@@ -2736,15 +2926,15 @@ class Ui_Control(QMainWindow,Ui_Form):
                 self.comboBox_23.addItem("")
                 self.comboBox_24.addItem("")
                 self.comboBox_25.addItem("")
-                self.comboBox_26.addItem("")
+                self.comboBox_power.addItem("")
                 self.comboBox_21.setItemText(i, ports[i].device)
                 self.comboBox_22.setItemText(i, ports[i].device)
                 self.comboBox_23.setItemText(i, ports[i].device)
                 self.comboBox_24.setItemText(i, ports[i].device)
                 self.comboBox_25.setItemText(i, ports[i].device)
-                self.comboBox_26.setItemText(i, ports[i].device)
+                self.comboBox_power.setItemText(i, ports[i].device)
                 if num != 0:
-                    if i ==0:
+                    if i == 0:
                         self.showInf(f'可用串口：\n')
                     self.showInf(f'({i + 1}){ports[i].description}\n')
                 # self.showInf(f'({i+1}){ports[i].device}, {ports[i].name}, {ports[i].description}\n')
@@ -2754,7 +2944,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             self.comboBox_23.removeItem(len(ports))
             self.comboBox_24.removeItem(len(ports))
             self.comboBox_25.removeItem(len(ports))
-            self.comboBox_26.removeItem(len(ports))
+            self.comboBox_power.removeItem(len(ports))
         elif type == "MA0202":
             # 清空串口选项
             for i in range(self.comboBox_MA0202_typeC.count()):
@@ -2774,6 +2964,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                 # self.showInf(f'({i+1}){ports[i].device}, {ports[i].name}, {ports[i].description}\n')
 
             self.comboBox_MA0202_typeC.removeItem(len(ports))
+
     def CANFail(self):
         self.endOfTest()
         self.initPara()
@@ -2794,7 +2985,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.CAN_errorLED = True
         self.reInputPNSNREV()
 
-    def saveExcel(self,saveList):
+    def saveExcel(self, saveList):
         saveList[0].save(str(self.label_41.text()) + saveList[1])
         # book.save(self.label_41.text() + saveDir)
 
@@ -2826,7 +3017,7 @@ class Ui_Control(QMainWindow,Ui_Form):
     #         self.showInf(f"printResultError:{e}+{self.HORIZONTAL_LINE}")
     #         traceback.print_exc()
 
-    def generateLabel(self,list):
+    def generateLabel(self, list):
         from docx import Document
 
         # docx.shared 用于设置大小（图片等）
@@ -2853,7 +3044,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             default_section.left_margin = Cm(0.5)
 
             # 添加图片（注意路径和图片必须要存在）
-            document.add_picture(self.current_dir+'/logo.png', width=Cm(6.1))
+            document.add_picture(self.current_dir + '/logo.png', width=Cm(6.1))
 
             # # 添加带样式的段落
             p = document.add_paragraph('')
@@ -2894,7 +3085,7 @@ class Ui_Control(QMainWindow,Ui_Form):
             Time.bold = True
             if list[1] == 'FAIL':
                 # 添加图片（注意路径和图片必须要存在）
-                document.add_picture(self.current_dir+'/fail.png', width=Cm(5.5))
+                document.add_picture(self.current_dir + '/fail.png', width=Cm(5.5))
                 pFail = document.add_paragraph('')
                 pFail.paragraph_format.line_spacing = 1
                 Fail = pFail.add_run('FAILED ITEMS：')
@@ -2909,21 +3100,19 @@ class Ui_Control(QMainWindow,Ui_Form):
                 fail_inf.font.size = Pt(10)
             elif list[1] == 'PASS':
                 # 添加图片（注意路径和图片必须要存在）
-                document.add_picture(self.current_dir+'/pass.png', width=Cm(5.5))
+                document.add_picture(self.current_dir + '/pass.png', width=Cm(5.5))
             document.paragraphs[6].alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-
 
             # 保存文档
             for p in document.paragraphs:
                 p.paragraph_format.line_spacing = 1
                 p.paragraph_format.space_before = Pt(0)
                 p.paragraph_format.space_after = Pt(0)
-            document.save(self.label_41.text()+f'{list[0]}_label.docx')
+            document.save(self.label_41.text() + f'{list[0]}_label.docx')
         except Exception as e:
             self.showInf(f"generateLabelError:{e}+{self.HORIZONTAL_LINE}")
             # 捕获异常并输出详细的错误信息
             traceback.print_exc()
-
 
     @abstractmethod
     def calibrateAO(self):
@@ -2949,226 +3138,11 @@ class Ui_Control(QMainWindow,Ui_Form):
     def testDO(self):
         raise NotImplementedError()
 
-  #   #检查配套AI模块输入类型是否正确
-  #   def setAIInputType(self,AIChannel,type):
-  #       #CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
-  #       #self.can_start()
-  #       if AIChannel == 1:
-  #           self.showInf(f'设置AI通道量程：\n\n')
-  #
-  #       self.m_transmitData[0] = 0x2b
-  #       self.m_transmitData[1] = 0x10
-  #       self.m_transmitData[2] = 0x61
-  #       self.m_transmitData[3] = AIChannel
-  #       self.m_transmitData[6] = 0x00
-  #       self.m_transmitData[7] = 0x00
-  #
-  #       self.clearList(self.m_can_obj.Data)
-  #
-  #       if type == 'AOVoltage' or type == 'AIVoltage':
-  #           self.m_transmitData[4] = self.AIRangeArray[0]
-  #           self.m_transmitData[5] = self.AIRangeArray[1]
-  #           while True:
-  #               self.isPause()
-  #               #if not self.isStop():
-  # #                  return
-  #               QApplication.processEvents()
-  #               if CAN_option.transmitCAN(0x600 + self.CANAddr_AI, self.m_transmitData)[0]:
-  #                   bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(0x580 + self.CANAddr_AI,
-  #                                                                            self.waiting_time)
-  #                   if bool_receive:
-  #                       # # print(f'm_can_obj.Data[4]:{self.m_can_obj.Data[4]}')
-  #                       # # print(f'm_can_obj.Data[5]:{self.m_can_obj.Data[5]}')
-  #                       # # print(f'AIRangeArray[0]:{self.AIRangeArray[0]}')
-  #                       # # print(f'AIRangeArray[1]:{self.AIRangeArray[1]}')
-  #                       if hex(self.m_can_obj.Data[4]) == hex(self.AIRangeArray[0]) and hex(
-  #                               self.m_can_obj.Data[5]) == hex(self.AIRangeArray[1]):
-  #                           # print(f'{AIChannel}.成功设置AI通道{AIChannel}的量程为”电压+/-10V“。\n\n')
-  #                           self.showInf(f'{AIChannel}.成功设置AI通道{AIChannel}的量程为”电压+/-10V“。\n\n')
-  #                           break
-  #                       else:
-  #                           self.showInf(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”电压+/-10V“。\n\n')
-  #                           # print(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”电压+/-10V“。\n\n')
-  #               else:
-  #                   self.showInf(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”电压+/-10V“。\n\n')
-  #                   # # print(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”电压+/-10V“。\n\n')
-  #       elif type == 'AOCurrent' or type == 'AICurrent':
-  #           self.m_transmitData[4] = self.AIRangeArray[10]
-  #           self.m_transmitData[5] = self.AIRangeArray[11]
-  #           while True:
-  #               self.isPause()
-  #               #if not self.isStop():
-  # #                  return
-  #               QApplication.processEvents()
-  #               if CAN_option.transmitCAN(0x600 + self.CANAddr_AI, self.m_transmitData)[0]:
-  #                   bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(0x580 + self.CANAddr_AI,
-  #                                                                            self.waiting_time)
-  #                   if bool_receive:
-  #                       # # print(f'm_can_obj.Data[4]:{self.m_can_obj.Data[4]}')
-  #                       # # print(f'm_can_obj.Data[5]:{self.m_can_obj.Data[5]}')
-  #                       # # print(f'AIRangeArray[0]:{self.AIRangeArray[0]}')
-  #                       # # print(f'AIRangeArray[1]:{self.AIRangeArray[1]}')
-  #                       if hex(self.m_can_obj.Data[4]) == hex(self.AIRangeArray[10]) and hex(
-  #                               self.m_can_obj.Data[5]) == hex(self.AIRangeArray[11]):
-  #                           # print(f'{AIChannel}.成功设置AI通道{AIChannel}的量程为”电流(0-20)mA“。\n\n')
-  #                           self.showInf(f'{AIChannel}.成功设置AI通道{AIChannel}的量程为”电流(0-20)mA“。\n\n')
-  #                           break
-  #                       else:
-  #                           self.showInf(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”电流(0-20)mA“。\n\n')
-  #                           # print(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”电流(0-20)mA“。\n\n')
-  #               else:
-  #                   self.showInf(f'{AIChannel}.未成功设置AI通道{AIChannel}的量程为”电流(0-20)mA“。\n\n')
-  #                   break
-  #
-  #       if AIChannel == 4:
-  #           self.showInf(self.HORIZONTAL_LINE)
-  #
-  #
-  #   # 检查待检AO模块输入类型是否正确
-  #   def setAOInputType(self, AOChannel, type):
-  #       # self.m_transmitData[0] = 0x2b
-  #       # self.m_transmitData[1] = 0x10
-  #       # self.m_transmitData[2] = 0x63
-  #       # self.m_transmitData[3] = AOChannel
-  #       # self.m_transmitData[4] = 0x00
-  #       # self.m_transmitData[5] = 0x00
-  #       # self.m_transmitData[6] = 0x00
-  #       # self.m_transmitData[7] = 0x00
-  #       #
-  #       # bool_transmit, self.m_can_obj = CAN_option.transmitCAN((0x600 + self.CANAddr_AO), self.m_transmitData)
-  #       #CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
-  #       #self.can_start()
-  #       if AOChannel == 1:
-  #           self.showInf(f'设置AO通道量程：\n\n')
-  #
-  #       self.m_transmitData[0] = 0x2b
-  #       self.m_transmitData[1] = 0x10
-  #       self.m_transmitData[2] = 0x63
-  #       self.m_transmitData[3] = AOChannel
-  #       self.m_transmitData[6] = 0x00
-  #       self.m_transmitData[7] = 0x00
-  #
-  #       self.clearList(self.m_can_obj.Data)
-  #
-  #       if type == 'AOVoltage' or type == 'AIVoltage':
-  #           self.m_transmitData[4] = self.AORangeArray[0]
-  #           self.m_transmitData[5] = self.AORangeArray[1]
-  #           while True:
-  #               self.isPause()
-  #               #if not self.isStop():
-  # #                  return
-  #               QApplication.processEvents()
-  #               if CAN_option.transmitCAN(0x600 + self.CANAddr_AO, self.m_transmitData)[0]:
-  #                   bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(0x580 + self.CANAddr_AO,
-  #                                                                            self.waiting_time)
-  #                   if bool_receive:
-  #                       # # print(f'm_can_obj.Data[4]:{self.m_can_obj.Data[4]}')
-  #                       # # print(f'm_can_obj.Data[5]:{self.m_can_obj.Data[5]}')
-  #                       # # print(f'AORangeArray[0]:{self.AORangeArray[0]}')
-  #                       # # print(f'AORangeArray[1]:{self.AORangeArray[1]}')
-  #                       if hex(self.m_can_obj.Data[4]) == hex(self.AORangeArray[0]) and hex(
-  #                               self.m_can_obj.Data[5]) == hex(self.AORangeArray[1]):
-  #                           # print(f'{AOChannel}.成功设置AO通道{AOChannel}的量程为”电压+/-10V“。\n\n')
-  #                           self.showInf(f'{AOChannel}.成功设置AO通道{AOChannel}的量程为”电压+/-10V“。\n\n')
-  #                           break
-  #                       else:
-  #                           self.showInf(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”电压+/-10V“。\n\n')
-  #                           # print(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”电压+/-10V“。\n\n')
-  #               else:
-  #                   self.showInf(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”电压+/-10V“。\n\n')
-  #                   # # print(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”电压+/-10V“。\n\n')
-  #       elif type == 'AOCurrent' or type == 'AICurrent':
-  #           self.m_transmitData[4] = self.AORangeArray[10]
-  #           self.m_transmitData[5] = self.AORangeArray[11]
-  #           while True:
-  #               self.isPause()
-  #               #if not self.isStop():
-  # #                  return
-  #               QApplication.processEvents()
-  #               if CAN_option.transmitCAN(0x600 + self.CANAddr_AO, self.m_transmitData)[0]:
-  #                   bool_receive, self.m_can_obj = CAN_option.receiveCANbyID(0x580 + self.CANAddr_AO,
-  #                                                                            self.waiting_time)
-  #                   if bool_receive:
-  #                       # # print(f'm_can_obj.Data[4]:{self.m_can_obj.Data[4]}')
-  #                       # # print(f'm_can_obj.Data[5]:{self.m_can_obj.Data[5]}')
-  #                       # # print(f'AORangeArray[0]:{self.AORangeArray[0]}')
-  #                       # # print(f'AORangeArray[1]:{self.AORangeArray[1]}')
-  #                       if hex(self.m_can_obj.Data[4]) == hex(self.AORangeArray[10]) and hex(
-  #                               self.m_can_obj.Data[5]) == hex(self.AORangeArray[11]):
-  #                           # print(f'{AOChannel}.成功设置AO通道{AOChannel}的量程为”电流(0-20)mA“。\n\n')
-  #                           self.showInf(f'{AOChannel}.成功设置AO通道{AOChannel}的量程为”电流(0-20)mA“。\n\n')
-  #                           break
-  #                       else:
-  #                           self.showInf(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”电流(0-20)mA“。\n\n')
-  #                           # print(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”电流(0-20)mA“。\n\n')
-  #               else:
-  #                   self.showInf(f'{AOChannel}.未成功设置AO通道{AOChannel}的量程为”电流(0-20)mA“。\n\n')
-  #                   break
-  #
-  #       if AOChannel == 4:
-  #           self.showInf(self.HORIZONTAL_LINE)
-  #
-  #   def receiveAIData(self):
-  #       can_id = 0x280 + self.CANAddr_AI
-  #       time1 = time.time()
-  #       while True:
-  #           if (time.time() - time1)*1000 > self.waiting_time:
-  #               break
-  #           self.isPause()
-  #           # if not self.isStop():
-  #           #     return
-  #           bool_receive,self.m_can_obj = CAN_option.receiveCANbyID(can_id, self.waiting_time)
-  #           QApplication.processEvents()
-  #           if bool_receive:
-  #               break
-  #       recv = [0,0,0,0]
-  #       for i in range(self.m_Channels):
-  #           # # print(f'i= {i}')
-  #           recv[i] = self.m_can_obj.Data[i*2] | self.m_can_obj.Data[i*2+1] << 8
-  #           # # print(f'recv[{i}]={recv[i]}')
-  #           self.isPause()
-  #           # if not self.isStop():
-  #           #     return
-  #       return recv
-  #
-  #   def calibrate_receiveAIData(self,channelNum):
-  #       #CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
-  #       #self.can_start()
-  #       recv = [0, 0, 0, 0]
-  #       if channelNum == 1:
-  #           recv=[0]
-  #       can_id = 0x600 + self.CANAddr_AI
-  #       for i in range(channelNum):
-  #           self.m_transmitData[0] = 0x40
-  #           self.m_transmitData[1] = 0x3c
-  #           self.m_transmitData[2] = 0x64
-  #           self.m_transmitData[3] = i+1
-  #           self.m_transmitData[4] = 0x00
-  #           self.m_transmitData[5] = 0x00
-  #           self.m_transmitData[6] = 0x00
-  #           self.m_transmitData[7] = 0x00
-  #           CAN_option.transmitCAN((0x600 + self.CANAddr_AI),self.m_transmitData)
-  #           self.isPause()
-  #           # if not self.isStop():
-  #           #     return
-  #           while True:
-  #               self.isPause()
-  #               #if not self.isStop():
-  # #                  return
-  #               bool_receive,self.m_can_obj = CAN_option.receiveCANbyID( 0x580 + self.CANAddr_AI, self.waiting_time)
-  #               QApplication.processEvents()
-  #               if bool_receive:
-  #                   break
-  #           recv[i] = ((self.m_can_obj.Data[7] << 24|self.m_can_obj.Data[6] << 16)|self.m_can_obj.Data[5] << 8) | \
-  #                     self.m_can_obj.Data[4]
-  #
-  #       return recv
-
-    def showInf(self,inf):
+    def showInf(self, inf):
         global isMainRunning
         if isMainRunning:
             self.textBrowser_5.append(inf)
-            if inf[:8] =='本轮测试总时间：':
+            if inf[:8] == '本轮测试总时间：':
                 self.move_to_end()
             QApplication.processEvents()
             time.sleep(0.1)
@@ -3180,7 +3154,6 @@ class Ui_Control(QMainWindow,Ui_Form):
         # self.isPause()
         # if self.work_thread.stopFlag.isSet():
         #     return
-
 
     def move_to_end(self):
         self.textBrowser_5.moveCursor(self.textBrowser_5.textCursor().End)
@@ -3222,7 +3195,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         # self.pushButton_9.setEnabled(False)
         # self.pushButton_9.setStyleSheet(self.topButton_qss['off'])
 
-    def AI_itemOperation(self,list):
+    def AI_itemOperation(self, list):
         '''
         :param list = [row,state,result,operationTime]
         :param row: 进行操作的单元行
@@ -3232,14 +3205,14 @@ class Ui_Control(QMainWindow,Ui_Form):
         :return:
         '''
         mTable = self.tableWidget_AI
-        col1 = ['本次不检测','正在检测','检测完成','等待检测']
-        col2 = ['','通过','未通过']
+        col1 = ['本次不检测', '正在检测', '检测完成', '等待检测']
+        col2 = ['', '通过', '未通过']
         font = QtGui.QColor(0, 0, 0)
         if list[1] == 0:
             color = QtGui.QColor(255, 255, 255)
             font = QtGui.QColor(197, 197, 197)
         elif list[1] == 1:
-            color = QtGui.QColor(255,255,0)
+            color = QtGui.QColor(255, 255, 0)
         elif list[1] == 2 and list[2] == 1:
             color = QtGui.QColor(0, 255, 0)
         elif list[1] == 2 and list[2] == 2:
@@ -3263,7 +3236,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                 item.setText(f'{list[3]}')
         QApplication.processEvents()
 
-    def AO_itemOperation(self,list):
+    def AO_itemOperation(self, list):
         '''
         :param list = [row,state,result,operationTime]
         :param row: 进行操作的单元行
@@ -3273,14 +3246,14 @@ class Ui_Control(QMainWindow,Ui_Form):
         :return:
         '''
         mTable = self.tableWidget_AO
-        col1 = ['本次不检测','正在检测','检测完成','等待检测']
-        col2 = ['','通过','未通过']
+        col1 = ['本次不检测', '正在检测', '检测完成', '等待检测']
+        col2 = ['', '通过', '未通过']
         font = QtGui.QColor(0, 0, 0)
         if list[1] == 0:
             color = QtGui.QColor(255, 255, 255)
             font = QtGui.QColor(197, 197, 197)
         elif list[1] == 1:
-            color = QtGui.QColor(255,255,0)
+            color = QtGui.QColor(255, 255, 0)
         elif list[1] == 2 and list[2] == 1:
             color = QtGui.QColor(0, 255, 0)
         elif list[1] == 2 and list[2] == 2:
@@ -3345,7 +3318,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                 item.setText(f'{list[3]}')
         QApplication.processEvents()
 
-    def CPU_itemOperation(self,list):
+    def CPU_itemOperation(self, list):
         '''
         :param list = [row,state,result,operationTime]
         :param row: 进行操作的单元行
@@ -3355,14 +3328,14 @@ class Ui_Control(QMainWindow,Ui_Form):
         :return:
         '''
         mTable = self.tableWidget_CPU
-        col1 = ['本次不检测','正在检测','检测完成','等待检测']
-        col2 = ['','通过','未通过']
+        col1 = ['本次不检测', '正在检测', '检测完成', '等待检测']
+        col2 = ['', '通过', '未通过']
         font = QtGui.QColor(0, 0, 0)
         if list[1] == 0:
             color = QtGui.QColor(255, 255, 255)
             font = QtGui.QColor(197, 197, 197)
         elif list[1] == 1:
-            color = QtGui.QColor(255,255,0)
+            color = QtGui.QColor(255, 255, 0)
         elif list[1] == 2 and list[2] == 1:
             color = QtGui.QColor(0, 255, 0)
         elif list[1] == 2 and list[2] == 2:
@@ -3386,7 +3359,7 @@ class Ui_Control(QMainWindow,Ui_Form):
                 item.setText(f'{list[3]}')
         QApplication.processEvents()
 
-    def itemOperation(self,mTable,row,state,result,operationTime):
+    def itemOperation(self, mTable, row, state, result, operationTime):
         '''
 
         :param mTable: 进行操作的表格
@@ -3396,14 +3369,14 @@ class Ui_Control(QMainWindow,Ui_Form):
         :param operationTime: 测试时间
         :return:
         '''
-        col1 = ['本次不检测','正在检测','检测完成','等待检测']
-        col2 = ['','通过','未通过']
+        col1 = ['本次不检测', '正在检测', '检测完成', '等待检测']
+        col2 = ['', '通过', '未通过']
         font = QtGui.QColor(0, 0, 0)
         if state == 0:
             color = QtGui.QColor(255, 255, 255)
             font = QtGui.QColor(197, 197, 197)
         elif state == 1:
-            color = QtGui.QColor(255,255,0)
+            color = QtGui.QColor(255, 255, 0)
         elif state == 2 and result == 1:
             color = QtGui.QColor(0, 255, 0)
         elif state == 2 and result == 2:
@@ -3427,1677 +3400,95 @@ class Ui_Control(QMainWindow,Ui_Form):
                 item.setText(f'{operationTime}')
         QApplication.processEvents()
 
+    def workerChange(self,inf:list):
+        # 弹出文本输入对话框
+        if inf[0]=='admin':
+            if self.checkBox_admin.isChecked():
+                text, ok = QInputDialog.getText(None, inf[1], inf[2],echo=QLineEdit.Password)
+            elif not self.checkBox_admin.isChecked():
+                #关闭所有参数修改权限
+                for g in self.group_list:
+                    g.setEnabled(False)
+        else:
+            text, ok = QInputDialog.getText(None, inf[1], inf[2])
+        if inf[0]=='start':
+            if len(text) != 0:
+                self.label_33.setText(text)
+            else:
+                self.killUi()
+        else:
+            if inf[0]=='worker':
+                if ok:
+                    self.label_33.setText(text)
+                    self.label_userName.setText(f'<h2>{text}<h2>')
+                    self.checkBox_admin.setChecked(False)
+            elif inf[0]=='admin':
+                if self.checkBox_admin.isChecked():
+                    if ok:
+                        if text == 'admin123':
+                            # if self.checkBox_admin.isChecked():
+                            for g in self.group_list:
+                                g.setEnabled(True)
+                        else:
+                            self.showMessageBox_oneButton(['警告','管理员密码输入错误！'])
+                            self.checkBox_admin.setChecked(False)
+
+            # elif inf[0]=='start':
+            #     if not ok:
+            #         self.killUi()
+
+    def userLogin(self):
+        global isMainRunning
+
+        if isMainRunning:
+            msg_box = QMessageBox()
+            msg_box.setStandardButtons(QMessageBox.Ok)
+            user_widget = QWidget()
+
+            layout_user = QHBoxLayout()
+            label_user = QLabel('<h2>当前员工：<h2>')
+            self.label_userName.setText(f'<h2>{self.label_33.text()}<h2>')
+
+            layout_user.addWidget(label_user)
+            layout_user.addWidget(self.label_userName)
+
+            self.checkBox_admin.setChecked(self.adminState)
+
+            pushButton_login = QPushButton('更换员工账号')
+
+            layout = QVBoxLayout()
+            layout.addLayout(layout_user)
+            layout.addWidget(self.checkBox_admin)
+            layout.addWidget(pushButton_login)
+
+            user_widget.setLayout(layout)
+
+            # 将QWidget对象添加到QMessageBox中
+            msg_box.layout().addWidget(user_widget)
+            # msg_box.setText(f'<center><h2>当前员工：{self.label_33.text()}</h2></center>')
+
+
+            msg_box.setWindowTitle('员工登录')
+            # 设置样式表
+            msg_box.setStyleSheet('QLabel{font-size: 18px;}')
+            msg_box.button(QMessageBox.Ok).setHidden(True)
+            #登录管理员账号
+            self.checkBox_admin.toggled.connect(lambda: self.workerChange(['admin','管理员登录', '请输入管理员密码：']))
+            self.checkBox_admin.toggled.connect(self.saveAdminState)
+            #更换员工账号
+            pushButton_login.clicked.connect(lambda: self.workerChange(['worker','测试人员登录', '请输入员工工号：']))
+
+            # 显示消息框
+            reply = msg_box.exec_()
+            # # 将弹窗结果放入队列
+            self.result_queue.put([reply])
+
+    def saveAdminState(self):
+        self.adminState = self.checkBox_admin.isChecked()
+
     def option_pushButton13(self):
         self.lineEdit_SN.setText('S1223-001083')
         self.lineEdit_REV.setText('06')
-
-    # def generateExcel(self, station, module):
-    # def generateExcel(self, list):
-    #     book = xlwt.Workbook(encoding='utf-8')
-    #     sheet = book.add_sheet('校准校验表', cell_overwrite_ok=True)
-    #     # 如果出现报错：Exception: Attempt to overwrite cell: sheetname='sheet1' rowx=0 colx=0
-    #     # 需要加上：cell_overwrite_ok=True)
-    #     # 这是因为重复操作一个单元格导致的
-    #     sheet.col(0).width = 256 * 12
-    #     for i in range(99):
-    #         #     sheet.w
-    #         #     tall_style = xlwt.easyxf('font:height 240;')  # 36pt,类型小初的字号
-    #         first_row = sheet.row(i)
-    #         first_row.height_mismatch = True
-    #         first_row.height = 20 * 20
-    #
-    #     # 为样式创建字体
-    #     title_font = xlwt.Font()
-    #     # 字体类型
-    #     title_font.name = '宋'
-    #     # 字体颜色
-    #     title_font.colour_index = 0
-    #     # 字体大小，11为字号，20为衡量单位
-    #     title_font.height = 20 * 20
-    #     # 字体加粗
-    #     title_font.bold = True
-    #
-    #     # 设置单元格对齐方式
-    #     title_alignment = xlwt.Alignment()
-    #     # 0x01(左端对齐)、0x02(水平方向上居中对齐)、0x03(右端对齐)
-    #     title_alignment.horz = 0x02
-    #     # 0x00(上端对齐)、 0x01(垂直方向上居中对齐)、0x02(底端对齐)
-    #     title_alignment.vert = 0x01
-    #     # 设置自动换行
-    #     title_alignment.wrap = 1
-    #
-    #     # 设置边框
-    #     title_borders = xlwt.Borders()
-    #     # 细实线:1，小粗实线:2，细虚线:3，中细虚线:4，大粗实线:5，双线:6，细点虚线:7
-    #     # 大粗虚线:8，细点划线:9，粗点划线:10，细双点划线:11，粗双点划线:12，斜点划线:13
-    #     title_borders.left = 0
-    #     title_borders.right = 0
-    #     title_borders.top = 0
-    #     title_borders.bottom = 0
-    #
-    #     # # 设置背景颜色
-    #     # pattern = xlwt.Pattern()
-    #     # # 设置背景颜色的模式
-    #     # pattern.pattern = xlwt.Pattern.SOLID_PATTERN
-    #     # # 背景颜色
-    #     # pattern.pattern_fore_colour = i
-    #
-    #     # # 初始化样式
-    #     title_style = xlwt.XFStyle()
-    #     title_style.borders = title_borders
-    #     title_style.alignment = title_alignment
-    #     title_style.font = title_font
-    #     # # 设置文字模式
-    #     # font.num_format_str = '#,##0.00'
-    #
-    #     # sheet.write(i, 0, u'字体', style0)
-    #     # sheet.write(i, 1, u'背景', style1)
-    #     # sheet.write(i, 2, u'对齐方式', style2)
-    #     # sheet.write(i, 3, u'边框', style3)
-    #
-    #     # 合并单元格，合并第1行到第2行的第1列到第19列
-    #     sheet.write_merge(0, 1, 0, 18, u'整机检验记录单V1.1', title_style)
-    #
-    #     # row3
-    #     # 为样式创建字体
-    #     row3_font = xlwt.Font()
-    #     # 字体类型
-    #     row3_font.name = '宋'
-    #     # 字体颜色
-    #     row3_font.colour_index = 0
-    #     # 字体大小，11为字号，20为衡量单位
-    #     row3_font.height = 10 * 20
-    #     # 字体加粗
-    #     row3_font.bold = False
-    #
-    #     # 设置单元格对齐方式
-    #     row3_alignment = xlwt.Alignment()
-    #     # 0x01(左端对齐)、0x02(水平方向上居中对齐)、0x03(右端对齐)
-    #     row3_alignment.horz = 0x02
-    #     # 0x00(上端对齐)、 0x01(垂直方向上居中对齐)、0x02(底端对齐)
-    #     row3_alignment.vert = 0x01
-    #     # 设置自动换行
-    #     row3_alignment.wrap = 1
-    #
-    #     # 设置边框
-    #     row3_borders = xlwt.Borders()
-    #     # 细实线:1，小粗实线:2，细虚线:3，中细虚线:4，大粗实线:5，双线:6，细点虚线:7
-    #     # 大粗虚线:8，细点划线:9，粗点划线:10，细双点划线:11，粗双点划线:12，斜点划线:13
-    #     row3_borders.left = 0
-    #     row3_borders.right = 0
-    #     row3_borders.top = 0
-    #     row3_borders.bottom = 0
-    #
-    #     # # 设置背景颜色
-    #     # pattern = xlwt.Pattern()
-    #     # # 设置背景颜色的模式
-    #     # pattern.pattern = xlwt.Pattern.SOLID_PATTERN
-    #     # # 背景颜色
-    #     # pattern.pattern_fore_colour = i
-    #
-    #     # # 初始化样式
-    #     row3_style = xlwt.XFStyle()
-    #     row3_style.borders = row3_borders
-    #     row3_style.alignment = row3_alignment
-    #     row3_style.font = row3_font
-    #     # # 设置文字模式
-    #     # font.num_format_str = '#,##0.00'
-    #
-    #     # sheet.write(i, 0, u'字体', style0)
-    #     # sheet.write(i, 1, u'背景', style1)
-    #     # sheet.write(i, 2, u'对齐方式', style2)
-    #     # sheet.write(i, 3, u'边框', style3)
-    #
-    #     sheet.write_merge(2, 2, 0, 2, 'PN：', row3_style)
-    #     sheet.write_merge(2, 2, 3, 5, f'{self.module_pn}', row3_style)
-    #     sheet.write_merge(2, 2, 6, 8, 'SN：', row3_style)
-    #     sheet.write_merge(2, 2, 9, 11, f'{self.module_sn}', row3_style)
-    #     sheet.write_merge(2, 2, 12, 14, 'REV：', row3_style)
-    #     sheet.write_merge(2, 2, 15, 17, f'{self.module_rev}', row3_style)
-    #
-    #     # leftTitle
-    #     # 为样式创建字体
-    #     leftTitle_font = xlwt.Font()
-    #     # 字体类型
-    #     leftTitle_font.name = '宋'
-    #     # 字体颜色
-    #     leftTitle_font.colour_index = 0
-    #     # 字体大小，11为字号，20为衡量单位
-    #     leftTitle_font.height = 12 * 20
-    #     # 字体加粗
-    #     leftTitle_font.bold = True
-    #
-    #     # 设置单元格对齐方式
-    #     leftTitle_alignment = xlwt.Alignment()
-    #     # 0x01(左端对齐)、0x02(水平方向上居中对齐)、0x03(右端对齐)
-    #     leftTitle_alignment.horz = 0x02
-    #     # 0x00(上端对齐)、 0x01(垂直方向上居中对齐)、0x02(底端对齐)
-    #     leftTitle_alignment.vert = 0x01
-    #     # 设置自动换行
-    #     leftTitle_alignment.wrap = 1
-    #
-    #     # 设置边框
-    #     leftTitle_borders = xlwt.Borders()
-    #     # 细实线:1，小粗实线:2，细虚线:3，中细虚线:4，大粗实线:5，双线:6，细点虚线:7
-    #     # 大粗虚线:8，细点划线:9，粗点划线:10，细双点划线:11，粗双点划线:12，斜点划线:13
-    #     leftTitle_borders.left = 5
-    #     leftTitle_borders.right = 5
-    #     leftTitle_borders.top = 5
-    #     leftTitle_borders.bottom = 5
-    #
-    #     # # 设置背景颜色
-    #     # pattern = xlwt.Pattern()
-    #     # # 设置背景颜色的模式
-    #     # pattern.pattern = xlwt.Pattern.SOLID_PATTERN
-    #     # # 背景颜色
-    #     # pattern.pattern_fore_colour = i
-    #
-    #     # # 初始化样式
-    #     leftTitle_style = xlwt.XFStyle()
-    #     leftTitle_style.borders = leftTitle_borders
-    #     leftTitle_style.alignment = leftTitle_alignment
-    #     leftTitle_style.font = leftTitle_font
-    #     self.generalTest_row = 4
-    #     sheet.write_merge(self.generalTest_row, self.generalTest_row + 1, 0, 0, '常规检测', leftTitle_style)
-    #     self.CPU_row = 6
-    #     sheet.write_merge(self.CPU_row, self.CPU_row + 7, 0, 0, 'CPU检测', leftTitle_style)
-    #     self.DI_row = 14
-    #     sheet.write_merge(self.DI_row, self.DI_row + 3, 0, 0, 'DI信号', leftTitle_style)
-    #     self.DO_row = 18
-    #     sheet.write_merge(self.DO_row, self.DO_row + 3, 0, 0, 'DO信号', leftTitle_style)
-    #     self.AI_row = 22
-    #     if (self.isAITestVol and not self.isAITestCur) or (not self.isAITestVol and self.isAITestCur):
-    #         sheet.write_merge(self.AI_row, self.AI_row + 1 + self.AI_Channels, 0, 0, 'AI信号', leftTitle_style)
-    #         self.AO_row = self.AI_row + 2 + self.AI_Channels
-    #     elif self.isAITestVol and self.isAITestCur:
-    #         sheet.write_merge(self.AI_row, self.AI_row + 1 + 2 * self.AI_Channels, 0, 0, 'AI信号', leftTitle_style)
-    #         self.AO_row = self.AI_row + 2 + 2 * self.AI_Channels
-    #     elif not self.isAITestVol and not self.isAITestCur:
-    #         sheet.write_merge(self.AI_row, self.AI_row + 1, 0, 0, 'AI信号', leftTitle_style)
-    #         self.AO_row = self.AI_row + 2
-    #
-    #
-    #     if (self.isAOTestVol and not self.isAOTestCur) or (not self.isAOTestVol and self.isAOTestCur):
-    #         sheet.write_merge(self.AO_row, self.AO_row + 1 + self.AO_Channels, 0, 0, 'AO信号', leftTitle_style)
-    #         self.result_row = self.AO_row + 2 + self.AO_Channels
-    #     elif self.isAOTestVol and self.isAOTestCur:
-    #         sheet.write_merge(self.AO_row, self.AO_row + 1 + 2 * self.AO_Channels, 0, 0, 'AO信号', leftTitle_style)
-    #         self.result_row = self.AO_row + 2 + 2 * self.AO_Channels
-    #     elif not self.isAOTestVol and not self.isAOTestCur:
-    #         sheet.write_merge(self.AO_row, self.AO_row + 1, 0, 0, 'AO信号', leftTitle_style)
-    #         self.result_row = self.AO_row + 2
-    #
-    #     # sheet.write_merge(self.AO_row, self.AO_row + 1 + self.AO_Channels, 0, 0, 'AO信号', leftTitle_style)
-    #     # self.result_row = self.AO_row + 2
-    #     sheet.write_merge(self.result_row, self.result_row + 1, 0, 3, '整体检测结果', leftTitle_style)
-    #
-    #     # contentTitle
-    #     # 为样式创建字体
-    #     contentTitle_font = xlwt.Font()
-    #     # 字体类型
-    #     contentTitle_font.name = '宋'
-    #     # 字体颜色
-    #     contentTitle_font.colour_index = 0
-    #     # 字体大小，11为字号，20为衡量单位
-    #     contentTitle_font.height = 10 * 20
-    #     # 字体加粗
-    #     contentTitle_font.bold = False
-    #
-    #     # 设置单元格对齐方式
-    #     contentTitle_alignment = xlwt.Alignment()
-    #     # 0x01(左端对齐)、0x02(水平方向上居中对齐)、0x03(右端对齐)
-    #     contentTitle_alignment.horz = 0x02
-    #     # 0x00(上端对齐)、 0x01(垂直方向上居中对齐)、0x02(底端对齐)
-    #     contentTitle_alignment.vert = 0x01
-    #     # 设置自动换行
-    #     contentTitle_alignment.wrap = 1
-    #
-    #     # 设置边框
-    #     contentTitle_borders = xlwt.Borders()
-    #     # 细实线:1，小粗实线:2，细虚线:3，中细虚线:4，大粗实线:5，双线:6，细点虚线:7
-    #     # 大粗虚线:8，细点划线:9，粗点划线:10，细双点划线:11，粗双点划线:12，斜点划线:13
-    #     contentTitle_borders.left = 5
-    #     contentTitle_borders.right = 5
-    #     contentTitle_borders.top = 5
-    #     contentTitle_borders.bottom = 5
-    #
-    #     # # 设置背景颜色
-    #     # pattern = xlwt.Pattern()
-    #     # # 设置背景颜色的模式
-    #     # pattern.pattern = xlwt.Pattern.SOLID_PATTERN
-    #     # # 背景颜色
-    #     # pattern.pattern_fore_colour = i
-    #
-    #     # # 初始化样式
-    #     contentTitle_style = xlwt.XFStyle()
-    #     contentTitle_style.borders = contentTitle_borders
-    #     contentTitle_style.alignment = contentTitle_alignment
-    #     contentTitle_style.font = contentTitle_font
-    #
-    #     sheet.write_merge(self.generalTest_row, self.generalTest_row, 1, 2, '外观', contentTitle_style)
-    #     sheet.write(self.generalTest_row, 3, '---', contentTitle_style)
-    #     sheet.write_merge(self.generalTest_row, self.generalTest_row, 4, 5, 'Run指示灯', contentTitle_style)
-    #     sheet.write(self.generalTest_row, 6, '---', contentTitle_style)
-    #     sheet.write_merge(self.generalTest_row, self.generalTest_row, 7, 8, 'Error指示灯', contentTitle_style)
-    #     sheet.write(self.generalTest_row, 9, '---', contentTitle_style)
-    #     sheet.write_merge(self.generalTest_row, self.generalTest_row, 10, 11, 'CAN_Run指示灯', contentTitle_style)
-    #     sheet.write(self.generalTest_row, 12, '---', contentTitle_style)
-    #     sheet.write_merge(self.generalTest_row, self.generalTest_row, 13, 14, 'CAN_Error指示灯', contentTitle_style)
-    #     sheet.write(self.generalTest_row, 15, '---', contentTitle_style)
-    #     sheet.write_merge(self.generalTest_row, self.generalTest_row, 16, 17, '拨码（预留）', contentTitle_style)
-    #     sheet.write(self.generalTest_row, 18, '---', contentTitle_style)
-    #     sheet.write_merge(self.generalTest_row + 1, self.generalTest_row + 1, 1, 2, '非测试项', contentTitle_style)
-    #     sheet.write(self.generalTest_row + 1, 3, '---', contentTitle_style)
-    #     sheet.write_merge(self.generalTest_row + 1, self.generalTest_row + 1, 4, 5, '------', contentTitle_style)
-    #     sheet.write(self.generalTest_row + 1, 6, '---', contentTitle_style)
-    #     sheet.write_merge(self.generalTest_row + 1, self.generalTest_row + 1, 7, 8, '------', contentTitle_style)
-    #     sheet.write(self.generalTest_row + 1, 9, '---', contentTitle_style)
-    #     sheet.write_merge(self.generalTest_row + 1, self.generalTest_row + 1, 10, 11, '------', contentTitle_style)
-    #     sheet.write(self.generalTest_row + 1, 12, '---', contentTitle_style)
-    #     sheet.write_merge(self.generalTest_row + 1, self.generalTest_row + 1, 13, 14, '------', contentTitle_style)
-    #     sheet.write(self.generalTest_row + 1, 15, '---', contentTitle_style)
-    #     sheet.write_merge(self.generalTest_row + 1, self.generalTest_row + 1, 16, 17, '------', contentTitle_style)
-    #     sheet.write(self.generalTest_row + 1, 18, '---', contentTitle_style)
-    #
-    #     sheet.write_merge(self.CPU_row, self.CPU_row, 1, 2, '片外Flash读写', contentTitle_style)
-    #     sheet.write(self.CPU_row, 3, '---', contentTitle_style)
-    #     sheet.write_merge(self.CPU_row, self.CPU_row, 4, 5, 'MAC&序列号', contentTitle_style)
-    #     sheet.write(self.CPU_row, self.CPU_row, '---', contentTitle_style)
-    #     sheet.write_merge(self.CPU_row, self.CPU_row, 7, 8, '多功能按钮', contentTitle_style)
-    #     sheet.write(self.CPU_row, 9, '---', contentTitle_style)
-    #     sheet.write_merge(self.CPU_row, self.CPU_row, 10, 11, 'R/S拨杆', contentTitle_style)
-    #     sheet.write(self.CPU_row, 12, '---', contentTitle_style)
-    #     sheet.write_merge(self.CPU_row, self.CPU_row, 13, 14, '实时时钟', contentTitle_style)
-    #     sheet.write(self.CPU_row, 15, '---', contentTitle_style)
-    #     sheet.write_merge(self.CPU_row, self.CPU_row, 16, 17, 'SRAM', contentTitle_style)
-    #     sheet.write(self.CPU_row, 18, '---', contentTitle_style)
-    #     sheet.write_merge(self.CPU_row + 1, self.CPU_row + 1, 1, 2, '掉电保存', contentTitle_style)
-    #     sheet.write(self.CPU_row  + 1, 3, '---', contentTitle_style)
-    #     sheet.write_merge(self.CPU_row + 1, self.CPU_row + 1, 4, 5, 'U盘', contentTitle_style)
-    #     sheet.write(self.CPU_row  + 1, 6, '---', contentTitle_style)
-    #     sheet.write_merge(self.CPU_row + 1, self.CPU_row + 1, 7, 8, 'type-C', contentTitle_style)
-    #     sheet.write(self.CPU_row  + 1, 9, '---', contentTitle_style)
-    #     sheet.write_merge(self.CPU_row + 1, self.CPU_row + 1, 10, 11, 'RS232通讯', contentTitle_style)
-    #     sheet.write(self.CPU_row  + 1, 12, '---', contentTitle_style)
-    #     sheet.write_merge(self.CPU_row + 1, self.CPU_row + 1, 13, 14, 'RS485通讯', contentTitle_style)
-    #     sheet.write(self.CPU_row  + 1, 15, '---', contentTitle_style)
-    #     sheet.write_merge(self.CPU_row + 1, self.CPU_row + 1, 16, 17, 'CAN通讯(预留)', contentTitle_style)
-    #     sheet.write(self.CPU_row  + 1, 18, '---', contentTitle_style)
-    #
-    #     sheet.write_merge(self.CPU_row + 2, self.CPU_row + 4, 1, 2, '输入通道', contentTitle_style)
-    #     sheet.write(self.CPU_row + 2, 3, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 2, 4, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 2, 5, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 2, 6, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 2, 7, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 2, 8, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 2, 9, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 2, 10, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 2, 11, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 2, 12, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 2, 13, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 2, 14, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 2, 15, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 2, 16, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 2, 17, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 2, 18, '---', contentTitle_style)
-    #
-    #     sheet.write(self.CPU_row + 3, 3, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 3, 4, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 3, 5, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 3, 6, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 3, 7, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 3, 8, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 3, 9, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 3, 10, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 3, 11, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 3, 12, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 3, 13, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 3, 14, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 3, 15, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 3, 16, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 3, 17, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 3, 18, '---', contentTitle_style)
-    #
-    #     sheet.write(self.CPU_row + 4, 3, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 4, 4, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 4, 5, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 4, 6, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 4, 7, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 4, 8, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 4, 9, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 4, 10, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 4, 11, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 4, 12, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 4, 13, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 4, 14, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 4, 15, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 4, 16, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 4, 17, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 4, 18, '---', contentTitle_style)
-    #
-    #     sheet.write_merge(self.CPU_row + 5, self.CPU_row + 7, 1, 2, '输出通道', contentTitle_style)
-    #     sheet.write(self.CPU_row + 5, 3, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 5, 4, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 5, 5, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 5, 6, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 5, 7, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 5, 8, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 5, 9, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 5, 10, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 5, 11, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 5, 12, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 5, 13, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 5, 14, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 5, 15, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 5, 16, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 5, 17, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 5, 18, '---', contentTitle_style)
-    #
-    #     sheet.write(self.CPU_row + 6, 3, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 6, 4, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 6, 5, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 6, 6, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 6, 7, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 6, 8, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 6, 9, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 6, 10, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 6, 11, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 6, 12, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 6, 13, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 6, 14, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 6, 15, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 6, 16, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 6, 17, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 6, 18, '---', contentTitle_style)
-    #
-    #     sheet.write(self.CPU_row + 7, 3, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 7, 4, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 7, 5, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 7, 6, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 7, 7, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 7, 8, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 7, 9, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 7, 10, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 7, 11, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 7, 12, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 7, 13, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 7, 14, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 7, 15, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 7, 16, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 7, 17, '---', contentTitle_style)
-    #     sheet.write(self.CPU_row + 7, 18, '---', contentTitle_style)
-    #     # DO
-    #     sheet.write_merge(self.DO_row, self.DO_row, 1, 2, '通道号', contentTitle_style)
-    #     sheet.write(self.DO_row, 3, 'CH1', contentTitle_style)
-    #     sheet.write(self.DO_row, 4, 'CH2', contentTitle_style)
-    #     sheet.write(self.DO_row, 5, 'CH3', contentTitle_style)
-    #     sheet.write(self.DO_row, 6, 'CH4', contentTitle_style)
-    #     sheet.write(self.DO_row, 7, 'CH5', contentTitle_style)
-    #     sheet.write(self.DO_row, 8, 'CH6', contentTitle_style)
-    #     sheet.write(self.DO_row, 9, 'CH7', contentTitle_style)
-    #     sheet.write(self.DO_row, 10, 'CH8', contentTitle_style)
-    #     sheet.write(self.DO_row, 11, 'CH9', contentTitle_style)
-    #     sheet.write(self.DO_row, 12, 'CH10', contentTitle_style)
-    #     sheet.write(self.DO_row, 13, 'CH11', contentTitle_style)
-    #     sheet.write(self.DO_row, 14, 'CH12', contentTitle_style)
-    #     sheet.write(self.DO_row, 15, 'CH13', contentTitle_style)
-    #     sheet.write(self.DO_row, 16, 'CH14', contentTitle_style)
-    #     sheet.write(self.DO_row, 17, 'CH15', contentTitle_style)
-    #     sheet.write(self.DO_row, 18, 'CH16', contentTitle_style)
-    #     sheet.write_merge(self.DO_row + 1, self.DO_row + 1, 1, 2, '是否合格', contentTitle_style)
-    #     sheet.write(self.DO_row + 1, 3, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 1, 4, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 1, 5, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 1, 6, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 1, 7, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 1, 8, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 1, 9, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 1, 10, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 1, 11, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 1, 12, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 1, 13, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 1, 14, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 1, 15, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 1, 16, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 1, 17, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 1, 18, '---', contentTitle_style)
-    #     sheet.write_merge(self.DO_row + 2, self.DO_row + 2, 1, 2, '通道号', contentTitle_style)
-    #     sheet.write(self.DO_row + 2, 3, 'CH17', contentTitle_style)
-    #     sheet.write(self.DO_row + 2, 4, 'CH18', contentTitle_style)
-    #     sheet.write(self.DO_row + 2, 5, 'CH19', contentTitle_style)
-    #     sheet.write(self.DO_row + 2, 6, 'CH20', contentTitle_style)
-    #     sheet.write(self.DO_row + 2, 7, 'CH21', contentTitle_style)
-    #     sheet.write(self.DO_row + 2, 8, 'CH22', contentTitle_style)
-    #     sheet.write(self.DO_row + 2, 9, 'CH23', contentTitle_style)
-    #     sheet.write(self.DO_row + 2, 10, 'CH24', contentTitle_style)
-    #     sheet.write(self.DO_row + 2, 11, 'CH25', contentTitle_style)
-    #     sheet.write(self.DO_row + 2, 12, 'CH26', contentTitle_style)
-    #     sheet.write(self.DO_row + 2, 13, 'CH27', contentTitle_style)
-    #     sheet.write(self.DO_row + 2, 14, 'CH28', contentTitle_style)
-    #     sheet.write(self.DO_row + 2, 15, 'CH29', contentTitle_style)
-    #     sheet.write(self.DO_row + 2, 16, 'CH30', contentTitle_style)
-    #     sheet.write(self.DO_row + 2, 17, 'CH31', contentTitle_style)
-    #     sheet.write(self.DO_row + 2, 18, 'CH32', contentTitle_style)
-    #     sheet.write_merge(self.DO_row + 3, self.DO_row + 3, 1, 2, '是否合格', contentTitle_style)
-    #     sheet.write(self.DO_row + 3, 3, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 3, 4, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 3, 5, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 3, 6, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 3, 7, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 3, 8, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 3, 9, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 3, 10, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 3, 11, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 3, 12, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 3, 13, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 3, 14, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 3, 15, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 3, 16, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 3, 17, '---', contentTitle_style)
-    #     sheet.write(self.DO_row + 3, 18, '---', contentTitle_style)
-    #
-    #     # DI
-    #     sheet.write_merge(self.DI_row, self.DI_row, 1, 2, '通道号', contentTitle_style)
-    #     sheet.write(self.DI_row, 3, 'CH1', contentTitle_style)
-    #     sheet.write(self.DI_row, 4, 'CH2', contentTitle_style)
-    #     sheet.write(self.DI_row, 5, 'CH3', contentTitle_style)
-    #     sheet.write(self.DI_row, 6, 'CH4', contentTitle_style)
-    #     sheet.write(self.DI_row, 7, 'CH5', contentTitle_style)
-    #     sheet.write(self.DI_row, 8, 'CH6', contentTitle_style)
-    #     sheet.write(self.DI_row, 9, 'CH7', contentTitle_style)
-    #     sheet.write(self.DI_row, 10, 'CH8', contentTitle_style)
-    #     sheet.write(self.DI_row, 11, 'CH9', contentTitle_style)
-    #     sheet.write(self.DI_row, 12, 'CH10', contentTitle_style)
-    #     sheet.write(self.DI_row, 13, 'CH11', contentTitle_style)
-    #     sheet.write(self.DI_row, 14, 'CH12', contentTitle_style)
-    #     sheet.write(self.DI_row, 15, 'CH13', contentTitle_style)
-    #     sheet.write(self.DI_row, 16, 'CH14', contentTitle_style)
-    #     sheet.write(self.DI_row, 17, 'CH15', contentTitle_style)
-    #     sheet.write(self.DI_row, 18, 'CH16', contentTitle_style)
-    #     sheet.write_merge(self.DI_row + 1, self.DI_row + 1, 1, 2, '是否合格', contentTitle_style)
-    #     sheet.write(self.DI_row + 1, 3, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 1, 4, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 1, 5, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 1, 6, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 1, 7, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 1, 8, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 1, 9, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 1, 10, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 1, 11, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 1, 12, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 1, 13, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 1, 14, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 1, 15, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 1, 16, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 1, 17, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 1, 18, '---', contentTitle_style)
-    #     sheet.write_merge(self.DI_row + 2, self.DI_row + 2, 1, 2, '通道号', contentTitle_style)
-    #     sheet.write(self.DI_row + 2, 3, 'CH17', contentTitle_style)
-    #     sheet.write(self.DI_row + 2, 4, 'CH18', contentTitle_style)
-    #     sheet.write(self.DI_row + 2, 5, 'CH19', contentTitle_style)
-    #     sheet.write(self.DI_row + 2, 6, 'CH20', contentTitle_style)
-    #     sheet.write(self.DI_row + 2, 7, 'CH21', contentTitle_style)
-    #     sheet.write(self.DI_row + 2, 8, 'CH22', contentTitle_style)
-    #     sheet.write(self.DI_row + 2, 9, 'CH23', contentTitle_style)
-    #     sheet.write(self.DI_row + 2, 10, 'CH24', contentTitle_style)
-    #     sheet.write(self.DI_row + 2, 11, 'CH25', contentTitle_style)
-    #     sheet.write(self.DI_row + 2, 12, 'CH26', contentTitle_style)
-    #     sheet.write(self.DI_row + 2, 13, 'CH27', contentTitle_style)
-    #     sheet.write(self.DI_row + 2, 14, 'CH28', contentTitle_style)
-    #     sheet.write(self.DI_row + 2, 15, 'CH29', contentTitle_style)
-    #     sheet.write(self.DI_row + 2, 16, 'CH30', contentTitle_style)
-    #     sheet.write(self.DI_row + 2, 17, 'CH31', contentTitle_style)
-    #     sheet.write(self.DI_row + 2, 18, 'CH32', contentTitle_style)
-    #     sheet.write_merge(self.DI_row + 3, self.DI_row + 3, 1, 2, '是否合格', contentTitle_style)
-    #     sheet.write(self.DI_row + 3, 3, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 3, 4, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 3, 5, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 3, 6, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 3, 7, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 3, 8, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 3, 9, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 3, 10, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 3, 11, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 3, 12, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 3, 13, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 3, 14, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 3, 15, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 3, 16, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 3, 17, '---', contentTitle_style)
-    #     sheet.write(self.DI_row + 3, 18, '---', contentTitle_style)
-    #
-    #     # AI
-    #     sheet.write_merge(self.AI_row, self.AI_row + 1, 1, 1, '信号类型', contentTitle_style)
-    #     sheet.write_merge(self.AI_row, self.AI_row + 1, 2, 3, '通道号', contentTitle_style)
-    #     sheet.write_merge(self.AI_row, self.AI_row, 3 + 1, 5 + 1, '测试点1', contentTitle_style)
-    #     sheet.write(self.AI_row + 1, 3 + 1, '理论值', contentTitle_style)
-    #     sheet.write(self.AI_row + 1, 4 + 1, '测试值', contentTitle_style)
-    #     sheet.write(self.AI_row + 1, 5 + 1, '精度', contentTitle_style)
-    #
-    #     sheet.write_merge(self.AI_row, self.AI_row, 6 + 1, 8 + 1, '测试点2', contentTitle_style)
-    #     sheet.write(self.AI_row + 1, 6 + 1, '理论值', contentTitle_style)
-    #     sheet.write(self.AI_row + 1, 7 + 1, '测试值', contentTitle_style)
-    #     sheet.write(self.AI_row + 1, 8 + 1, '精度', contentTitle_style)
-    #
-    #     sheet.write_merge(self.AI_row, self.AI_row, 9 + 1, 11 + 1, '测试点3', contentTitle_style)
-    #     sheet.write(self.AI_row + 1, 9 + 1, '理论值', contentTitle_style)
-    #     sheet.write(self.AI_row + 1, 10 + 1, '测试值', contentTitle_style)
-    #     sheet.write(self.AI_row + 1, 11 + 1, '精度', contentTitle_style)
-    #
-    #     sheet.write_merge(self.AI_row, self.AI_row, 12 + 1, 14 + 1, '测试点4', contentTitle_style)
-    #     sheet.write(self.AI_row + 1, 12 + 1, '理论值', contentTitle_style)
-    #     sheet.write(self.AI_row + 1, 13 + 1, '测试值', contentTitle_style)
-    #     sheet.write(self.AI_row + 1, 14 + 1, '精度', contentTitle_style)
-    #
-    #     sheet.write_merge(self.AI_row, self.AI_row, 15 + 1, 17 + 1, '测试点5', contentTitle_style)
-    #
-    #     sheet.write(self.AI_row + 1, 15 + 1, '理论值', contentTitle_style)
-    #     sheet.write(self.AI_row + 1, 16 + 1, '测试值', contentTitle_style)
-    #     sheet.write(self.AI_row + 1, 17 + 1, '精度', contentTitle_style)
-    #     # sheet.write(self.AI_row, 18, '', contentTitle_style)
-    #     # sheet.write(self.AI_row + 1, 18, '', contentTitle_style)
-    #
-    #     # AO
-    #     sheet.write_merge(self.AO_row, self.AO_row + 1, 1, 1, '信号类型', contentTitle_style)
-    #     sheet.write_merge(self.AO_row, self.AO_row + 1, 2, 2 + 1, '通道号', contentTitle_style)
-    #     sheet.write_merge(self.AO_row, self.AO_row, 3 + 1, 5 + 1, '测试点1', contentTitle_style)
-    #     sheet.write(self.AO_row + 1, 3 + 1, '理论值', contentTitle_style)
-    #     sheet.write(self.AO_row + 1, 4 + 1, '测试值', contentTitle_style)
-    #     sheet.write(self.AO_row + 1, 5 + 1, '精度', contentTitle_style)
-    #
-    #     sheet.write_merge(self.AO_row, self.AO_row, 6 + 1, 8 + 1, '测试点2', contentTitle_style)
-    #     sheet.write(self.AO_row + 1, 6 + 1, '理论值', contentTitle_style)
-    #     sheet.write(self.AO_row + 1, 7 + 1, '测试值', contentTitle_style)
-    #     sheet.write(self.AO_row + 1, 8 + 1, '精度', contentTitle_style)
-    #
-    #     sheet.write_merge(self.AO_row, self.AO_row, 9 + 1, 11 + 1, '测试点3', contentTitle_style)
-    #     sheet.write(self.AO_row + 1, 9 + 1, '理论值', contentTitle_style)
-    #     sheet.write(self.AO_row + 1, 10 + 1, '测试值', contentTitle_style)
-    #     sheet.write(self.AO_row + 1, 11 + 1, '精度', contentTitle_style)
-    #
-    #     sheet.write_merge(self.AO_row, self.AO_row, 12 + 1, 14 + 1, '测试点4', contentTitle_style)
-    #     sheet.write(self.AO_row + 1, 12 + 1, '理论值', contentTitle_style)
-    #     sheet.write(self.AO_row + 1, 13 + 1, '测试值', contentTitle_style)
-    #     sheet.write(self.AO_row + 1, 14 + 1, '精度', contentTitle_style)
-    #
-    #     sheet.write_merge(self.AO_row, self.AO_row, 15 + 1, 17 + 1, '测试点5', contentTitle_style)
-    #     sheet.write(self.AO_row + 1, 15 + 1, '理论值', contentTitle_style)
-    #     sheet.write(self.AO_row + 1, 16 + 1, '测试值', contentTitle_style)
-    #     sheet.write(self.AO_row + 1, 17 + 1, '精度', contentTitle_style)
-    #     # sheet.write(self.AO_row, 18, '', contentTitle_style)
-    #     # sheet.write(self.AO_row + 1, 18, '', contentTitle_style)
-    #
-    #     # 结果
-    #     sheet.write_merge(self.result_row, self.result_row, 4, 5, '□ 合格', contentTitle_style)
-    #     sheet.write_merge(self.result_row, self.result_row, 6, 18, ' ', contentTitle_style)
-    #     sheet.write_merge(self.result_row + 1, self.result_row + 1, 4, 5, '□ 不合格', contentTitle_style)
-    #     sheet.write_merge(self.result_row + 1, self.result_row + 1, 6, 18, ' ', contentTitle_style)
-    #
-    #     # 补充说明
-    #     sheet.write(self.result_row + 2, 0, '补充说明：', contentTitle_style)
-    #     sheet.write_merge(self.result_row + 2, self.result_row + 2, 1, 18,
-    #                       'AI/AO信号检验要记录数据，电压和电流的精度为2‰以下为合格、电阻的精度0.5℃以下合格；其他测试项合格打“√”，否则打“×”',
-    #                       contentTitle_style)
-    #
-    #     # 检测信息
-    #     sheet.write_merge(self.result_row + 3, self.result_row + 3, 0, 1, '检验员：', contentTitle_style)
-    #     sheet.write_merge(self.result_row + 3, self.result_row + 3, 2, 3, '555', contentTitle_style)
-    #     sheet.write_merge(self.result_row + 3, self.result_row + 3, 4, 5, '检验日期：', contentTitle_style)
-    #     sheet.write_merge(self.result_row + 3, self.result_row + 3, 6, 8, f'{time.strftime("%Y-%m-%d %H：%M：%S")}', contentTitle_style)
-    #     sheet.write_merge(self.result_row + 3, self.result_row + 3, 9, 10, '审核：', contentTitle_style)
-    #     sheet.write_merge(self.result_row + 3, self.result_row + 3, 11, 13, ' ', contentTitle_style)
-    #     sheet.write_merge(self.result_row + 3, self.result_row + 3, 14, 15, '审核日期：', contentTitle_style)
-    #     sheet.write_merge(self.result_row + 3, self.result_row + 3, 16, 18, ' ', contentTitle_style)
-    #     # if module == 'DI':
-    #     #     self.fillInDIData(station, book, sheet)
-    #     # elif module == 'DO':
-    #     #     self.fillInDOData(station, book, sheet)
-    #     # elif module == 'AI':
-    #     #     # # print('打印AI检测结果')
-    #     #     self.fillInAIData(station, book, sheet)
-    #     # elif module == 'AO':
-    #     #     # # print('打印AI检测结果')
-    #     #     self.fillInAOData(station, book, sheet)
-    #     if list[1] == 'DI':
-    #         self.fillInDIData(list[0], book, sheet)
-    #     elif list[1] == 'DO':
-    #         self.fillInDOData(list[0], book, sheet)
-    #     elif list[1] == 'AI':
-    #         # # print('打印AI检测结果')
-    #         self.fillInAIData(list[0], book, sheet)
-    #     elif list[1] == 'AO':
-    #         # # print('打印AI检测结果')
-    #         self.fillInAOData(list[0], book, sheet)
-    #
-    #
-    # # @abstractmethod
-    # # def fillInDIData(self):
-    # #     raise NotImplementedError()
-    # def fillInDIData(self,station, book, sheet):
-    #     #通过单元格样式
-    #     # 为样式创建字体
-    #     pass_font = xlwt.Font()
-    #     # 字体类型
-    #     pass_font.name = '宋'
-    #     # 字体颜色
-    #     pass_font.colour_index = 0
-    #     # 字体大小，11为字号，20为衡量单位
-    #     pass_font.height = 10 * 20
-    #     # 字体加粗
-    #     pass_font.bold = False
-    #
-    #     # 设置单元格对齐方式
-    #     pass_alignment = xlwt.Alignment()
-    #     # 0x01(左端对齐)、0x02(水平方向上居中对齐)、0x03(右端对齐)
-    #     pass_alignment.horz = 0x02
-    #     # 0x00(上端对齐)、 0x01(垂直方向上居中对齐)、0x02(底端对齐)
-    #     pass_alignment.vert = 0x01
-    #     # 设置自动换行
-    #     pass_alignment.wrap = 1
-    #
-    #     # 设置边框
-    #     pass_borders = xlwt.Borders()
-    #     # 细实线:1，小粗实线:2，细虚线:3，中细虚线:4，大粗实线:5，双线:6，细点虚线:7
-    #     # 大粗虚线:8，细点划线:9，粗点划线:10，细双点划线:11，粗双点划线:12，斜点划线:13
-    #     pass_borders.left = 5
-    #     pass_borders.right = 5
-    #     pass_borders.top = 5
-    #     pass_borders.bottom = 5
-    #
-    #     # # 设置背景颜色
-    #     # pattern = xlwt.Pattern()
-    #     # # 设置背景颜色的模式
-    #     # pattern.pattern = xlwt.Pattern.SOLID_PATTERN
-    #     # # 背景颜色
-    #     # pattern.pattern_fore_colour = i
-    #
-    #     # # 初始化样式
-    #     pass_style = xlwt.XFStyle()
-    #     pass_style.borders = pass_borders
-    #     pass_style.alignment = pass_alignment
-    #     pass_style.font = pass_font
-    #
-    #
-    #     #未通过单元格样式
-    #     # 为样式创建字体
-    #     fail_font = xlwt.Font()
-    #     # 字体类型
-    #     fail_font.name = '宋'
-    #     # 字体颜色
-    #     fail_font.colour_index = 1
-    #     # 字体大小，11为字号，20为衡量单位
-    #     fail_font.height = 10 * 20
-    #     # 字体加粗
-    #     fail_font.bold = False
-    #
-    #     # 设置单元格对齐方式
-    #     fail_alignment = xlwt.Alignment()
-    #     # 0x01(左端对齐)、0x02(水平方向上居中对齐)、0x03(右端对齐)
-    #     fail_alignment.horz = 0x02
-    #     # 0x00(上端对齐)、 0x01(垂直方向上居中对齐)、0x02(底端对齐)
-    #     fail_alignment.vert = 0x01
-    #     # 设置自动换行
-    #     fail_alignment.wrap = 1
-    #
-    #     # 设置边框
-    #     fail_borders = xlwt.Borders()
-    #     # 细实线:1，小粗实线:2，细虚线:3，中细虚线:4，大粗实线:5，双线:6，细点虚线:7
-    #     # 大粗虚线:8，细点划线:9，粗点划线:10，细双点划线:11，粗双点划线:12，斜点划线:13
-    #     fail_borders.left = 5
-    #     fail_borders.right = 5
-    #     fail_borders.top = 5
-    #     fail_borders.bottom = 5
-    #
-    #     # 设置背景颜色
-    #     fail_pattern = xlwt.Pattern()
-    #     # 设置背景颜色的模式
-    #     fail_pattern.pattern = xlwt.Pattern.SOLID_PATTERN
-    #     # 背景颜色
-    #     fail_pattern.pattern_fore_colour = 18
-    #
-    #     # # 初始化样式
-    #     fail_style = xlwt.XFStyle()
-    #     fail_style.borders = fail_borders
-    #     fail_style.alignment = fail_alignment
-    #     fail_style.font = fail_font
-    #     fail_style.pattern = fail_pattern
-    #
-    #     # 提示警告单元格样式
-    #     # 为样式创建字体
-    #     warning_font = xlwt.Font()
-    #     # 字体类型
-    #     warning_font.name = '宋'
-    #     # 字体颜色
-    #     warning_font.colour_index = 2
-    #     # 字体大小，11为字号，20为衡量单位
-    #     warning_font.height = 12 * 20
-    #     # 字体加粗
-    #     warning_font.bold = True
-    #
-    #     # 设置单元格对齐方式
-    #     warning_alignment = xlwt.Alignment()
-    #     # 0x01(左端对齐)、0x02(水平方向上居中对齐)、0x03(右端对齐)
-    #     warning_alignment.horz = 0x02
-    #     # 0x00(上端对齐)、 0x01(垂直方向上居中对齐)、0x02(底端对齐)
-    #     warning_alignment.vert = 0x01
-    #     # 设置自动换行
-    #     warning_alignment.wrap = 1
-    #
-    #     # 设置边框
-    #     warning_borders = xlwt.Borders()
-    #     # 细实线:1，小粗实线:2，细虚线:3，中细虚线:4，大粗实线:5，双线:6，细点虚线:7
-    #     # 大粗虚线:8，细点划线:9，粗点划线:10，细双点划线:11，粗双点划线:12，斜点划线:13
-    #     warning_borders.left = 5
-    #     warning_borders.right = 5
-    #     warning_borders.top = 5
-    #     warning_borders.bottom = 5
-    #
-    #     # 设置背景颜色
-    #     pattern = xlwt.Pattern()
-    #     # 设置背景颜色的模式
-    #     pattern.pattern = xlwt.Pattern.SOLID_PATTERN
-    #     # 背景颜色
-    #     pattern.pattern_fore_colour = 3
-    #
-    #     # # 初始化样式
-    #     warning_style = xlwt.XFStyle()
-    #     warning_style.borders = warning_borders
-    #     warning_style.alignment = warning_alignment
-    #     warning_style.font = warning_font
-    #
-    #     if station and self.testNum == 0:
-    #         name_save = '合格'
-    #     if station and self.testNum != 0:
-    #         name_save = '部分合格'
-    #     elif not station:
-    #         name_save = '不合格'
-    #
-    #     if self.appearance:
-    #         sheet.write(self.generalTest_row, 3, '√', pass_style)
-    #     elif not self.appearance:
-    #         sheet.write(self.generalTest_row, 3, '×', fail_style)
-    #         self.errorNum += 1
-    #         self.errorInf += f'{self.errorNum})外观存在瑕疵 '
-    #
-    #     if self.CAN_runLED and self.isTestCANRunErr:
-    #         sheet.write(self.generalTest_row, 12, '√', pass_style)
-    #     elif not self.CAN_runLED and self.isTestCANRunErr:
-    #         sheet.write(self.generalTest_row, 12, '×', fail_style)
-    #         self.errorNum += 1
-    #         self.errorInf += f'{self.errorNum})CAN_RUN指示灯未亮 '
-    #     if self.CAN_errorLED and self.isTestCANRunErr:
-    #         sheet.write(self.generalTest_row, 15, '√', pass_style)
-    #     elif not self.CAN_errorLED and self.isTestCANRunErr:
-    #         sheet.write(self.generalTest_row, 15, '×', fail_style)
-    #         self.errorNum += 1
-    #         self.errorInf += f'{self.errorNum})CAN_ERROR指示灯未亮 '
-    #     if self.runLED and self.isTestRunErr:
-    #         sheet.write(self.generalTest_row, 6, '√', pass_style)
-    #     elif not self.runLED and self.isTestRunErr:
-    #         sheet.write(self.generalTest_row, 6, '×', fail_style)
-    #         self.errorNum += 1
-    #         self.errorInf += f'{self.errorNum})RUN指示灯未亮 '
-    #     if self.errorLED and self.isTestRunErr:
-    #         sheet.write(self.generalTest_row, 9, '√', pass_style)
-    #     elif not self.errorLED and self.isTestRunErr:
-    #         sheet.write(self.generalTest_row, 9, '×', fail_style)
-    #         self.errorNum += 1
-    #         self.errorInf += f'{self.errorNum})ERROE指示灯未亮 '
-    #     # #填写信号类型、通道号、测试点数据
-    #     #     if self.isAITestVol:
-    #     #         all_row = 9 + 4 + 4 + (2 + self.AI_Channels) + 2  # CPU + DI + DO + AI + AO
-    #     #         sheet.write_merge(self.AI_row + 2,self.AI_row + 1 + self.AI_Channels,1,1,'电压',pass_style)
-    #     #         for i in range(self.AI_Channels):
-    #     #             #通道号
-    #     #             sheet.write(self.AI_row + 2 + i, 2, f'CH{i+1}', pass_style)
-    #     #             for i in range(5):
-    #     #                 #理论值
-    #     #                 sheet.write(self.AI_row + 2 + i, 3 + 3 * i, f'{self.voltageTheory[i]}', pass_style)
-    #     #                 #测试值
-    #     #                 sheet.write(self.AI_row + 2 + i, 4 + 3 * i, f'{self.volReceValue[i]}', pass_style)
-    #     #                 # 精度
-    #     #                 if abs(self.volPrecision[i]) < 2:
-    #     #                     sheet.write(self.AI_row + 2 + i, 5 + 3 * i, f'{self.volPrecision[i]}‰', pass_style)
-    #     #                 else:
-    #     #                     sheet.write(self.AI_row + 2 + i, 5 + 3 * i, f'{self.volPrecision[i]}‰', fail_style)
-    #     #     if self.isAITestVol and self.isAITestCur:
-    #     #         all_row = 9 + 4 + 4 + (2 + 2 * self.AI_Channels) + 2  # CPU + DI + DO + AI + AO
-    #     #         sheet.write_merge(self.AI_row + 2 + self.AI_Channels,self.AI_row + 1 + 2 * self.AI_Channels,1,1,'电流',pass_style)
-    #     #         for i in range(self.AI_Channels):
-    #     #             #通道号
-    #     #             sheet.write(self.AI_row + 6 + i, 2, f'CH{i+1}', pass_style)
-    #     #             for i in range(5):
-    #     #                 #理论值
-    #     #                 sheet.write(self.AI_row + 6 + i, 3 + 3 * i, f'{self.currentTheory[i]}', pass_style)
-    #     #                 #测试值
-    #     #                 sheet.write(self.AI_row + 6 + i, 4 + 3 * i, f'{self.curReceValue[i]}', pass_style)
-    #     #                 # 精度
-    #     #                 if abs(self.curPrecision[i]) < 2:
-    #     #                     sheet.write(self.AI_row + 6 + i, 5 + 3 * i, f'{self.curPrecision[i]}‰', pass_style)
-    #     #                 else:
-    #     #                     sheet.write(self.AI_row + 6 + i, 5 + 3 * i, f'{self.curPrecision[i]}‰', fail_style)
-    #     #     if not self.isAITestVol and self.isAITestCur:
-    #     #         all_row = 9 + 4 + 4 + (2 + self.AI_Channels) + 2  # CPU + DI + DO + AI + AO
-    #     #         sheet.write_merge(self.AI_row + 2, self.AI_row + 1 + self.AI_Channels, 1, 1, '电流', pass_style)
-    #     #         for i in range(self.AI_Channels):
-    #     #             # 通道号
-    #     #             sheet.write(self.AI_row + 2 + i, 2, f'CH{i + 1}', pass_style)
-    #     #             for i in range(5):
-    #     #                 # 理论值
-    #     #                 sheet.write(self.AI_row + 2 + i, 3 + 3 * i, f'{self.currentTheory[i]}', pass_style)
-    #     #                 # 测试值
-    #     #                 sheet.write(self.AI_row + 2 + i, 4 + 3 * i, f'{self.curReceValue[i]}', pass_style)
-    #     #                 # 精度
-    #     #                 if abs(self.curPrecision[i]) < 2:
-    #     #                     sheet.write(self.AI_row + 2 + i, 5 + 3 * i, f'{self.curPrecision[i]}‰', pass_style)
-    #     #                 else:
-    #     #                     sheet.write(self.AI_row + 2 + i, 5 + 3 * i, f'{self.curPrecision[i]}‰', fail_style)
-    #     #     if not self.isAITestVol and not self.isAITestCur:
-    #     #         all_row = 9 + 4 + 4 + 2 + 2  # CPU + DI + DO + AI + AO
-    #     #填写通道状态
-    #     # self.DODataCheck[0] = True
-    #     for i in range(self.m_Channels):
-    #         if i < 16:
-    #             if self.DIDataCheck[i]:
-    #                 sheet.write(self.DI_row + 1, 3 + i, '√', pass_style)
-    #             elif not self.DIDataCheck[i]:
-    #                 sheet.write(self.DI_row + 1, 3 + i, '×', fail_style)
-    #                 self.errorNum += 1
-    #                 self.errorInf += f'{self.errorNum})通道{i+1} 灯未亮 '
-    #         else:
-    #             if self.DIDataCheck[i]:
-    #                 sheet.write(self.DI_row + 3, i - 13, '√', pass_style)
-    #             elif not self.DIDataCheck[i]:
-    #                 sheet.write(self.DI_row + 3, i - 13, '×', fail_style)
-    #                 self.errorNum += 1
-    #                 self.errorInf += f'{self.errorNum})通道{i + 1} 灯未亮 '
-    #
-    #     self.isDIPassTest = (((((self.isDIPassTest & self.isLEDRunOK) & self.isLEDErrOK) &
-    #                           self.CAN_runLED) & self.CAN_errorLED) & self.appearance)
-    #     # self.showInf(f'self.isLEDRunOK:{self.isLEDRunOK}')
-    #     all_row = 9 + 4 + 4 + 2 + 2  # CPU + DI + DO + AI + AO
-    #     if self.isDIPassTest and self.testNum == 0:
-    #         name_save = '合格'
-    #         sheet.write(self.generalTest_row + all_row + 1, 4, '■ 合格', pass_style)
-    #         self.label.setStyleSheet(self.testState_qss['pass'])
-    #         self.label.setText('通过')
-    #     if self.isDIPassTest and self.testNum > 0:
-    #         name_save = '部分合格'
-    #         sheet.write(self.generalTest_row + all_row + 1, 4, '■ 部分合格', pass_style)
-    #         sheet.write(self.generalTest_row + all_row + 1, 6, '------------------ 注意：有部分项目未测试！！！ ------------------', warning_style)
-    #         self.label.setStyleSheet(self.testState_qss['testing'])
-    #         self.label.setText('部分通过')
-    #     elif not self.isDIPassTest:
-    #         name_save = '不合格'
-    #         sheet.write(self.generalTest_row + all_row + 2, 4, '■ 不合格', fail_style)
-    #         sheet.write(self.generalTest_row + all_row + 2, 6, f'不合格原因：{self.errorInf}', warning_style)
-    #         self.label.setStyleSheet(self.testState_qss['fail'])
-    #         self.label.setText('未通过')
-    #     book.save(self.saveDir + f'/{name_save}{self.module_type}_{time.strftime("%Y%m%d%H%M%S")}.xls')
-
-    # @abstractmethod
-    # def fillInDOData(self, station, book, sheet):
-    #     # 通过单元格样式
-    #     # 为样式创建字体
-    #     pass_font = xlwt.Font()
-    #     # 字体类型
-    #     pass_font.name = '宋'
-    #     # 字体颜色
-    #     pass_font.colour_index = 0
-    #     # 字体大小，11为字号，20为衡量单位
-    #     pass_font.height = 10 * 20
-    #     # 字体加粗
-    #     pass_font.bold = False
-    #
-    #     # 设置单元格对齐方式
-    #     pass_alignment = xlwt.Alignment()
-    #     # 0x01(左端对齐)、0x02(水平方向上居中对齐)、0x03(右端对齐)
-    #     pass_alignment.horz = 0x02
-    #     # 0x00(上端对齐)、 0x01(垂直方向上居中对齐)、0x02(底端对齐)
-    #     pass_alignment.vert = 0x01
-    #     # 设置自动换行
-    #     pass_alignment.wrap = 1
-    #
-    #     # 设置边框
-    #     pass_borders = xlwt.Borders()
-    #     # 细实线:1，小粗实线:2，细虚线:3，中细虚线:4，大粗实线:5，双线:6，细点虚线:7
-    #     # 大粗虚线:8，细点划线:9，粗点划线:10，细双点划线:11，粗双点划线:12，斜点划线:13
-    #     pass_borders.left = 5
-    #     pass_borders.right = 5
-    #     pass_borders.top = 5
-    #     pass_borders.bottom = 5
-    #
-    #     # # 设置背景颜色
-    #     # pattern = xlwt.Pattern()
-    #     # # 设置背景颜色的模式
-    #     # pattern.pattern = xlwt.Pattern.SOLID_PATTERN
-    #     # # 背景颜色
-    #     # pattern.pattern_fore_colour = i
-    #
-    #     # # 初始化样式
-    #     pass_style = xlwt.XFStyle()
-    #     pass_style.borders = pass_borders
-    #     pass_style.alignment = pass_alignment
-    #     pass_style.font = pass_font
-    #
-    #     # 未通过单元格样式
-    #     # 为样式创建字体
-    #     fail_font = xlwt.Font()
-    #     # 字体类型
-    #     fail_font.name = '宋'
-    #     # 字体颜色
-    #     fail_font.colour_index = 1
-    #     # 字体大小，11为字号，20为衡量单位
-    #     fail_font.height = 10 * 20
-    #     # 字体加粗
-    #     fail_font.bold = False
-    #
-    #     # 设置单元格对齐方式
-    #     fail_alignment = xlwt.Alignment()
-    #     # 0x01(左端对齐)、0x02(水平方向上居中对齐)、0x03(右端对齐)
-    #     fail_alignment.horz = 0x02
-    #     # 0x00(上端对齐)、 0x01(垂直方向上居中对齐)、0x02(底端对齐)
-    #     fail_alignment.vert = 0x01
-    #     # 设置自动换行
-    #     fail_alignment.wrap = 1
-    #
-    #     # 设置边框
-    #     fail_borders = xlwt.Borders()
-    #     # 细实线:1，小粗实线:2，细虚线:3，中细虚线:4，大粗实线:5，双线:6，细点虚线:7
-    #     # 大粗虚线:8，细点划线:9，粗点划线:10，细双点划线:11，粗双点划线:12，斜点划线:13
-    #     fail_borders.left = 5
-    #     fail_borders.right = 5
-    #     fail_borders.top = 5
-    #     fail_borders.bottom = 5
-    #
-    #     # 设置背景颜色
-    #     fail_pattern = xlwt.Pattern()
-    #     # 设置背景颜色的模式
-    #     fail_pattern.pattern = xlwt.Pattern.SOLID_PATTERN
-    #     # 背景颜色
-    #     fail_pattern.pattern_fore_colour = 18
-    #
-    #     # # 初始化样式
-    #     fail_style = xlwt.XFStyle()
-    #     fail_style.borders = fail_borders
-    #     fail_style.alignment = fail_alignment
-    #     fail_style.font = fail_font
-    #     fail_style.pattern = fail_pattern
-    #
-    #     # 提示警告单元格样式
-    #     # 为样式创建字体
-    #     warning_font = xlwt.Font()
-    #     # 字体类型
-    #     warning_font.name = '宋'
-    #     # 字体颜色
-    #     warning_font.colour_index = 2
-    #     # 字体大小，11为字号，20为衡量单位
-    #     warning_font.height = 12 * 20
-    #     # 字体加粗
-    #     warning_font.bold = True
-    #
-    #     # 设置单元格对齐方式
-    #     warning_alignment = xlwt.Alignment()
-    #     # 0x01(左端对齐)、0x02(水平方向上居中对齐)、0x03(右端对齐)
-    #     warning_alignment.horz = 0x02
-    #     # 0x00(上端对齐)、 0x01(垂直方向上居中对齐)、0x02(底端对齐)
-    #     warning_alignment.vert = 0x01
-    #     # 设置自动换行
-    #     warning_alignment.wrap = 1
-    #
-    #     # 设置边框
-    #     warning_borders = xlwt.Borders()
-    #     # 细实线:1，小粗实线:2，细虚线:3，中细虚线:4，大粗实线:5，双线:6，细点虚线:7
-    #     # 大粗虚线:8，细点划线:9，粗点划线:10，细双点划线:11，粗双点划线:12，斜点划线:13
-    #     warning_borders.left = 5
-    #     warning_borders.right = 5
-    #     warning_borders.top = 5
-    #     warning_borders.bottom = 5
-    #
-    #     # 设置背景颜色
-    #     pattern = xlwt.Pattern()
-    #     # 设置背景颜色的模式
-    #     pattern.pattern = xlwt.Pattern.SOLID_PATTERN
-    #     # 背景颜色
-    #     pattern.pattern_fore_colour = 3
-    #
-    #     # # 初始化样式
-    #     warning_style = xlwt.XFStyle()
-    #     warning_style.borders = warning_borders
-    #     warning_style.alignment = warning_alignment
-    #     warning_style.font = warning_font
-    #
-    #     # if station and self.testNum == 0:
-    #     #     name_save = '合格'
-    #     # if station and self.testNum != 0:
-    #     #     name_save = '部分合格'
-    #     # elif not station:
-    #     #     name_save = '不合格'
-    #
-    #     if self.appearance:
-    #         sheet.write(self.generalTest_row, 3, '√', pass_style)
-    #     elif not self.appearance:
-    #         sheet.write(self.generalTest_row, 3, '×', fail_style)
-    #         self.errorNum += 1
-    #         self.errorInf += f'{self.errorNum})外观存在瑕疵 '
-    #
-    #     if self.CAN_runLED and self.isTestCANRunErr:
-    #         sheet.write(self.generalTest_row, 12, '√', pass_style)
-    #     elif not self.CAN_runLED and self.isTestCANRunErr:
-    #         sheet.write(self.generalTest_row, 12, '×', fail_style)
-    #         self.errorNum += 1
-    #         self.errorInf += f'{self.errorNum})CAN_RUN指示灯未亮 '
-    #     if self.CAN_errorLED and self.isTestCANRunErr:
-    #         sheet.write(self.generalTest_row, 15, '√', pass_style)
-    #     elif not self.CAN_errorLED and self.isTestCANRunErr:
-    #         sheet.write(self.generalTest_row, 15, '×', fail_style)
-    #         self.errorNum += 1
-    #         self.errorInf += f'{self.errorNum})CAN_ERROR指示灯未亮 '
-    #     if self.runLED and self.isTestRunErr:
-    #         sheet.write(self.generalTest_row, 6, '√', pass_style)
-    #     elif not self.runLED and self.isTestRunErr:
-    #         sheet.write(self.generalTest_row, 6, '×', fail_style)
-    #         self.errorNum += 1
-    #         self.errorInf += f'{self.errorNum})RUN指示灯未亮 '
-    #     if self.errorLED and self.isTestRunErr:
-    #         sheet.write(self.generalTest_row, 9, '√', pass_style)
-    #     elif not self.errorLED and self.isTestRunErr:
-    #         sheet.write(self.generalTest_row, 9, '×', fail_style)
-    #         self.errorNum += 1
-    #         self.errorInf += f'{self.errorNum})ERROE指示灯未亮 '
-    #
-    #     # 填写通道状态
-    #     # self.DODataCheck[0] = True
-    #     for i in range(self.m_Channels):
-    #         if i < 16:
-    #             if self.DODataCheck[i]:
-    #                 sheet.write(self.DO_row + 1, 3 + i, '√', pass_style)
-    #             elif not self.DODataCheck[i]:
-    #                 sheet.write(self.DO_row + 1, 3 + i, '×', fail_style)
-    #                 self.errorNum += 1
-    #                 self.errorInf += f'{self.errorNum}.通道{i + 1}灯未亮 '
-    #         else:
-    #             if self.DODataCheck[i]:
-    #                 sheet.write(self.DO_row + 3, i - 13, '√', pass_style)
-    #             elif not self.DODataCheck[i]:
-    #                 sheet.write(self.DO_row + 3, i - 13, '×', fail_style)
-    #                 self.errorNum += 1
-    #                 self.errorInf += f'{self.errorNum}.通道{i + 1}灯未亮 '
-    #
-    #     self.isDOPassTest = (((((self.isDOPassTest & self.isLEDRunOK) & self.isLEDErrOK) &
-    #                            self.CAN_runLED) & self.CAN_errorLED) & self.appearance)
-    #     # self.showInf(f'self.isLEDRunOK:{self.isLEDRunOK}')
-    #     all_row = 9 + 4 + 4 + 2 + 2
-    #     if self.isDOPassTest and self.testNum == 0:
-    #         name_save = '合格'
-    #         sheet.write(self.generalTest_row + all_row + 1, 4, '■ 合格', pass_style)
-    #         self.label.setStyleSheet(self.testState_qss['pass'])
-    #         self.label.setText('通过')
-    #     if self.isDOPassTest and self.testNum > 0:
-    #         name_save = '部分合格'
-    #         sheet.write(self.generalTest_row + all_row + 1, 4, '■ 部分合格', pass_style)
-    #         sheet.write(self.generalTest_row + all_row + 1, 6,
-    #                     '------------------ 注意：有部分项目未测试！！！ ------------------', warning_style)
-    #         self.label.setStyleSheet(self.testState_qss['testing'])
-    #         self.label.setText('部分通过')
-    #     elif not self.isDOPassTest:
-    #         name_save = '不合格'
-    #         sheet.write(self.generalTest_row + all_row + 2, 4, '■ 不合格', fail_style)
-    #         sheet.write(self.generalTest_row + all_row + 2, 6, f'不合格原因：{self.errorInf}', fail_style)
-    #         self.label.setStyleSheet(self.testState_qss['fail'])
-    #         self.label.setText('未通过')
-    #
-    #     book.save(self.saveDir + f'/{name_save}{self.module_type}_{time.strftime("%Y%m%d%H%M%S")}.xls')
-    #
-    # # @abstractmethod
-    # def fillInAIData(self,station, book, sheet):
-    #     # 通过单元格样式
-    #     # 为样式创建字体
-    #     pass_font = xlwt.Font()
-    #     # 字体类型
-    #     pass_font.name = '宋'
-    #     # 字体颜色
-    #     pass_font.colour_index = 0
-    #     # 字体大小，11为字号，20为衡量单位
-    #     pass_font.height = 10 * 20
-    #     # 字体加粗
-    #     pass_font.bold = False
-    #
-    #     # 设置单元格对齐方式
-    #     pass_alignment = xlwt.Alignment()
-    #     # 0x01(左端对齐)、0x02(水平方向上居中对齐)、0x03(右端对齐)
-    #     pass_alignment.horz = 0x02
-    #     # 0x00(上端对齐)、 0x01(垂直方向上居中对齐)、0x02(底端对齐)
-    #     pass_alignment.vert = 0x01
-    #     # 设置自动换行
-    #     pass_alignment.wrap = 1
-    #
-    #     # 设置边框
-    #     pass_borders = xlwt.Borders()
-    #     # 细实线:1，小粗实线:2，细虚线:3，中细虚线:4，大粗实线:5，双线:6，细点虚线:7
-    #     # 大粗虚线:8，细点划线:9，粗点划线:10，细双点划线:11，粗双点划线:12，斜点划线:13
-    #     pass_borders.left = 5
-    #     pass_borders.right = 5
-    #     pass_borders.top = 5
-    #     pass_borders.bottom = 5
-    #
-    #     # 设置背景颜色
-    #     pass_pattern = xlwt.Pattern()
-    #     # 设置背景颜色的模式
-    #     pass_pattern.pattern = xlwt.Pattern.SOLID_PATTERN
-    #     # 背景颜色
-    #     pass_pattern.pattern_fore_colour = 3
-    #
-    #     # # 初始化样式
-    #     pass_style = xlwt.XFStyle()
-    #     pass_style.borders = pass_borders
-    #     pass_style.alignment = pass_alignment
-    #     pass_style.font = pass_font
-    #     pass_style.pattern = pass_pattern
-    #
-    #     # 未通过单元格样式
-    #     # 为样式创建字体
-    #     fail_font = xlwt.Font()
-    #     # 字体类型
-    #     fail_font.name = '宋'
-    #     # 字体颜色
-    #     fail_font.colour_index = 1
-    #     # 字体大小，11为字号，20为衡量单位
-    #     fail_font.height = 10 * 20
-    #     # 字体加粗
-    #     fail_font.bold = True
-    #
-    #     # 设置单元格对齐方式
-    #     fail_alignment = xlwt.Alignment()
-    #     # 0x01(左端对齐)、0x02(水平方向上居中对齐)、0x03(右端对齐)
-    #     fail_alignment.horz = 0x02
-    #     # 0x00(上端对齐)、 0x01(垂直方向上居中对齐)、0x02(底端对齐)
-    #     fail_alignment.vert = 0x01
-    #     # 设置自动换行
-    #     fail_alignment.wrap = 1
-    #
-    #     # 设置边框
-    #     fail_borders = xlwt.Borders()
-    #     # 细实线:1，小粗实线:2，细虚线:3，中细虚线:4，大粗实线:5，双线:6，细点虚线:7
-    #     # 大粗虚线:8，细点划线:9，粗点划线:10，细双点划线:11，粗双点划线:12，斜点划线:13
-    #     fail_borders.left = 5
-    #     fail_borders.right = 5
-    #     fail_borders.top = 5
-    #     fail_borders.bottom = 5
-    #
-    #     # 设置背景颜色
-    #     fail_pattern = xlwt.Pattern()
-    #     # 设置背景颜色的模式
-    #     fail_pattern.pattern = xlwt.Pattern.SOLID_PATTERN
-    #     # 背景颜色
-    #     fail_pattern.pattern_fore_colour = 2
-    #
-    #     # # 初始化样式
-    #     fail_style = xlwt.XFStyle()
-    #     fail_style.borders = fail_borders
-    #     fail_style.alignment = fail_alignment
-    #     fail_style.font = fail_font
-    #     fail_style.pattern = fail_pattern
-    #
-    #     # 提示警告单元格样式
-    #     # 为样式创建字体
-    #     warning_font = xlwt.Font()
-    #     # 字体类型
-    #     warning_font.name = '宋'
-    #     # 字体颜色
-    #     warning_font.colour_index = 2
-    #     # 字体大小，11为字号，20为衡量单位
-    #     warning_font.height = 10 * 20
-    #     # 字体加粗
-    #     warning_font.bold = True
-    #
-    #     # 设置单元格对齐方式
-    #     warning_alignment = xlwt.Alignment()
-    #     # 0x01(左端对齐)、0x02(水平方向上居中对齐)、0x03(右端对齐)
-    #     warning_alignment.horz = 0x02
-    #     # 0x00(上端对齐)、 0x01(垂直方向上居中对齐)、0x02(底端对齐)
-    #     warning_alignment.vert = 0x01
-    #     # 设置自动换行
-    #     warning_alignment.wrap = 1
-    #
-    #     # 设置边框
-    #     warning_borders = xlwt.Borders()
-    #     # 细实线:1，小粗实线:2，细虚线:3，中细虚线:4，大粗实线:5，双线:6，细点虚线:7
-    #     # 大粗虚线:8，细点划线:9，粗点划线:10，细双点划线:11，粗双点划线:12，斜点划线:13
-    #     warning_borders.left = 5
-    #     warning_borders.right = 5
-    #     warning_borders.top = 5
-    #     warning_borders.bottom = 5
-    #
-    #     # 设置背景颜色
-    #     warning_pattern = xlwt.Pattern()
-    #     # 设置背景颜色的模式
-    #     warning_pattern.pattern = xlwt.Pattern.SOLID_PATTERN
-    #     # 背景颜色
-    #     warning_pattern.pattern_fore_colour = 5
-    #
-    #     # # 初始化样式
-    #     warning_style = xlwt.XFStyle()
-    #     warning_style.borders = warning_borders
-    #     warning_style.alignment = warning_alignment
-    #     warning_style.font = warning_font
-    #     warning_style.pattern = warning_pattern
-    #
-    #     # if station and self.testNum == 0:
-    #     #     name_save = '合格'
-    #     # if station and self.testNum != 0:
-    #     #     name_save = '部分合格'
-    #     # elif not station:
-    #     #     name_save = '不合格'
-    #
-    #     if self.appearance:
-    #         sheet.write(self.generalTest_row, 3, '√', pass_style)
-    #     elif not self.appearance:
-    #         sheet.write(self.generalTest_row, 3, '×', fail_style)
-    #         self.errorNum += 1
-    #         self.errorInf += f'{self.errorNum})外观存在瑕疵 '
-    #     if not self.isTestRunErr:
-    #         sheet.write(self.generalTest_row, 6, '未检测', warning_style)
-    #         sheet.write(self.generalTest_row, 9, '未检测', warning_style)
-    #     if not self.isTestCANRunErr:
-    #         sheet.write(self.generalTest_row, 12, '未检测', warning_style)
-    #         sheet.write(self.generalTest_row, 15, '未检测', warning_style)
-    #     if self.CAN_runLED and self.isTestCANRunErr:
-    #         sheet.write(self.generalTest_row, 12, '√', pass_style)
-    #     elif not self.CAN_runLED and self.isTestCANRunErr:
-    #         sheet.write(self.generalTest_row, 12, '×', fail_style)
-    #         self.errorNum += 1
-    #         self.errorInf += f'{self.errorNum})CAN_RUN指示灯未亮 '
-    #     if self.CAN_errorLED and self.isTestCANRunErr:
-    #         sheet.write(self.generalTest_row, 15, '√', pass_style)
-    #     elif not self.CAN_errorLED and self.isTestCANRunErr:
-    #         sheet.write(self.generalTest_row, 15, '×', fail_style)
-    #         self.errorNum += 1
-    #         self.errorInf += f'{self.errorNum})CAN_ERROR指示灯未亮 '
-    #     if self.runLED and self.isTestRunErr:
-    #         sheet.write(self.generalTest_row, 6, '√', pass_style)
-    #     elif not self.runLED and self.isTestRunErr:
-    #         sheet.write(self.generalTest_row, 6, '×', fail_style)
-    #         self.errorNum += 1
-    #         self.errorInf += f'{self.errorNum})RUN指示灯未亮 '
-    #     if self.errorLED and self.isTestRunErr:
-    #         sheet.write(self.generalTest_row, 9, '√', pass_style)
-    #     elif not self.errorLED and self.isTestRunErr:
-    #         sheet.write(self.generalTest_row, 9, '×', fail_style)
-    #         self.errorNum += 1
-    #         self.errorInf += f'{self.errorNum})ERROE指示灯未亮 '
-    #     # 填写信号类型、通道号、测试点数据
-    #     if self.isAITestVol:
-    #         all_row = 9 + 4 + 4 + (2 + self.AI_Channels) + 2  # CPU + DI + DO + AI + AO
-    #         sheet.write_merge(self.AI_row + 2, self.AI_row + 1 + self.AI_Channels, 1, 1, '电压', pass_style)
-    #         for i in range(5):
-    #             for j in range(self.AI_Channels):
-    #                 # 通道号
-    #                 sheet.write_merge(self.AI_row + 2 + j, self.AI_row + 2 + j, 2, 3, f'CH{j + 1}', pass_style)
-    #                 # 理论值
-    #                 sheet.write(self.AI_row + 2 + j, 3 + 3 * i + 1, f'{self.voltageTheory[i]}', pass_style)
-    #                 # 测试值
-    #                 sheet.write(self.AI_row + 2 + j, 4 + 3 * i + 1, f'{self.volReceValue[i][j]}', pass_style)
-    #                 # 精度
-    #                 if abs(self.volPrecision[i][j]) < 2:
-    #                     sheet.write(self.AI_row + 2 + j, 5 + 3 * i + 1, f'{self.volPrecision[i][j]}‰', pass_style)
-    #                 else:
-    #                     self.errorNum += 1
-    #                     self.errorInf += f'{self.errorNum})测试点{i+1}AI通道{j+1}电压精度超出范围 '
-    #                     sheet.write(self.AI_row + 2 + j, 5 + 3 * i + 1, f'{self.volPrecision[i][j]}‰', fail_style)
-    #     if self.isAITestVol and self.isAITestCur:
-    #         all_row = 9 + 4 + 4 + (2 + 2 * self.AI_Channels) + 2  # CPU + DI + DO + AI + AO
-    #         sheet.write_merge(self.AI_row + 2 + self.AI_Channels, self.AI_row + 1 + 2 * self.AI_Channels, 1, 1,
-    #                           '电流', pass_style)
-    #         for i in range(5):
-    #             for j in range(self.AI_Channels):
-    #                 # 通道号
-    #                 sheet.write_merge(self.AI_row + 2 +self.AI_Channels + j,self.AI_row + 6 + j, 2, 3, f'CH{j + 1}', pass_style)
-    #                 # 理论值
-    #                 sheet.write(self.AI_row + 2 +self.AI_Channels + j, 3 + 3 * i + 1, f'{self.currentTheory[i]}', pass_style)
-    #                 # 测试值
-    #                 sheet.write(self.AI_row + 2 +self.AI_Channels + j, 4 + 3 * i + 1, f'{self.curReceValue[i][j]}', pass_style)
-    #                 # 精度
-    #                 if abs(self.curPrecision[i][j]) < 2:
-    #                     sheet.write(self.AI_row + 2 +self.AI_Channels + j, 5 + 3 * i + 1, f'{self.curPrecision[i][j]}‰', pass_style)
-    #                 else:
-    #                     self.errorNum += 1
-    #                     self.errorInf += f'{self.errorNum})测试点{i+1}AI通道{j + 1}电流精度超出范围 '
-    #                     sheet.write(self.AI_row + 2 +self.AI_Channels + j, 5 + 3 * i + 1, f'{self.curPrecision[i][j]}‰', fail_style)
-    #     if not self.isAITestVol and self.isAITestCur:
-    #         all_row = 9 + 4 + 4 + (2 + self.AI_Channels) + 2  # CPU + DI + DO + AI + AO
-    #         sheet.write_merge(self.AI_row + 2, self.AI_row + 1 + self.AI_Channels, 1, 1, '电流', pass_style)
-    #         for i in range(5):
-    #             for j in range(self.AI_Channels):
-    #                 # 通道号
-    #                 sheet.write_merge(self.AI_row + 2 + j, self.AI_row + 2 + j, 2, 3, f'CH{j + 1}', pass_style)
-    #                 # 理论值
-    #                 sheet.write(self.AI_row + 2 + j, 3 + 3 * i + 1, f'{self.currentTheory[i]}', pass_style)
-    #                 # 测试值
-    #                 # # print(j)
-    #                 sheet.write(self.AI_row + 2 + j, 4 + 3 * i + 1, f'{self.curReceValue[i][j]}', pass_style)
-    #                 # 精度
-    #                 if abs(self.curPrecision[i][j]) < 2:
-    #                     sheet.write(self.AI_row + 2 + j, 5 + 3 * i + 1, f'{self.curPrecision[i][j]}‰', pass_style)
-    #                 else:
-    #                     self.errorNum += 1
-    #                     self.errorInf += f'{self.errorNum})测试点{i+1}AI通道{j + 1}电流精度超出范围'
-    #                     sheet.write(self.AI_row + 2 + j, 5 + 3 * i + 1, f'{self.curPrecision[i][j]}‰', fail_style)
-    #
-    #     if not self.isAITestVol and not self.isAITestCur:
-    #         all_row = 9 + 4 + 4 + 2 + 2  # CPU + DI + DO + AI + AO
-    #     # print(f'self.isAIPassTest:{self.isAIPassTest}')
-    #     self.isAIPassTest = (((((self.isAIPassTest & self.isLEDRunOK) & self.isLEDErrOK) & self.CAN_runLED) & self.CAN_errorLED) & self.appearance)
-    #     # self.showInf(f'self.isLEDRunOK:{self.isLEDRunOK}')
-    #     # print(f'self.isAIPassTest:{self.isAIPassTest}')
-    #     # print(f'self.isLEDRunOK:{self.isLEDRunOK}')
-    #     # print(f'self.isLEDErrOK:{self.isLEDErrOK}')
-    #     # print(f'self.CAN_runLED:{self.CAN_runLED}')
-    #     # print(f'self.CAN_errorLED:{self.CAN_errorLED}')
-    #     # print(f'self.appearance:{self.appearance}')
-    #     # print(f'self.testNum:{self.testNum}')
-    #     # self.showInf(f'self.testNum:{self.testNum}')
-    #     name_save = ''
-    #     if self.isAIPassTest and self.testNum == 0:
-    #         name_save = '合格'
-    #         sheet.write(self.generalTest_row + all_row + 1, 4, '■ 合格', pass_style)
-    #         sheet.write(self.generalTest_row + all_row + 1, 6,
-    #                     '------------------ 全部项目测试通过！！！ ------------------', pass_style)
-    #         self.label.setStyleSheet(self.testState_qss['pass'])
-    #         self.label.setText('全部通过')
-    #     elif self.isAIPassTest and self.testNum > 0:
-    #         name_save = '部分合格'
-    #         sheet.write(self.generalTest_row + all_row + 1, 4, '■ 部分合格', pass_style)
-    #         sheet.write(self.generalTest_row + all_row + 1, 6,
-    #                     '------------------ 注意：有部分项目未测试！！！ ------------------', warning_style)
-    #         self.label.setStyleSheet(self.testState_qss['testing'])
-    #         self.label.setText('部分通过')
-    #     elif not self.isAIPassTest:
-    #         name_save = '不合格'
-    #         sheet.write(self.generalTest_row + all_row + 2, 4, '■ 不合格', fail_style)
-    #         sheet.write(self.generalTest_row + all_row + 2, 6, f'不合格原因：{self.errorInf}', fail_style)
-    #         self.label.setStyleSheet(self.testState_qss['fail'])
-    #         self.label.setText('未通过')
-    #
-    #     book.save(self.saveDir + f'/{name_save}{self.module_type}_{time.strftime("%Y%m%d%H%M%S")}.xls')
-    #
-    # # @abstractmethod
-    # def fillInAOData(self,station, book, sheet):
-    #     # 通过单元格样式
-    #     # 为样式创建字体
-    #     pass_font = xlwt.Font()
-    #     # 字体类型
-    #     pass_font.name = '宋'
-    #     # 字体颜色
-    #     pass_font.colour_index = 0
-    #     # 字体大小，11为字号，20为衡量单位
-    #     pass_font.height = 10 * 20
-    #     # 字体加粗
-    #     pass_font.bold = False
-    #
-    #     # 设置单元格对齐方式
-    #     pass_alignment = xlwt.Alignment()
-    #     # 0x01(左端对齐)、0x02(水平方向上居中对齐)、0x03(右端对齐)
-    #     pass_alignment.horz = 0x02
-    #     # 0x00(上端对齐)、 0x01(垂直方向上居中对齐)、0x02(底端对齐)
-    #     pass_alignment.vert = 0x01
-    #     # 设置自动换行
-    #     pass_alignment.wrap = 1
-    #
-    #     # 设置边框
-    #     pass_borders = xlwt.Borders()
-    #     # 细实线:1，小粗实线:2，细虚线:3，中细虚线:4，大粗实线:5，双线:6，细点虚线:7
-    #     # 大粗虚线:8，细点划线:9，粗点划线:10，细双点划线:11，粗双点划线:12，斜点划线:13
-    #     pass_borders.left = 5
-    #     pass_borders.right = 5
-    #     pass_borders.top = 5
-    #     pass_borders.bottom = 5
-    #
-    #     # 设置背景颜色
-    #     pass_pattern = xlwt.Pattern()
-    #     # 设置背景颜色的模式
-    #     pass_pattern.pattern = xlwt.Pattern.SOLID_PATTERN
-    #     # 背景颜色
-    #     pass_pattern.pattern_fore_colour = 3
-    #
-    #     # # 初始化样式
-    #     pass_style = xlwt.XFStyle()
-    #     pass_style.borders = pass_borders
-    #     pass_style.alignment = pass_alignment
-    #     pass_style.font = pass_font
-    #     pass_style.pattern = pass_pattern
-    #
-    #     # 未通过单元格样式
-    #     # 为样式创建字体
-    #     fail_font = xlwt.Font()
-    #     # 字体类型
-    #     fail_font.name = '宋'
-    #     # 字体颜色
-    #     fail_font.colour_index = 1
-    #     # 字体大小，11为字号，20为衡量单位
-    #     fail_font.height = 10 * 20
-    #     # 字体加粗
-    #     fail_font.bold = True
-    #
-    #     # 设置单元格对齐方式
-    #     fail_alignment = xlwt.Alignment()
-    #     # 0x01(左端对齐)、0x02(水平方向上居中对齐)、0x03(右端对齐)
-    #     fail_alignment.horz = 0x02
-    #     # 0x00(上端对齐)、 0x01(垂直方向上居中对齐)、0x02(底端对齐)
-    #     fail_alignment.vert = 0x01
-    #     # 设置自动换行
-    #     fail_alignment.wrap = 1
-    #
-    #     # 设置边框
-    #     fail_borders = xlwt.Borders()
-    #     # 细实线:1，小粗实线:2，细虚线:3，中细虚线:4，大粗实线:5，双线:6，细点虚线:7
-    #     # 大粗虚线:8，细点划线:9，粗点划线:10，细双点划线:11，粗双点划线:12，斜点划线:13
-    #     fail_borders.left = 5
-    #     fail_borders.right = 5
-    #     fail_borders.top = 5
-    #     fail_borders.bottom = 5
-    #
-    #     # 设置背景颜色
-    #     fail_pattern = xlwt.Pattern()
-    #     # 设置背景颜色的模式
-    #     fail_pattern.pattern = xlwt.Pattern.SOLID_PATTERN
-    #     # 背景颜色
-    #     fail_pattern.pattern_fore_colour = 2
-    #
-    #     # # 初始化样式
-    #     fail_style = xlwt.XFStyle()
-    #     fail_style.borders = fail_borders
-    #     fail_style.alignment = fail_alignment
-    #     fail_style.font = fail_font
-    #     fail_style.pattern = fail_pattern
-    #
-    #     # 提示警告单元格样式
-    #     # 为样式创建字体
-    #     warning_font = xlwt.Font()
-    #     # 字体类型
-    #     warning_font.name = '宋'
-    #     # 字体颜色
-    #     warning_font.colour_index = 2
-    #     # 字体大小，11为字号，20为衡量单位
-    #     warning_font.height = 10 * 20
-    #     # 字体加粗
-    #     warning_font.bold = True
-    #
-    #     # 设置单元格对齐方式
-    #     warning_alignment = xlwt.Alignment()
-    #     # 0x01(左端对齐)、0x02(水平方向上居中对齐)、0x03(右端对齐)
-    #     warning_alignment.horz = 0x02
-    #     # 0x00(上端对齐)、 0x01(垂直方向上居中对齐)、0x02(底端对齐)
-    #     warning_alignment.vert = 0x01
-    #     # 设置自动换行
-    #     warning_alignment.wrap = 1
-    #
-    #     # 设置边框
-    #     warning_borders = xlwt.Borders()
-    #     # 细实线:1，小粗实线:2，细虚线:3，中细虚线:4，大粗实线:5，双线:6，细点虚线:7
-    #     # 大粗虚线:8，细点划线:9，粗点划线:10，细双点划线:11，粗双点划线:12，斜点划线:13
-    #     warning_borders.left = 5
-    #     warning_borders.right = 5
-    #     warning_borders.top = 5
-    #     warning_borders.bottom = 5
-    #
-    #     # 设置背景颜色
-    #     warning_pattern = xlwt.Pattern()
-    #     # 设置背景颜色的模式
-    #     warning_pattern.pattern = xlwt.Pattern.SOLID_PATTERN
-    #     # 背景颜色
-    #     warning_pattern.pattern_fore_colour = 5
-    #
-    #     # # 初始化样式
-    #     warning_style = xlwt.XFStyle()
-    #     warning_style.borders = warning_borders
-    #     warning_style.alignment = warning_alignment
-    #     warning_style.font = warning_font
-    #     warning_style.pattern = warning_pattern
-    #
-    #     # if station and self.testNum == 0:
-    #     #     name_save = '合格'
-    #     # if station and self.testNum != 0:
-    #     #     name_save = '部分合格'
-    #     # elif not station:
-    #     #     name_save = '不合格'
-    #
-    #     if self.appearance:
-    #         sheet.write(self.generalTest_row, 3, '√', pass_style)
-    #     elif not self.appearance:
-    #         sheet.write(self.generalTest_row, 3, '×', fail_style)
-    #         self.errorNum += 1
-    #         self.errorInf += f'{self.errorNum})外观存在瑕疵 '
-    #     if not self.isTestRunErr:
-    #         sheet.write(self.generalTest_row, 6, '未检测', warning_style)
-    #         sheet.write(self.generalTest_row, 9, '未检测', warning_style)
-    #     if not self.isTestCANRunErr:
-    #         sheet.write(self.generalTest_row, 12, '未检测', warning_style)
-    #         sheet.write(self.generalTest_row, 15, '未检测', warning_style)
-    #     if self.CAN_runLED and self.isTestCANRunErr:
-    #         sheet.write(self.generalTest_row, 12, '√', pass_style)
-    #     elif not self.CAN_runLED and self.isTestCANRunErr:
-    #         sheet.write(self.generalTest_row, 12, '×', fail_style)
-    #         self.errorNum += 1
-    #         self.errorInf += f'{self.errorNum})CAN_RUN指示灯未亮 '
-    #     if self.CAN_errorLED and self.isTestCANRunErr:
-    #         sheet.write(self.generalTest_row, 15, '√', pass_style)
-    #     elif not self.CAN_errorLED and self.isTestCANRunErr:
-    #         sheet.write(self.generalTest_row, 15, '×', fail_style)
-    #         self.errorNum += 1
-    #         self.errorInf += f'{self.errorNum})CAN_ERROR指示灯未亮 '
-    #     if self.runLED and self.isTestRunErr:
-    #         sheet.write(self.generalTest_row, 6, '√', pass_style)
-    #     elif not self.runLED and self.isTestRunErr:
-    #         sheet.write(self.generalTest_row, 6, '×', fail_style)
-    #         self.errorNum += 1
-    #         self.errorInf += f'{self.errorNum})RUN指示灯未亮 '
-    #     if self.errorLED and self.isTestRunErr:
-    #         sheet.write(self.generalTest_row, 9, '√', pass_style)
-    #     elif not self.errorLED and self.isTestRunErr:
-    #         sheet.write(self.generalTest_row, 9, '×', fail_style)
-    #         self.errorNum += 1
-    #         self.errorInf += f'{self.errorNum})ERROE指示灯未亮 '
-    #     # 填写信号类型、通道号、测试点数据
-    #     if self.isAOTestVol:
-    #         all_row = 9 + 4 + 4 + (2 + self.AO_Channels) + 2  # CPU + DI + DO + AO + AI
-    #         sheet.write_merge(self.AO_row + 2, self.AO_row + 1 + self.AO_Channels, 1, 1, '电压', pass_style)
-    #         for i in range(5):
-    #             for j in range(self.AO_Channels):
-    #                 # 通道号
-    #                 sheet.write_merge(self.AO_row + 2 + j, self.AO_row + 2 + j, 2, 3, f'CH{j + 1}', pass_style)
-    #                 # 理论值
-    #                 sheet.write(self.AO_row + 2 + j, 3 + 3 * i + 1, f'{self.voltageTheory[i]}', pass_style)
-    #                 # 测试值
-    #                 sheet.write(self.AO_row + 2 + j, 4 + 3 * i + 1, f'{self.volReceValue[i][j]}', pass_style)
-    #                 # 精度
-    #                 if abs(self.volPrecision[i][j]) < 2:
-    #                     sheet.write(self.AO_row + 2 + j, 5 + 3 * i + 1, f'{self.volPrecision[i][j]}‰', pass_style)
-    #                 else:
-    #                     self.errorNum += 1
-    #                     self.errorInf += f'{self.errorNum})AO通道{i + 1}电压精度超出范围 '
-    #                     sheet.write(self.AO_row + 2 + j, 5 + 3 * i + 1, f'{self.volPrecision[i][j]}‰', fail_style)
-    #     if self.isAOTestVol and self.isAOTestCur:
-    #         all_row = 9 + 4 + 4 + (2 + 2 * self.AO_Channels) + 2  # CPU + DI + DO + AO + AI
-    #         sheet.write_merge(self.AO_row + 2 + self.AO_Channels, self.AO_row + 1 + 2 * self.AO_Channels, 1, 1,
-    #                           '电流', pass_style)
-    #         for i in range(5):
-    #             for j in range(self.AO_Channels):
-    #                 # 通道号
-    #                 sheet.write_merge(self.AO_row + 2 + self.AO_Channels + j, self.AO_row + 6 + j, 2, 3, f'CH{j + 1}',
-    #                                   pass_style)
-    #                 # 理论值
-    #                 sheet.write(self.AO_row + 2 + self.AO_Channels + j, 3 + 3 * i + 1, f'{self.currentTheory[i]}',
-    #                             pass_style)
-    #                 # 测试值
-    #                 sheet.write(self.AO_row + 2 + self.AO_Channels + j, 4 + 3 * i + 1, f'{self.curReceValue[i][j]}',
-    #                             pass_style)
-    #                 # 精度
-    #                 if abs(self.curPrecision[i][j]) < 2:
-    #                     sheet.write(self.AO_row + 2 + self.AO_Channels + j, 5 + 3 * i + 1,
-    #                                 f'{self.curPrecision[i][j]}‰', pass_style)
-    #                 else:
-    #                     self.errorNum += 1
-    #                     self.errorInf += f'{self.errorNum})测试点{i+1}AO通道{j + 1}电流精度超出范围 '
-    #                     sheet.write(self.AO_row + 2 + self.AO_Channels + j, 5 + 3 * i + 1,
-    #                                 f'{self.curPrecision[i][j]}‰', fail_style)
-    #     if not self.isAOTestVol and self.isAOTestCur:
-    #         all_row = 9 + 4 + 4 + (2 + self.AO_Channels) + 2  # CPU + DI + DO + AO + AI
-    #         sheet.write_merge(self.AO_row + 2, self.AO_row + 1 + self.AO_Channels, 1, 1, '电流', pass_style)
-    #         for i in range(5):
-    #             for j in range(self.AO_Channels):
-    #                 # 通道号
-    #                 sheet.write_merge(self.AO_row + 2 + j, self.AO_row + 2 + j, 2, 3, f'CH{j + 1}', pass_style)
-    #                 # 理论值
-    #                 sheet.write(self.AO_row + 2 + j, 3 + 3 * i + 1, f'{self.currentTheory[i]}', pass_style)
-    #                 # 测试值
-    #                 # # print(j)
-    #                 sheet.write(self.AO_row + 2 + j, 4 + 3 * i + 1, f'{self.curReceValue[i][j]}', pass_style)
-    #                 # 精度
-    #                 if abs(self.curPrecision[i][j]) < 2:
-    #                     sheet.write(self.AO_row + 2 + j, 5 + 3 * i + 1, f'{self.curPrecision[i][j]}‰', pass_style)
-    #                 else:
-    #                     self.errorNum += 1
-    #                     self.errorInf += f'{self.errorNum})测试点{i+1}AO通道{j + 1}电流精度超出范围'
-    #                     sheet.write(self.AO_row + 2 + j, 5 + 3 * i + 1, f'{self.curPrecision[i][j]}‰', fail_style)
-    #
-    #     if not self.isAOTestVol and not self.isAOTestCur:
-    #         all_row = 9 + 4 + 4 + 2 + 2  # CPU + DI + DO + AI + AO
-    #     # print(f'self.isAOPassTest:{self.isAOPassTest}')
-    #     self.isAOPassTest = (((((self.isAOPassTest & self.isLEDRunOK) & self.isLEDErrOK) & self.CAN_runLED) & self.CAN_errorLED) & self.appearance)
-    #     # self.showInf(f'self.isLEDRunOK:{self.isLEDRunOK}')
-    #     # print(f'self.isAOPassTest:{self.isAOPassTest}')
-    #     # print(f'self.isLEDRunOK:{self.isLEDRunOK}')
-    #     # print(f'self.isLEDErrOK:{self.isLEDErrOK}')
-    #     # print(f'self.CAN_runLED:{self.CAN_runLED}')
-    #     # print(f'self.CAN_errorLED:{self.CAN_errorLED}')
-    #     # print(f'self.appearance:{self.appearance}')
-    #     # print(f'self.testNum:{self.testNum}')
-    #     # self.showInf(f'self.testNum:{self.testNum}')
-    #     name_save = ''
-    #     if self.isAOPassTest and self.testNum == 0:
-    #         name_save = '合格'
-    #         sheet.write(self.generalTest_row + all_row + 1, 4, '■ 合格', pass_style)
-    #         sheet.write(self.generalTest_row + all_row + 1, 6,
-    #                     '------------------ 全部项目测试通过！！！ ------------------', pass_style)
-    #         self.label.setStyleSheet(self.testState_qss['pass'])
-    #         self.label.setText('全部通过')
-    #     elif self.isAOPassTest and self.testNum > 0:
-    #         name_save = '部分合格'
-    #         sheet.write(self.generalTest_row + all_row + 1, 4, '■ 部分合格', pass_style)
-    #         sheet.write(self.generalTest_row + all_row + 1, 6,
-    #                     '------------------ 注意：有部分项目未测试！！！ ------------------', warning_style)
-    #         self.label.setStyleSheet(self.testState_qss['testing'])
-    #         self.label.setText('部分通过')
-    #     elif not self.isAOPassTest:
-    #         name_save = '不合格'
-    #         sheet.write(self.generalTest_row + all_row + 2, 4, '■ 不合格', fail_style)
-    #         sheet.write(self.generalTest_row + all_row + 2, 6, f'不合格原因：{self.errorInf}', fail_style)
-    #         self.label.setStyleSheet(self.testState_qss['fail'])
-    #         self.label.setText('未通过')
-    #
-    #     book.save(self.saveDir + f'/{name_save}{self.module_type}_{time.strftime("%Y%m%d%H%M%S")}.xls')
 
     def initPara(self):
         # 生成表格的相关标识
@@ -5183,7 +3574,7 @@ class Ui_Control(QMainWindow,Ui_Form):
         self.subRunFlag = True
 
 
-def CAN_init(CAN_channel:list):
+def CAN_init(CAN_channel: list):
     CAN_option.close(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX)
     time.sleep(0.1)
     QApplication.processEvents()
@@ -5191,18 +3582,18 @@ def CAN_init(CAN_channel:list):
         if not CAN_option.connect(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, channel):
             # self.showMessageBox(['CAN设备存在问题', 'CAN设备开启失败，请检查CAN设备！'])
             # self.CANFail()
-            return [False,['CAN设备存在问题', f'CAN通道{channel}开启失败，请检查CAN设备！']]
+            return [False, ['CAN设备存在问题', f'CAN通道{channel}开启失败，请检查CAN设备！']]
 
         if not CAN_option.init(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, channel, init_config):
             # self.showMessageBox(['CAN设备存在问题', 'CAN通道初始化失败，请检查CAN设备！'])
             # self.CANFail()
-            return [False,['CAN设备存在问题', f'CAN通道{channel}初始化失败，请检查CAN设备！']]
+            return [False, ['CAN设备存在问题', f'CAN通道{channel}初始化失败，请检查CAN设备！']]
 
         if not CAN_option.start(CAN_option.VCI_USB_CAN_2, CAN_option.DEV_INDEX, channel):
             # self.showMessageBox(['CAN设备存在问题','CAN通道打开失败，请检查CAN设备！'])
             # self.CANFail()
-            return [False,['CAN设备存在问题',f'CAN通道{channel}打开失败，请检查CAN设备！']]
-    return [True,['','']]
+            return [False, ['CAN设备存在问题', f'CAN通道{channel}打开失败，请检查CAN设备！']]
+    return [True, ['', '']]
 
 
 def mainThreadRunning():
@@ -5210,9 +3601,12 @@ def mainThreadRunning():
     if not isMainRunning:
         return False
     return True
+
+
 def canInit_thread():
     q.put(CAN_init([1]))
     event_canInit.set()
+
 
 def strToASCII(str):
     ascii_list = []
@@ -5222,6 +3616,7 @@ def strToASCII(str):
 
     # print(ascii_list)
     return ascii_list
+
 
 def ASCIIToHex(list):
     hex_list = [0x00 for x in range(len(list))]
@@ -5235,10 +3630,11 @@ def ASCIIToHex(list):
     # print(f'hex_list = {hex_list}')
     return hex_list
 
-def write3codeToPLC(addr,code_list):
+
+def write3codeToPLC(addr, code_list):
     ubyte_transmit = c_ubyte * 8
     transmit_inf = ubyte_transmit(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
-    #写入PN
+    # 写入PN
     code_pn = code_list[0]
     # print(f'code_pn = {code_pn}')
     num1 = int(len(code_pn) / 4)
@@ -5246,17 +3642,17 @@ def write3codeToPLC(addr,code_list):
     if num1 != 0:
         for i in range(num1):
             transmit_inf = ubyte_transmit(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
-            transmit_inf = [0x23, 0xf8, 0x5f,  0x00+(i+1), 0x00+code_pn[i*4+0], 0x00+code_pn[i*4+1],
-                            0x00+code_pn[i*4+2], 0x00+code_pn[i*4+3]]
+            transmit_inf = [0x23, 0xf8, 0x5f, 0x00 + (i + 1), 0x00 + code_pn[i * 4 + 0], 0x00 + code_pn[i * 4 + 1],
+                            0x00 + code_pn[i * 4 + 2], 0x00 + code_pn[i * 4 + 3]]
             # transmit_inf = [0x23, 0xf7, 0x5f, 0x01, 0x53, 0x31, 0x32, 0x32]
-            bool_pn, rece_pn = CAN_option.transmitCAN(0x602, transmit_inf,0)
+            bool_pn, rece_pn = CAN_option.transmitCAN(0x602, transmit_inf, 0)
             if not bool_pn:
                 return False
     if num2 != 0:
         transmit_inf = ubyte_transmit(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
         if num2 == 1:
             transmit_inf[0] = 0x2f
-            transmit_inf[4] = code_pn[num1*4+0]
+            transmit_inf[4] = code_pn[num1 * 4 + 0]
         elif num2 == 2:
             transmit_inf[0] = 0x2b
             transmit_inf[4] = 0x00 + code_pn[num1 * 4 + 0]
@@ -5269,8 +3665,8 @@ def write3codeToPLC(addr,code_list):
 
         transmit_inf[1] = 0xf8
         transmit_inf[2] = 0x5f
-        transmit_inf[3] = num1+1
-        bool_pn,rece_pn = CAN_option.transmitCAN(0x602,transmit_inf,0)
+        transmit_inf[3] = num1 + 1
+        bool_pn, rece_pn = CAN_option.transmitCAN(0x602, transmit_inf, 0)
         if not bool_pn:
             return False
 
@@ -5282,10 +3678,10 @@ def write3codeToPLC(addr,code_list):
     if num1 != 0:
         for i in range(num1):
             transmit_inf = ubyte_transmit(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
-            transmit_inf = [0x23, 0xf7, 0x5f, 0x00+(i+1), 0x00 + code_sn[i * 4 + 0], 0x00+code_sn[i * 4 + 1],
+            transmit_inf = [0x23, 0xf7, 0x5f, 0x00 + (i + 1), 0x00 + code_sn[i * 4 + 0], 0x00 + code_sn[i * 4 + 1],
                             0x00 + code_sn[i * 4 + 2], 0x00 + code_sn[i * 4 + 3]]
             # transmit_inf = [0x23, 0xf7, 0x5f, 0x01, 0x53, 0x31,0x32,0x32]
-            bool_sn, rece_sn = CAN_option.transmitCAN(0x602, transmit_inf,0)
+            bool_sn, rece_sn = CAN_option.transmitCAN(0x602, transmit_inf, 0)
             if not bool_sn:
                 return False
     if num2 != 0:
@@ -5306,7 +3702,7 @@ def write3codeToPLC(addr,code_list):
         transmit_inf[1] = 0xf7
         transmit_inf[2] = 0x5f
         transmit_inf[3] = 0x00 + (num1 + 1)
-        bool_sn, rece_sn = CAN_option.transmitCAN(0x602, transmit_inf,0)
+        bool_sn, rece_sn = CAN_option.transmitCAN(0x602, transmit_inf, 0)
         if not bool_sn:
             return False
     # print('code_sn = ', code_sn)
@@ -5318,9 +3714,9 @@ def write3codeToPLC(addr,code_list):
         for i in range(num1):
 
             transmit_inf = ubyte_transmit(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
-            transmit_inf = [0x23, 0xf9, 0x5f, 0x00 + (i+1), 0x00 + code_rev[i * 4 + 0], 0x00 + code_rev[i * 4 + 1],
+            transmit_inf = [0x23, 0xf9, 0x5f, 0x00 + (i + 1), 0x00 + code_rev[i * 4 + 0], 0x00 + code_rev[i * 4 + 1],
                             0x00 + code_rev[i * 4 + 2], 0x00 + code_rev[i * 4 + 3]]
-            bool_rev, rece_rev = CAN_option.transmitCAN(0x600 + addr, transmit_inf,0)
+            bool_rev, rece_rev = CAN_option.transmitCAN(0x600 + addr, transmit_inf, 0)
             if not bool_rev:
                 return False
     if num2 != 0:
@@ -5341,17 +3737,18 @@ def write3codeToPLC(addr,code_list):
         transmit_inf[1] = 0xf9
         transmit_inf[2] = 0x5f
         transmit_inf[3] = 0x00 + (num1 + 1)
-        bool_rev, rece_rev = CAN_option.transmitCAN(0x600 + addr, transmit_inf,0)
+        bool_rev, rece_rev = CAN_option.transmitCAN(0x600 + addr, transmit_inf, 0)
         if not bool_rev:
             return False
 
     return True
 
+
 def get3codeFromPLC(addr):
     ubyte_transmit = c_ubyte * 8
     transmit_inf = ubyte_transmit(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
 
-    #读设备PN
+    # 读设备PN
     pn_list = []
     flag_pn = True
     for i in range(6):
@@ -5359,12 +3756,12 @@ def get3codeFromPLC(addr):
         transmit_inf[1] = 0xf8
         transmit_inf[2] = 0x5f
         transmit_inf[3] = 0x00 + i + 1
-        bool_pn, transmit_pn = CAN_option.transmitCAN(0x602, transmit_inf,0)
+        bool_pn, transmit_pn = CAN_option.transmitCAN(0x602, transmit_inf, 0)
         if not bool_pn:
             return False
 
         while True:
-            bool_pn, m_can_obj = CAN_option.receiveCANbyID(0x582, 2,0)
+            bool_pn, m_can_obj = CAN_option.receiveCANbyID(0x582, 2, 0)
             if bool_pn:
                 break
             if bool_pn == 'stopReceive':
@@ -5373,8 +3770,8 @@ def get3codeFromPLC(addr):
                 return False, m_can_obj.Data
 
         for j in range(4):
-            if  m_can_obj.Data[j+4] != 0x00:
-                pn_list.append(int(m_can_obj.Data[j+4]))
+            if m_can_obj.Data[j + 4] != 0x00:
+                pn_list.append(int(m_can_obj.Data[j + 4]))
             else:
                 flag_pn = False
                 break
@@ -5396,12 +3793,12 @@ def get3codeFromPLC(addr):
         transmit_inf[1] = 0xf7
         transmit_inf[2] = 0x5f
         transmit_inf[3] = 0x00 + i + 1
-        bool_sn, transmit_sn = CAN_option.transmitCAN(0x602, transmit_inf,0)
+        bool_sn, transmit_sn = CAN_option.transmitCAN(0x602, transmit_inf, 0)
         if not bool_sn:
             return False
 
         while True:
-            bool_sn, m_can_obj = CAN_option.receiveCANbyID(0x582, 2,0)
+            bool_sn, m_can_obj = CAN_option.receiveCANbyID(0x582, 2, 0)
             if bool_sn:
                 break
             if bool_sn == 'stopReceive':
@@ -5433,12 +3830,12 @@ def get3codeFromPLC(addr):
         transmit_inf[1] = 0xf9
         transmit_inf[2] = 0x5f
         transmit_inf[3] = 0x00 + i + 1
-        bool_rev, transmit_rev = CAN_option.transmitCAN(0x602, transmit_inf,0)
+        bool_rev, transmit_rev = CAN_option.transmitCAN(0x602, transmit_inf, 0)
         if not bool_rev:
             return False
 
         while True:
-            bool_rev, m_can_obj = CAN_option.receiveCANbyID(0x582, 2,0)
+            bool_rev, m_can_obj = CAN_option.receiveCANbyID(0x582, 2, 0)
             if bool_rev:
                 break
             if bool_rev == 'stopReceive':
@@ -5462,42 +3859,5 @@ def get3codeFromPLC(addr):
         revCode += chr(asc)
     # print('revCode = ', revCode)
 
-    return True,[pnCode,snCode,revCode]
+    return True, [pnCode, snCode, revCode]
 
-# def online_thread():
-#     try:
-#         time_online = time.time()
-#         while True:
-#             QApplication.processEvents()
-#             if (time.time() - time_online) * 1000 > 2000:
-#                 if not mainThreadRunning():
-#                     return False
-#                 self.showInf(f'错误：总线初始化超时！' + self.HORIZONTAL_LINE)
-#                 QMessageBox.critical(None, '错误', '总线初始化超时！请检查CAN分析仪是否正确连接', QMessageBox.AcceptRole |
-#                                      QMessageBox.RejectRole, QMessageBox.AcceptRole)
-#                 self.endOfTest()
-#                 return False
-#             bool_online = self.isModulesOnline()
-#             # bool_online = self.isModulesOnline(currentTable)
-#             if bool_online:
-#                 if not mainThreadRunning():
-#                     return False
-#                 self.showInf(f'总线初始化成功！' + self.HORIZONTAL_LINE)
-#                 break
-#             else:
-#                 if not mainThreadRunning():
-#                     return False
-#                 self.showInf(f'错误：总线初始化失败！再次尝试初始化。' + self.HORIZONTAL_LINE)
-#                 # QMessageBox.critical(None, '错误', '总线初始化失败！再次尝试初始化', QMessageBox.AcceptRole |
-#                 #                  QMessageBox.RejectRole, QMessageBox.AcceptRole)
-#                 self.PassOrFail(False)
-#                 if not mainThreadRunning():
-#                     return False
-#         self.showInf('模块在线检测结束！' + self.HORIZONTAL_LINE)
-#
-#     except:
-#         if not mainThreadRunning():
-#             return False
-#         QMessageBox(QMessageBox.Critical, '错误提示', '总线初始化异常，请检查设备').exec_()
-#         self.PassOrFail(False)
-#         return False

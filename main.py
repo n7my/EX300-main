@@ -20,11 +20,12 @@ class uWindow(Ui_Control):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+
     # 此处调用GUI的程序
     # widgets = QtWidgets.QMainWindow()
     mainWin = uWindow()
     mainWin.show()
-    ui = uWindow()
+    # ui = uWindow()
 
     # 结束
 

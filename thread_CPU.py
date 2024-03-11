@@ -17,12 +17,14 @@ class CPUThread(QObject):
     pass_signal = pyqtSignal(bool)
 
     messageBox_signal = pyqtSignal(list)
+    pic_messageBox_signal = pyqtSignal(list)
+    messageBox_oneButton_signal = pyqtSignal(list)
     # excel_signal = pyqtSignal(list)
     allFinished_signal = pyqtSignal()
     label_signal = pyqtSignal(list)
     saveExcel_signal = pyqtSignal(list)
     print_signal = pyqtSignal(list)
-    pic_messageBox_signal = pyqtSignal(list)
+
     moveToRow_signal = pyqtSignal(list)
 
     HORIZONTAL_LINE = "\n------------------------------------------------------------" \
@@ -2186,7 +2188,7 @@ class CPUThread(QObject):
         typeC_serial.close()
 
     #FLASH测试
-    def CPU_FLASHTest(self,serial_transmitData:list): 
+    def CPU_FLASHTest(self,serial_transmitData:list):
         try:
             #打开串口
             typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
@@ -3197,7 +3199,7 @@ class CPUThread(QObject):
             # 接收数组数据
             data = typeC_serial.read(len(transmitData))
             if len(data) == 0:
-                self.messageBox_signal.emit(['操作警告','未接收到信号，请检查232（或485）接线是否断开。'])
+                self.messageBox_signal.emit(['操作警告',f'未接收到{type}信号，请检查{type}接线是否断开。'])
                 reply = self.result_queue.get()
                 if reply == QMessageBox.AcceptRole:
                     isReceiveTrueData &= False
@@ -3284,7 +3286,7 @@ class CPUThread(QObject):
         #         self.cancelAllTest()
         # 关闭串口
         typeC_serial.close()
-        # return isReceiveTrueData
+
 
     # 本体485测试
     def CPU_485Test(self, transmitData: list,baudRate:list):

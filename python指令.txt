@@ -55,6 +55,7 @@ python虚拟环境激活报错的解决方法：https://blog.csdn.net/Protinx/article/details/
 
 pip install -r requirements.txt -i https://pypi.douban.com/simple/
 
+D:\MyData\wujun89\myEnv_PLC\Scripts\activate 
 
 
 
