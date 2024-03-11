@@ -2013,8 +2013,8 @@ class CPUThread(QObject):
 
         except:
             self.isPassAll &= False
-            self.messageBox_signal.emit(['错误提示', f'测试出现问题，请检查测试程序和测试设备！\n'
-                                                     f'"ErrorInf:\n{traceback.format_exc()}"'])
+            self.result_signal.emit(f'测试出现问题，请检查测试程序和测试设备！\n'
+                                                     f'"ErrorInf:\n{traceback.format_exc()}"')
             self.showErrorInf('测试')
             return False
         finally:
@@ -2067,8 +2067,7 @@ class CPUThread(QObject):
             #打开串口
             typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
         except serial.SerialException as e:
-            self.messageBox_signal.emit(['错误警告',f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'
-                                                    f'Failed to open serial port: {e}'])
+            self.messageBox_signal.emit(['错误警告',f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'])
             self.isPassTypeTest= False
             isThisPass = False
             self.cancelAllTest()
@@ -2142,8 +2141,7 @@ class CPUThread(QObject):
             #打开串口
             typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
         except serial.SerialException as e:
-            self.messageBox_signal.emit(['错误警告',f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'
-                                                    f'Failed to open serial port: {e}'])
+            self.messageBox_signal.emit(['错误警告',f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'])
             self.isPassSRAM = False
             self.cancelAllTest()
         loopStartTime = time.time()
@@ -2193,8 +2191,7 @@ class CPUThread(QObject):
             #打开串口
             typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
         except serial.SerialException as e:
-            self.messageBox_signal.emit(['错误警告',f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'
-                                                    f'Failed to open serial port: {e}'])
+            self.messageBox_signal.emit(['错误警告',f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'])
             self.isPassFLASH = False
             self.cancelAllTest()
         loopStartTime = time.time()
@@ -2259,8 +2256,7 @@ class CPUThread(QObject):
             if not self.is_running:
                 self.cancelAllTest()
                 return False
-            self.messageBox_signal.emit(['错误警告',f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'
-                                                    f'Failed to open serial port: {e}'])
+            self.messageBox_signal.emit(['错误警告',f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'])
             self.isPassFPGA = False
             isThisPass = False
             self.cancelAllTest()
@@ -2322,8 +2318,7 @@ class CPUThread(QObject):
             #打开串口
             typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
         except serial.SerialException as e:
-            self.messageBox_signal.emit(['错误警告',f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'
-                                                    f'Failed to open serial port: {e}'])
+            self.messageBox_signal.emit(['错误警告',f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'])
             self.isPassLever = False
             isThisPass = False
             self.cancelAllTest()
@@ -2383,8 +2378,7 @@ class CPUThread(QObject):
             #打开串口
             typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
         except serial.SerialException as e:
-            self.messageBox_signal.emit(['错误警告',f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'
-                                                    f'Failed to open serial port: {e}'])
+            self.messageBox_signal.emit(['错误警告',f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'])
             self.isPassMFK = False
             isThisPass = False
             self.cancelAllTest()
@@ -2444,7 +2438,7 @@ class CPUThread(QObject):
             # 打开串口
             typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
         except serial.SerialException as e:
-            self.messageBox_signal.emit(['错误警告', f'Failed to open serial port: {e}'])
+            self.messageBox_signal.emit(['错误警告', f'Failed to open serial port。\n'])
             self.isPassPowerOffSave = False
             isThisPass = False
             self.cancelAllTest()
@@ -2519,8 +2513,7 @@ class CPUThread(QObject):
             #打开串口
             typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
         except serial.SerialException as e:
-            self.messageBox_signal.emit(['错误警告',f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'
-                                                    f'Failed to open serial port: {e}'])
+            self.messageBox_signal.emit(['错误警告',f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'])
             self.isPassRTC = False
             isThisPass = False
             self.cancelAllTest()
@@ -2637,8 +2630,7 @@ class CPUThread(QObject):
                 #打开串口
                 typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
             except serial.SerialException as e:
-                self.messageBox_signal.emit(['错误警告',f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'
-                                                        f'Failed to open serial port: {e}'])
+                self.messageBox_signal.emit(['错误警告',f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'])
                 self.isPassLED = False
                 isThisPass = False
                 self.cancelAllTest()
@@ -2750,8 +2742,7 @@ class CPUThread(QObject):
             #打开串口
             typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
         except serial.SerialException as e:
-            self.messageBox_signal.emit(['错误警告',f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'
-                                                    f'Failed to open serial port: {e}'])
+            self.messageBox_signal.emit(['错误警告',f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'])
             self.isPassIn = False
             isThisPass = False
             self.cancelAllTest()
@@ -2854,8 +2845,7 @@ class CPUThread(QObject):
             #打开串口
             typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
         except serial.SerialException as e:
-            self.messageBox_signal.emit(['错误警告',f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'
-                                                    f'Failed to open serial port: {e}'])
+            self.messageBox_signal.emit(['错误警告',f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'])
             self.isPassOut = False
             isThisPass = False
             self.cancelAllTest()
@@ -3020,8 +3010,7 @@ class CPUThread(QObject):
             #打开串口
             typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
         except serial.SerialException as e:
-            self.messageBox_signal.emit(['错误警告',f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'
-                                                    f'Failed to open serial port: {e}'])
+            self.messageBox_signal.emit(['错误警告',f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'])
         loopStartTime = time.time()
         while True:
             if (time.time() - loopStartTime) * 1000 > self.waiting_time:
@@ -3099,8 +3088,7 @@ class CPUThread(QObject):
             #打开串口
             typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
         except serial.SerialException as e:
-            self.messageBox_signal.emit(['错误警告',f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'
-                                                    f'Failed to open serial port: {e}'])
+            self.messageBox_signal.emit(['错误警告',f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'])
             self.isPass232 = False
             isThisPass = False
             self.cancelAllTest()
@@ -3177,8 +3165,7 @@ class CPUThread(QObject):
                 m_port = str(self.serialPort_power)
                 typeC_serial = serial.Serial(port=m_port, baudrate=baudRate, timeout=1)
         except serial.SerialException as e:
-            self.messageBox_signal.emit(['错误警告',f'串口{m_port}打开失败，请检查该串口是否被占用。\n'
-                                                    f'Failed to open serial port: {e}'])
+            self.messageBox_signal.emit(['错误警告',f'串口{m_port}打开失败，请检查该串口是否被占用。\n'])
             isReceiveTrueData &= False
             # 关闭串口
             typeC_serial.close()
@@ -3237,8 +3224,7 @@ class CPUThread(QObject):
             m_port = str(self.serialPort_power)
             typeC_serial = serial.Serial(port=m_port, baudrate=baudRate, timeout=1)
         except serial.SerialException as e:
-            self.messageBox_signal.emit(['错误警告', f'串口{m_port}打开失败，请检查该串口是否被占用。\n'
-                                                     f'Failed to open serial port: {e}'])
+            self.messageBox_signal.emit(['错误警告', f'串口{m_port}打开失败，请检查该串口是否被占用。\n'])
             isReceiveTrueData &= False
             # 关闭串口
             typeC_serial.close()
@@ -3296,8 +3282,7 @@ class CPUThread(QObject):
             typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
         except serial.SerialException as e:
             self.messageBox_signal.emit(
-                ['错误警告', f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'
-                             f'Failed to open serial port: {e}'])
+                ['错误警告', f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'])
             self.isPass485 = False
             isThisPass = False
             self.cancelAllTest()
@@ -3368,8 +3353,7 @@ class CPUThread(QObject):
             #打开串口
             typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
         except serial.SerialException as e:
-            self.messageBox_signal.emit(['错误警告',f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'
-                                                    f'Failed to open serial port: {e}'])
+            self.messageBox_signal.emit(['错误警告',f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'])
             self.isPassRightCAN =False
             isThisPass = False
             self.cancelAllTest()
@@ -3460,8 +3444,7 @@ class CPUThread(QObject):
             #打开串口
             typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
         except serial.SerialException as e:
-            self.messageBox_signal.emit(['错误警告',f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'
-                                                    f'Failed to open serial port: {e}'])
+            self.messageBox_signal.emit(['错误警告',f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'])
             self.isPassConfig = False
             isThisPass = False
             self.cancelAllTest()
@@ -3621,8 +3604,7 @@ class CPUThread(QObject):
                     self.isPassOp &= False
                     isThisPass = False
                 self.messageBox_signal.emit(
-                    ['错误警告', f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'
-                                 f'Failed to open serial port: {e}'])
+                    ['错误警告', f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'])
                 self.isPassOp = False
                 isThisPass = False
                 self.cancelAllTest()
@@ -3887,8 +3869,7 @@ class CPUThread(QObject):
                 typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
             except serial.SerialException as e:
                 self.messageBox_signal.emit(
-                    ['错误警告', f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'
-                                 f'Failed to open serial port: {e}'])
+                    ['错误警告', f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'])
                 self.isPassLdCAN &= False
                 isThisPass = False
                 self.cancelAllTest()
@@ -3961,8 +3942,7 @@ class CPUThread(QObject):
             typeC_serial = serial.Serial(port=str(self.serialPort_typeC), baudrate=1000000, timeout=1)
         except serial.SerialException as e:
             self.messageBox_signal.emit(
-                ['错误警告', f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'
-                             f'Failed to open serial port: {e}'])
+                ['错误警告', f'串口{str(self.serialPort_typeC)}打开失败，请检查该串口是否被占用。\n'])
             self.isPassDIP &= False
             isThisPass = False
             self.cancelAllTest()
@@ -4120,7 +4100,7 @@ class CPUThread(QObject):
         self.result_signal.emit(f"{Inf}程序出现问题\n")
         # 捕获异常并输出详细的错误信息
         self.result_signal.emit(f"ErrorInf:\n{traceback.format_exc()}\n")
-        self.messageBox_signal.emit(['错误警告',(f"ErrorInf:\n{traceback.format_exc()}\n")])
+        # self.messageBox_signal.emit(['错误警告',(f"ErrorInf:\n{traceback.format_exc()}\n")])
 
     #CAN设备初始化
     def CAN_init(self,CAN_channel:list):
