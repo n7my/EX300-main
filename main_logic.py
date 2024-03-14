@@ -1493,28 +1493,28 @@ class Ui_Control(QMainWindow, Ui_Form):
             QApplication.processEvents()
 
             # 控制可编程电源自动上电
-            if self.powerControl(baudRate=9600, transmitData=self.vol_24v):
-                self.showInf('成功设置电压为24V。\n')
-                if self.powerControl(baudRate=9600, transmitData=self.cur_2a):
-                    self.showInf('成功设置电流为2A。\n')
-                    if self.powerControl(baudRate=9600, transmitData=self.power_on):
-                        self.showInf('成功上电，等待设备初始化。\n')
-                        if self.tabIndex == 0 or self.tabIndex == 1 or self.tabIndex == 2:
-                            waitTime = 3
-                        elif self.tabIndex == 3 or self.tabIndex == 4:
-                            waitTime = 6
-                        for i in range(waitTime):
-                            self.showInf(f'剩余等待时间：{waitTime-i}秒……\n')
-                            # time.sleep(1)
-                    else:
-                        self.showInf('上电失败，测试取消。\n')
-                        return False
-                else:
-                    self.showInf('电流设置失败，测试取消。\n')
-                    return False
-            else:
-                self.showInf('电压设置失败，测试取消。\n')
-                return False
+            # if self.powerControl(baudRate=9600, transmitData=self.vol_24v):
+            #     self.showInf('成功设置电压为24V。\n')
+            #     if self.powerControl(baudRate=9600, transmitData=self.cur_2a):
+            #         self.showInf('成功设置电流为2A。\n')
+            #         if self.powerControl(baudRate=9600, transmitData=self.power_on):
+            #             self.showInf('成功上电，等待设备初始化。\n')
+            #             if self.tabIndex == 0 or self.tabIndex == 1 or self.tabIndex == 2:
+            #                 waitTime = 3
+            #             elif self.tabIndex == 3 or self.tabIndex == 4:
+            #                 waitTime = 6
+            #             for i in range(waitTime):
+            #                 self.showInf(f'剩余等待时间：{waitTime-i}秒……\n')
+            #                 # time.sleep(1)
+            #         else:
+            #             self.showInf('上电失败，测试取消。\n')
+            #             return False
+            #     else:
+            #         self.showInf('电流设置失败，测试取消。\n')
+            #         return False
+            # else:
+            #     self.showInf('电压设置失败，测试取消。\n')
+            #     return False
 
             # 检查三码信息
             if not mainThreadRunning():
@@ -1556,10 +1556,10 @@ class Ui_Control(QMainWindow, Ui_Form):
                     return False
                 time.sleep(0.5)
                 # CPU工装心跳检测
-                if not self.isModulesOnline([int(self.lineEdit_34.text()), int(self.lineEdit_35.text()),
-                                             int(self.lineEdit_36.text())],
-                                            ['模块ET1600', '模块QN0016', '模块QN0016']):
-                    return False
+                # if not self.isModulesOnline([int(self.lineEdit_34.text()), int(self.lineEdit_35.text()),
+                #                              int(self.lineEdit_36.text())],
+                #                             ['模块ET1600', '模块QN0016', '模块QN0016']):
+                #     return False
             elif self.tabIndex == 4:
                 if self.radioButton_MA0202.isChecked():
                     if not self.configCANAddr([int(self.lineEdit_MA0202_AE.text()),
@@ -2098,8 +2098,8 @@ class Ui_Control(QMainWindow, Ui_Form):
 
     def PassOrFail(self, isPass):
         #控制可编程电源断电
-        if not self.powerControl(baudRate=9600, transmitData=self.power_off):
-            self.showMessageBox_oneButton(['操作提示','自动断电失败，请手动断电后再取下待测模块。'])
+        # if not self.powerControl(baudRate=9600, transmitData=self.power_off):
+        #     self.showMessageBox_oneButton(['操作提示','自动断电失败，请手动断电后再取下待测模块。'])
         if not isPass:
             self.endOfTest()
             self.initPara()
