@@ -805,68 +805,89 @@ class Ui_Control(QMainWindow, Ui_Form):
 
     def generateCheckBox_messageBox_widget(self,list):
         self.checkBox_messageBox_widget = QWidget()
-        self.checkBoxs = [0,0,0,0,
-                          0,0,0,0,
-                          0,0,0,0,
-                          0,0,0,0]
-        self.checkBox_status = [True, True, True, True,
-                                True, True, True, True,
-                                True, True, True, True,
-                                True, True, True, True]
+        if list[0] =='odd'or list[0] =='even':
+            self.checkBoxs = [0,0,0,0,
+                              0,0,0,0,
+                              0,0,0,0,
+                              0,0,0,0]
+            self.checkBox_status = [True, True, True, True,
+                                    True, True, True, True,
+                                    True, True, True, True,
+                                    True, True, True, True]
 
-        # 创建四个QHBoxLayout布局管理器
-        layout1 = QHBoxLayout()
-        layout2 = QHBoxLayout()
-        layout3 = QHBoxLayout()
-        layout4 = QHBoxLayout()
+            # 创建四个QHBoxLayout布局管理器
+            layout1 = QHBoxLayout()
+            layout2 = QHBoxLayout()
+            layout3 = QHBoxLayout()
+            layout4 = QHBoxLayout()
 
-        # 添加16个checkBox，分成4组，每组4个，左右分布
-        for i in range(0, 7, 2):
-            button = QCheckBox('0' + str(i))
-            button.setObjectName('通道' + str(i))  # 通道0，2，4，6
-            if list[2] == 'odd':
-                button.setEnabled(False)
-            self.checkBoxs[i]=button
-            # self.checkBox_messageBox_widget.append(button)
-            layout1.addWidget(button)
-        for i in range(1, 8, 2):
-            button = QCheckBox('0' + str(i))
-            button.setObjectName('通道' + str(i))  # 通道1，3，5，7
-            if list[2] == 'even':
-                button.setEnabled(False)
-            self.checkBoxs[i]=button
-            # self.checkBox_messageBox_widget.append(button)
-            layout2.addWidget(button)
-        for i in range(10, 17, 2):
-            button = QCheckBox(str(i))
-            button.setObjectName('通道' + str(i))  # 通道10，12，14，16
-            if list[2] == 'odd':
-                button.setEnabled(False)
-            self.checkBoxs[i-2]=button
-            # self.checkBox_messageBox_widget.append(button)
-            layout3.addWidget(button)
-        for i in range(11, 18, 2):
-            button = QCheckBox(str(i))
-            button.setObjectName('通道' + str(i))  # 通道11，13，15，17
-            if list[2] == 'even':
-                button.setEnabled(False)
-            self.checkBoxs[i-2]=button
-            # self.checkBox_messageBox_widget.append(button)
-            layout4.addWidget(button)
+            # 添加16个checkBox，分成4组，每组4个，左右分布
+            for i in range(0, 7, 2):
+                button = QCheckBox('0' + str(i))
+                button.setObjectName('通道' + str(i))  # 通道0，2，4，6
+                if list[2] == 'odd':
+                    button.setEnabled(False)
+                self.checkBoxs[i]=button
+                # self.checkBox_messageBox_widget.append(button)
+                layout1.addWidget(button)
+            for i in range(1, 8, 2):
+                button = QCheckBox('0' + str(i))
+                button.setObjectName('通道' + str(i))  # 通道1，3，5，7
+                if list[2] == 'even':
+                    button.setEnabled(False)
+                self.checkBoxs[i]=button
+                # self.checkBox_messageBox_widget.append(button)
+                layout2.addWidget(button)
+            for i in range(10, 17, 2):
+                button = QCheckBox(str(i))
+                button.setObjectName('通道' + str(i))  # 通道10，12，14，16
+                if list[2] == 'odd':
+                    button.setEnabled(False)
+                self.checkBoxs[i-2]=button
+                # self.checkBox_messageBox_widget.append(button)
+                layout3.addWidget(button)
+            for i in range(11, 18, 2):
+                button = QCheckBox(str(i))
+                button.setObjectName('通道' + str(i))  # 通道11，13，15，17
+                if list[2] == 'even':
+                    button.setEnabled(False)
+                self.checkBoxs[i-2]=button
+                # self.checkBox_messageBox_widget.append(button)
+                layout4.addWidget(button)
 
-        # 创建一个QWidget对象，并将四个QHBoxLayout布局管理器添加到该对象中
-        # widget = QWidget()
-        layout = QVBoxLayout()
+            # 创建一个QWidget对象，并将四个QHBoxLayout布局管理器添加到该对象中
+            # widget = QWidget()
+            layout = QVBoxLayout()
 
-        layout.addLayout(layout1)
-        layout.addLayout(layout2)
-        layout.addLayout(layout3)
-        layout.addLayout(layout4)
+            layout.addLayout(layout1)
+            layout.addLayout(layout2)
+            layout.addLayout(layout3)
+            layout.addLayout(layout4)
 
-        self.checkBox_messageBox_widget.setLayout(layout)
+            self.checkBox_messageBox_widget.setLayout(layout)
 
-        for element in self.checkBoxs:
-            element.toggled.connect(self.update_checkBox_status)
+            for element in self.checkBoxs:
+                element.toggled.connect(self.update_checkBox_status)
+        elif list[2]=='CPU_LED':
+            name_LED = ['RUN灯', 'ERROR灯', 'BAT_LOW灯', 'PRG灯', 'RS-232C灯', 'RS-485灯', 'HOST灯']
+            self.checkBoxs = [0, 0, 0, 0,
+                              0, 0, 0, 0, 0,]
+            self.checkBox_status = [True, True, True, True,
+                                    True, True, True, True,True]
+
+            # 创建四个QHBoxLayout布局管理器
+            layout = QVBoxLayout()
+            for i in range(len(name_LED)):
+                button = QCheckBox(name_LED[i])
+                button.setObjectName(name_LED[i])
+                self.checkBoxs[i] = button
+                layout.addWidget(button)
+
+            self.checkBox_messageBox_widget.setLayout(layout)
+            for element in self.checkBoxs:
+                element.toggled.connect(self.update_checkBox_status)
+
+            pass
 
     def update_checkBox_status(self):
         for i in range(len(self.checkBoxs)):
@@ -1825,6 +1846,10 @@ class Ui_Control(QMainWindow, Ui_Form):
                     self.CPU_option.messageBox_signal.connect(self.showMessageBox)
                     self.CPU_option.pic_messageBox_signal.connect(self.pic_MessageBox)
                     self.CPU_option.messageBox_oneButton_signal.connect(self.showMessageBox_oneButton)
+                    self.CPU_option.checkBox_messageBox_signal.connect(
+                        self.generateCheckBox_messageBox_widget)  # widget在QMessageBox关闭后也会消失，因此需要每次重新生成新的。
+                    self.CPU_option.checkBox_messageBox_signal.connect(self.checkBox_MessageBox)
+
                     self.CPU_option.moveToRow_signal.connect(self.CPU_moveToRow)
                     # self.CPU_option.excel_signal.connect(self.generateExcel)
                     self.CPU_option.allFinished_signal.connect(self.allFinished)

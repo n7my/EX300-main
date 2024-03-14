@@ -10,6 +10,7 @@ from CAN_option import *
 import otherOption
 import logging
 import struct
+import threading
 
 class CPUThread(QObject):
     result_signal = pyqtSignal(str)
@@ -670,6 +671,7 @@ class CPUThread(QObject):
                             if self.isCancelAllTest:
                                 break
                     elif i == 9:#各指示灯
+                        self.stopChannel = 2
                         self.moveToRow_signal.emit([i, 0])
                         testStartTime = time.time()
                         self.item_signal.emit([i, 1, 0, ''])
@@ -687,27 +689,51 @@ class CPUThread(QObject):
                             #进入灯测试模式
                             self.CPU_LEDTest(transmitData=inTest_transmitData,LED_name='')
                             if not self.isCancelAllTest:
-                                for l in range(8):
-                                    if l != 7:
-                                        self.result_signal.emit(f"----------开始测试{name_LED[l]}----------\n")
-                                        w_transmitData[5] = l
-                                        w_transmitData[7] = self.getCheckNum(w_transmitData[:7])
-                                        self.CPU_LEDTest(transmitData=w_transmitData, LED_name=name_LED[l])
-                                    else:
-                                        #关闭所有LED
-                                        w_allLED = [0xAC, 8, 0x00, 0x09, 0x10, 0xAA, 0x00, 0x00, 0x88]
-                                        self.CPU_LEDTest(transmitData=w_allLED, LED_name=name_LED[l])
-                                    if not self.isCancelAllTest:
-                                        if l != 7:
-                                            r_transmitData[5] = l
-                                            r_transmitData[6] = self.getCheckNum(r_transmitData[:6])
-                                            self.CPU_LEDTest(transmitData=r_transmitData, LED_name=name_LED[l])
-                                        else:
-                                            r_allLED = [0xAC, 6, 0x00, 0x09, 0x0E, 0xAA, 0x8c]
-                                            self.CPU_LEDTest(transmitData=r_allLED, LED_name=name_LED[l])
+                                LED_thread = threading.Thread(target=self.CPU_LED_light_loop)
+                                LED_thread.start()
+                                image_CPU_LED = self.current_dir + '/CPU_LED.gif'
+                                self.gif_messageBox_signal.emit(
+                                    [f'LED检测', f'LED指示灯是否如图所示循环点亮？', image_CPU_LED])
+                                reply = self.result_queue.get()
+                                if reply == QMessageBox.AcceptRole:
+                                    self.isPassLED &= True
+                                else:
+                                    self.isPassLED &= False
+                                    self.checkBox_messageBox_signal.emit(['故障LED灯选择', '请选择存在故障的LED灯。', 'CPU_LED'])
 
-                                    else:
-                                        break
+                                    messageList = self.result_queue.get()
+                                    reply = messageList[0]
+                                    CPU_LED_status = messageList[1]
+                                    if reply == QMessageBox.AcceptRole:
+                                        for cls in range(len(CPU_LED_status)):
+                                            if not CPU_LED_status[cls]:
+                                                    self.result_signal.emit(f'{CPU_LED_status[cls]}存在问题。\n\n')
+
+                                # 等待子线程执行结束
+                                LED_thread.join()
+                                w_allLED = [0xAC, 8, 0x00, 0x09, 0x10, 0xAA, 0x00, 0x00, 0x88]
+                                self.CPU_LEDTest(transmitData=w_allLED, LED_name='所有灯')
+                                # for l in range(8):
+                                #     if l != 7:
+                                #         self.result_signal.emit(f"----------开始测试{name_LED[l]}----------\n")
+                                #         w_transmitData[5] = l
+                                #         w_transmitData[7] = self.getCheckNum(w_transmitData[:7])
+                                #         self.CPU_LEDTest(transmitData=w_transmitData, LED_name=name_LED[l])
+                                #     else:
+                                #         #关闭所有LED
+                                #         w_allLED = [0xAC, 8, 0x00, 0x09, 0x10, 0xAA, 0x00, 0x00, 0x88]
+                                #         self.CPU_LEDTest(transmitData=w_allLED, LED_name=name_LED[l])
+                                #     if not self.isCancelAllTest:
+                                #         if l != 7:
+                                #             r_transmitData[5] = l
+                                #             r_transmitData[6] = self.getCheckNum(r_transmitData[:6])
+                                #             self.CPU_LEDTest(transmitData=r_transmitData, LED_name=name_LED[l])
+                                #         else:
+                                #             r_allLED = [0xAC, 6, 0x00, 0x09, 0x0E, 0xAA, 0x8c]
+                                #             self.CPU_LEDTest(transmitData=r_allLED, LED_name=name_LED[l])
+                                #
+                                #     else:
+                                #         break
                         except:
                             self.isPassLED =False
                             self.showErrorInf('LED测试')
@@ -2684,25 +2710,25 @@ class CPUThread(QObject):
                     break
                 elif dataLen == 8: #读
                     if trueData[7] == 0x00:#灯熄灭
-                        self.messageBox_signal.emit(['操作提示',f'{LED_name}是否熄灭？'])
-                        reply = self.result_queue.get()
-                        if reply == QMessageBox.AcceptRole:
-                            self.isPassLED &= True
-                            isThisPass = True
-                        else:
-                            self.isPassLED &= False
-                            isThisPass = False
+                        # self.messageBox_signal.emit(['操作提示',f'{LED_name}是否熄灭？'])
+                        # reply = self.result_queue.get()
+                        # if reply == QMessageBox.AcceptRole:
+                        #     self.isPassLED &= True
+                        #     isThisPass = True
+                        # else:
+                        #     self.isPassLED &= False
+                        #     isThisPass = False
                         break
                     elif trueData[7] == 0x01:#灯点亮
-                        image = self.current_dir+f'/{LED_name}.png'
-                        self.pic_messageBox_signal.emit(['操作提示',f'{LED_name}是否如图所示点亮？',image])
-                        reply = self.result_queue.get()
-                        if reply == QMessageBox.AcceptRole:
-                            self.isPassLED &= True
-                            isThisPass = True
-                        else:
-                            self.isPassLED &= False
-                            isThisPass = False
+                        # image = self.current_dir+f'/{LED_name}.png'
+                        # self.pic_messageBox_signal.emit(['操作提示',f'{LED_name}是否如图所示点亮？',image])
+                        # reply = self.result_queue.get()
+                        # if reply == QMessageBox.AcceptRole:
+                        #     self.isPassLED &= True
+                        #     isThisPass = True
+                        # else:
+                        #     self.isPassLED &= False
+                        #     isThisPass = False
                         break
                 elif dataLen == 9:#读所有灯状态
                     if trueData[7] == 0x00 and trueData[8] == 0x00:
@@ -2735,6 +2761,33 @@ class CPUThread(QObject):
 
             # 关闭串口
             typeC_serial.close()
+
+    def CPU_LED_light_loop(self):
+        w_transmitData = [0xAC, 7, 0x00, 0x09, 0x10, 0x00, 0x01,
+                          self.getCheckNum([0xAC, 7, 0x00, 0x09, 0x10, 0x00, 0x01])]
+        r_transmitData = [0xAC, 6, 0x00, 0x09, 0x0E, 0x00,
+                          self.getCheckNum([0xAC, 6, 0x00, 0x09, 0x0E, 0x00])]
+        name_LED = ['RUN灯', 'ERROR灯', 'BAT_LOW灯', 'PRG灯', 'RS-232C灯', 'RS-485灯', 'HOST灯']
+        for l in range(7):
+            if self.stopChannel == QMessageBox.AcceptRole or self.stopChannel == QMessageBox.RejectRole:
+                self.stopChannel= 2
+                # 打开所有LED
+                w_allLED = [0xAC, 8, 0x00, 0x09, 0x10, 0xAA, 0x01, 0x00, 0x88]
+                self.CPU_LEDTest(transmitData=w_allLED, LED_name='所有灯')
+                break
+
+            if not self.isCancelAllTest:
+                w_transmitData[5] = l
+                w_transmitData[7] = self.getCheckNum(w_transmitData[:7])
+                self.CPU_LEDTest(transmitData=w_transmitData, LED_name=name_LED[l])
+                time.sleep(0.2)
+                if not self.isCancelAllTest:
+                    # 关闭所有LED
+                    w_allLED = [0xAC, 8, 0x00, 0x09, 0x10, 0xAA, 0x00, 0x00, 0x88]
+                    self.CPU_LEDTest(transmitData=w_allLED, LED_name='所有灯')
+                    if l == 6:
+                        l = 0
+        pass
 
     def CPU_InTest(self, transmitData:list):
         isThisPass = True
