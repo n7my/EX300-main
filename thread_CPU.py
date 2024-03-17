@@ -183,6 +183,9 @@ class CPUThread(QObject):
 
         self.current_dir = inf_CPUlist[5]
         self.testType = inf_CPUlist[6]
+
+        self.pic_dir = current_dir + '/pic'
+        self.CPU_pic_dir = self.pic_dir + '/CPU'
         # #初始化表格状态
         # for i in range(len(self.CPU_isTest)):
         #     self.result_signal.emit(f"self.CPU_isTest[{i}]:{self.CPU_isTest[i]}\n")
@@ -442,7 +445,7 @@ class CPUThread(QObject):
                             else:
                                 self.result_signal.emit("MFK测试未通过" + self.HORIZONTAL_LINE)
                                 self.changeTabItem(testStartTime, row=i, state=2, result=2)
-                            image_485boma = self.current_dir+'/485拨码.png'
+                            image_485boma = self.CPU_pic_dir+'/485拨码.png'
                             self.pic_messageBox_signal.emit(['操作提示','请将如图所示的485拨码拨至左侧。',image_485boma])
                             reply = self.result_queue.get()
                             if reply == QMessageBox.AcceptRole or reply == QMessageBox.RejectRole:
@@ -691,7 +694,7 @@ class CPUThread(QObject):
                             if not self.isCancelAllTest:
                                 LED_thread = threading.Thread(target=self.CPU_LED_light_loop)
                                 LED_thread.start()
-                                image_CPU_LED = self.current_dir + '/CPU_LED.gif'
+                                image_CPU_LED = self.CPU_pic_dir + '/CPU_LED.gif'
                                 self.gif_messageBox_signal.emit(
                                     [f'LED检测', f'LED指示灯是否如图所示循环点亮？', image_CPU_LED])
                                 reply = self.result_queue.get()
@@ -707,7 +710,8 @@ class CPUThread(QObject):
                                     if reply == QMessageBox.AcceptRole:
                                         for cls in range(len(CPU_LED_status)):
                                             if not CPU_LED_status[cls]:
-                                                    self.result_signal.emit(f'{CPU_LED_status[cls]}存在问题。\n\n')
+                                                self.isPassLED &= False
+                                                self.result_signal.emit(f'{CPU_LED_status[cls]}存在问题。\n\n')
 
                                 # 等待子线程执行结束
                                 LED_thread.join()
@@ -2720,7 +2724,7 @@ class CPUThread(QObject):
                         #     isThisPass = False
                         break
                     elif trueData[7] == 0x01:#灯点亮
-                        # image = self.current_dir+f'/{LED_name}.png'
+                        # image = self.CPU_pic_dir+f'/{LED_name}.png'
                         # self.pic_messageBox_signal.emit(['操作提示',f'{LED_name}是否如图所示点亮？',image])
                         # reply = self.result_queue.get()
                         # if reply == QMessageBox.AcceptRole:
@@ -2732,7 +2736,7 @@ class CPUThread(QObject):
                         break
                 elif dataLen == 9:#读所有灯状态
                     if trueData[7] == 0x00 and trueData[8] == 0x00:
-                        image = self.current_dir + f'/{LED_name}.png'
+                        image = self.CPU_pic_dir + f'/{LED_name}.png'
                         self.pic_messageBox_signal.emit(['操作提示', f'{LED_name}（除PWR灯以外）是否如图所示熄灭？',image])
                         reply = self.result_queue.get()
                         if reply == QMessageBox.AcceptRole:
@@ -2825,7 +2829,7 @@ class CPUThread(QObject):
             elif dataLen == 12:#读所有输入通道
                 if trueData[7] == 0x00:  # 读所有输入通道成功
                     if trueData[9] == 0xAA and trueData[10] == 0xAA and trueData[11] == 0xAA:
-                        image_aa = self.current_dir + '/AAAA.png'
+                        image_aa = self.CPU_pic_dir + '/AAAA.png'
                         self.pic_messageBox_signal.emit(['操作提示', 'CPU输入通道指示灯是否如图所示点亮？', image_aa])
                         reply = self.result_queue.get()
                         if reply == QMessageBox.AcceptRole:
@@ -2837,7 +2841,7 @@ class CPUThread(QObject):
                             isThisPass = False
                         break
                     elif trueData[9] == 0x55 and trueData[10] == 0x55 and trueData[11] == 0x55:
-                        image_55 = self.current_dir+'/5555.png'
+                        image_55 = self.CPU_pic_dir+'/5555.png'
                         self.pic_messageBox_signal.emit(['操作提示','CPU输入通道指示灯是否如图所示点亮？',image_55])
                         reply = self.result_queue.get()
                         if reply == QMessageBox.AcceptRole:
@@ -2849,7 +2853,7 @@ class CPUThread(QObject):
                             isThisPass = False
                         break
                     elif trueData[9] == 0x00 and trueData[10] == 0x00 and trueData[11] == 0x00:
-                        image_00 = self.current_dir + '/0000.png'
+                        image_00 = self.CPU_pic_dir + '/0000.png'
                         self.pic_messageBox_signal.emit(['操作提示', 'CPU输入通道指示灯是否如图所示全部熄灭？', image_00])
                         reply = self.result_queue.get()
                         if reply == QMessageBox.AcceptRole:
@@ -2949,13 +2953,13 @@ class CPUThread(QObject):
                             (hex(self.m_receiveData[0]) == '0x55' and hex(self.m_receiveData[1]) == '0x55') or \
                             (hex(self.m_receiveData[0]) == '0x0' and hex(self.m_receiveData[1]) == '0x0'):
                         if hex(self.m_receiveData[0]) == '0xaa':
-                            image_aa = self.current_dir + '/AE_aa.png'
+                            image_aa = self.CPU_pic_dir + '/AE_aa.png'
                             self.pic_messageBox_signal.emit(['操作提示','模块ET1600的通道指示灯是否如图所示点亮？',image_aa])
                         if hex(self.m_receiveData[0]) == '0x55':
-                            image_55 = self.current_dir + '/AE_55.png'
+                            image_55 = self.CPU_pic_dir + '/AE_55.png'
                             self.pic_messageBox_signal.emit(['操作提示','模块ET1600的通道指示灯是否如图所示点亮？',image_55])
                         elif hex(self.m_receiveData[0]) == '0x0':
-                            image_00 = self.current_dir + '/AE_00.png'
+                            image_00 = self.CPU_pic_dir + '/AE_00.png'
                             self.pic_messageBox_signal.emit(
                                 ['操作提示', '模块ET1600的通道指示灯是否如图所示全部熄灭？', image_00])
                         reply = self.result_queue.get()
@@ -4463,7 +4467,7 @@ class CPUThread(QObject):
             self.print_signal.emit(
                 [f'/{name_save}{self.module_type}_{time.strftime("%Y%m%d%H%M%S")}', 'FAIL', self.errorInf])
 
-        self.saveExcel_signal.emit([book,f'/{name_save}{self.module_type}_{time.strftime("%Y%m%d%H%M%S")}.xls'])
+        self.saveExcel_signal.emit([book,f'/{name_save}{self.module_type}_{self.module_sn}.xls'])
         # book.save(self.saveDir + f'/{name_save}{self.module_type}_{time.strftime("%Y%m%d%H%M%S")}.xls')
 
     def fillCPUInOut(self,sheet,type:str,station:int):
