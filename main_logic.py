@@ -905,7 +905,7 @@ class Ui_Control(QMainWindow, Ui_Form):
                 self.checkBox_status[i] = True
 
     def generateDefaultConfigFile(self):
-        config_str = "{'savePath': 'C:/测试报告',\n" \
+        config_str = "{'savePath': 'D:/MyData/wujun89/Desktop/EX300_x64_python',\n" \
                      "'currentIndex': 0,\n" \
                      "'AO_型号': 0,\n" \
                      "'AO_CAN_修改参数': False,\n" \
@@ -992,7 +992,12 @@ class Ui_Control(QMainWindow, Ui_Form):
                      "'全选': False,\n" \
                      "'选项板232':0,\n" \
                      "'选项板485':0,\n" \
-                     "'可编程电源':0}"
+                     "'可编程电源':0,\n" \
+                     "'MA0202_修改参数':True,\n" \
+                     "'MA0202_型号':True,\n" \
+                     "'MA0202_typecCOM':1,\n" \
+                     "'MA0202_AE0400':'1',\n" \
+                     "'MA0202_AQ0004':'2'}"
         self.configFile = open(f'{self.config_dir}/config.txt', 'w', encoding='utf-8')
         self.configFile.write(config_str)
         self.configFile.close()
@@ -1074,6 +1079,13 @@ class Ui_Control(QMainWindow, Ui_Form):
         self.comboBox_25.setCurrentIndex(self.config_param["选项板485"])
         self.comboBox_power.setCurrentIndex(self.config_param["可编程电源"])
 
+        #MA0202页面配置
+        self.checkBox_MA0202_para.setChecked(self.config_param["MA0202_修改参数"])
+        self.radioButton_MA0202.setChecked(self.config_param["MA0202_型号"])
+        self.comboBox_MA0202_typeC.setCurrentIndex(self.config_param["MA0202_typecCOM"])
+        self.lineEdit_MA0202_AE.setText(self.config_param["MA0202_AE0400"])
+        self.lineEdit_MA0202_AQ.setText(self.config_param["MA0202_AQ0004"])
+
         for i in range(len(self.CPU_lineEdit_array)):
             self.CPU_lineEdit_array[i].setText(self.config_param[self.CPU_lineEditName_array[i]])
 
@@ -1150,6 +1162,13 @@ class Ui_Control(QMainWindow, Ui_Form):
         self.config_param["可编程电源"] = self.comboBox_power.currentIndex()
         for i in range(len(self.CPU_checkBox_array)):
             self.config_param[self.CPU_checkBoxName_array[i]] = self.CPU_checkBox_array[i].isChecked()
+
+        # MA0202页面配置
+        self.config_param["MA0202_修改参数"] = self.checkBox_MA0202_para.isChecked()
+        self.config_param["MA0202_型号"] = self.radioButton_MA0202.isChecked()
+        self.config_param["MA0202_typecCOM"] = self.comboBox_MA0202_typeC.currentIndex()
+        self.config_param["MA0202_AE0400"] = self.lineEdit_MA0202_AE.text()
+        self.config_param["MA0202_AQ0004"] = self.lineEdit_MA0202_AQ.text()
 
         # save
         config_str = str(self.config_param)
@@ -1339,7 +1358,8 @@ class Ui_Control(QMainWindow, Ui_Form):
                 self.lineEdit_MA0202_REV.setText(self.lineEdit_REV.text())
             self.pushButton_4.setDefault(True)
             # setShortcut(QKeySequence::InsertParagraphSeparator )
-            self.pushButton_4.setFocus()
+            # self.pushButton_4.setFocus()
+            self.pushButton_4.setShortcut(Qt.Key_Space)
         else:
             # time.sleep(0.5)
             self.lineEdit_REV.clear()
