@@ -181,6 +181,9 @@ class DIDOThread(QObject):
         self.led_channel = {0: '00', 1: '01', 2: '02', 3: '03', 4: '04', 5: '05', 6: '06', 7: '07',
                             8: '10', 9: '11', 10: '12', 11: '13', 12: '14', 13: '15', 14: '16', 15: '17'}
         self.current_dir = os.getcwd().replace('\\', '/') + "/_internal"
+        self.pic_dir = current_dir + '/pic'
+        self.config_dir = current_dir + '/config'
+        self.DIDO_pic_dir = self.pic_dir + '/DIDO'
 
         self.stopChannel = 2
 
@@ -324,7 +327,7 @@ class DIDOThread(QObject):
             import threading
             odd_thread = threading.Thread(target=self.oddChannelTest,args=('DI',))
             odd_thread.start()
-            image_ET1600_LED = self.current_dir + '/ET1600_odd.gif'
+            image_ET1600_LED = self.DIDO_pic_dir + '/ET1600_odd.gif'
             self.gif_messageBox_signal.emit(
                 [f'{self.module_type}通道检测', f'{self.module_type}通道指示灯是否如图所示闪烁？', image_ET1600_LED])
             reply = self.result_queue.get()
@@ -363,7 +366,7 @@ class DIDOThread(QObject):
             # if reply == QMessageBox.AcceptRole:
             even_thread = threading.Thread(target=self.evenChannelTest,args=('DI',))
             even_thread.start()
-            image_ET1600_LED = self.current_dir + '/ET1600_even.gif'
+            image_ET1600_LED = self.DIDO_pic_dir + '/ET1600_even.gif'
             self.gif_messageBox_signal.emit(
                 [f'{self.module_type}通道检测', f'{self.module_type}通道指示灯是否如图所示闪烁？', image_ET1600_LED])
             reply = self.result_queue.get()
@@ -500,7 +503,7 @@ class DIDOThread(QObject):
             import threading
             odd_thread = threading.Thread(target=self.oddChannelTest,args=('DO',))
             odd_thread.start()
-            image_QNP0016_LED = self.current_dir + '/QNP0016_odd.gif'
+            image_QNP0016_LED = self.DIDO_pic_dir + '/QNP0016_odd.gif'
             self.gif_messageBox_signal.emit(
                 [f'{self.module_type}通道检测', f'{self.module_type}通道指示灯是否如图所示闪烁？', image_QNP0016_LED])
             reply = self.result_queue.get()
@@ -537,7 +540,7 @@ class DIDOThread(QObject):
             # if reply == QMessageBox.AcceptRole:
             even_thread = threading.Thread(target=self.evenChannelTest, args=('DO',))
             even_thread.start()
-            image_QNP0016_LED = self.current_dir + '/QNP0016_even.gif'
+            image_QNP0016_LED = self.DIDO_pic_dir + '/QNP0016_even.gif'
             self.gif_messageBox_signal.emit(
                 [f'{self.module_type}通道检测', f'{self.module_type}通道指示灯是否如图所示闪烁？',
                  image_QNP0016_LED])
@@ -903,9 +906,9 @@ class DIDOThread(QObject):
         time.sleep(0.1)
 
         if type == 'DI':
-            image_RUN = self.current_dir + '/ET1600_RUN.png'
+            image_RUN = self.DIDO_pic_dir + '/ET1600_RUN.png'
         elif type == 'DO':
-            image_RUN = self.current_dir + '/DO_RUN.png'
+            image_RUN = self.DIDO_pic_dir + '/DO_RUN.png'
         self.pic_messageBox_signal.emit(['检测RUN &ERROR', 'RUN指示灯是否如红框中所示点亮？', image_RUN])
         # self.messageBox_signal.emit(['检测RUN &ERROR', 'RUN指示灯是否点亮？'])
         reply = self.result_queue.get()
@@ -971,9 +974,9 @@ class DIDOThread(QObject):
         errorTest_time = round(errorEnd_time - errorStart_time, 2)
         time.sleep(0.1)
         if type == 'DI':
-            image_ERROR = self.current_dir + '/ET1600_ERROR.png'
+            image_ERROR = self.DIDO_pic_dir + '/ET1600_ERROR.png'
         elif type == 'DO':
-            image_ERROR = self.current_dir + '/DO_ERROR.png'
+            image_ERROR = self.DIDO_pic_dir + '/DO_ERROR.png'
         self.pic_messageBox_signal.emit(['检测RUN &ERROR', 'ERROR指示灯是否如红框中所示点亮？', image_ERROR])
         reply = self.result_queue.get()
 
@@ -1025,7 +1028,7 @@ class DIDOThread(QObject):
 
         return True
 
-    def testCANRunErr(self, addr):
+    def testCANRunErr(self, addr, type):
         self.testNum -= 1
 
         CANRunStart_time = time.time()
@@ -1072,18 +1075,15 @@ class DIDOThread(QObject):
             CANRunEnd_time = time.time()
             CANRunTest_time = round(CANRunEnd_time - CANRunStart_time, 2)
             time.sleep(0.1)
-            self.messageBox_signal.emit(['检测RUN &ERROR', 'CAN_RUN指示灯是否点亮（绿色）？'])
+            image_CANRUN = self.DIDO_pic_dir + '/DIDO_CAN_RUN.jpg'
+            self.pic_messageBox_signal.emit(['检测CAN_RUN &CAN_ERROR', 'CAN_RUN指示灯是否如红框中所示点亮？（绿灯）', image_CANRUN])
             reply = self.result_queue.get()
-            # reply = QMessageBox.question(None, '检测CAN_RUN &CAN_ERROR', '指示灯是否点亮？',
-            #                              QMessageBox.AcceptRole | QMessageBox.RejectRole,
-            #                              QMessageBox.AcceptRole)
             if reply == QMessageBox.AcceptRole:
                 self.CAN_runLED = True
                 self.pauseOption()
                 if not self.is_running:
                     return False
                 self.item_signal.emit([2, 2, 1, CANRunTest_time])
-                # self.itemOperation(mTable,3,2,1,CANRunTest_time)
                 self.pauseOption()
                 if not self.is_running:
                     return False
@@ -1133,7 +1133,8 @@ class DIDOThread(QObject):
             CANErrEnd_time = time.time()
             CANErrTest_time = round(CANErrEnd_time - CANErrStart_time, 2)
             time.sleep(0.1)
-            self.messageBox_signal.emit(['检测RUN &ERROR', 'CAN_ERROR指示灯是否点亮(红色)？'])
+            image_CANERROR = self.DIDO_pic_dir + '/DIDO_CAN_ERROR.jpg'
+            self.pic_messageBox_signal.emit(['检测CAN_RUN &CAN_ERROR', 'CAN_ERROR指示灯是否如红框中所示点亮？（红灯）', image_CANERROR])
             reply = self.result_queue.get()
 
             if reply == QMessageBox.AcceptRole:

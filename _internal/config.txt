@@ -1,5 +1,5 @@
 {'savePath': 'G:/Desktop/测试报告',
- 'currentIndex': 3,
+ 'currentIndex': 4,
  'AO_型号': 0,
  'AO_CAN_修改参数': False,
  'AO_CAN_工装': '1',

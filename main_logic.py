@@ -214,11 +214,19 @@ class Ui_Control(QMainWindow, Ui_Form):
     config_param = {}
 
     current_dir = os.getcwd().replace('\\', '/') + "/_internal"
+    pic_dir = current_dir+'/pic'
+    config_dir = current_dir+'/config'
+    DIDO_pic_dir = pic_dir+'/DIDO'
+    AI_pic_dir = pic_dir + '/AI'
+    AO_pic_dir = pic_dir + '/AO'
+    CPU_pic_dir = pic_dir + '/CPU'
+
 
     # current_dir = os.getcwd().replace('\\', '/')
     def __init__(self, parent=None):
         super(Ui_Control, self).__init__(parent)
         self.setupUi(self)
+
         self.pushButton_13.setVisible(False)
         # self.label_11.setPixmap(QtGui.QPixmap(f"{current_dir}/beast5.png"))
         # self.label_11.setVisible(False)
@@ -607,20 +615,20 @@ class Ui_Control(QMainWindow, Ui_Form):
         # self.pushButton_9.clicked.connect(self.sendMessage)
         self.pushbutton_allScreen.setStyleSheet(f"""
                                     QPushButton {{
-                                        image: url({self.current_dir}/全屏按钮.png);
+                                        image: url({self.pic_dir}/全屏按钮.png);
 
                                     }}
                                     QPushButton:hover {{
-                                        image: url({self.current_dir}/全屏按钮2.png);
+                                        image: url({self.pic_dir}/全屏按钮2.png);
                                     }}
                                 """)
         self.pushbutton_cancelAllScreen.setStyleSheet(f"""
                                      QPushButton {{
-                                         image: url({self.current_dir}/取消全屏按钮.png);
+                                         image: url({self.pic_dir}/取消全屏按钮.png);
 
                                      }}
                                      QPushButton:hover {{
-                                         image: url({self.current_dir}/取消全屏按钮2.png);
+                                         image: url({self.pic_dir}/取消全屏按钮2.png);
                                      }}
                                  """)
         self.pushButton_8.setStyleSheet(f"""
@@ -805,7 +813,7 @@ class Ui_Control(QMainWindow, Ui_Form):
 
     def generateCheckBox_messageBox_widget(self,list):
         self.checkBox_messageBox_widget = QWidget()
-        if list[0] =='odd'or list[0] =='even':
+        if list[2] =='odd'or list[2] =='even':
             self.checkBoxs = [0,0,0,0,
                               0,0,0,0,
                               0,0,0,0,
@@ -870,10 +878,10 @@ class Ui_Control(QMainWindow, Ui_Form):
                 element.toggled.connect(self.update_checkBox_status)
         elif list[2]=='CPU_LED':
             name_LED = ['RUN灯', 'ERROR灯', 'BAT_LOW灯', 'PRG灯', 'RS-232C灯', 'RS-485灯', 'HOST灯']
-            self.checkBoxs = [0, 0, 0, 0,
-                              0, 0, 0, 0, 0,]
-            self.checkBox_status = [True, True, True, True,
-                                    True, True, True, True,True]
+            self.checkBoxs = [0, 0, 0,
+                              0, 0, 0, 0,]
+            self.checkBox_status = [True, True, True,
+                                    True, True, True, True]
 
             # 创建四个QHBoxLayout布局管理器
             layout = QVBoxLayout()
@@ -897,7 +905,7 @@ class Ui_Control(QMainWindow, Ui_Form):
                 self.checkBox_status[i] = True
 
     def generateDefaultConfigFile(self):
-        config_str = "{'savePath': 'D:/MyData/wujun89/Desktop/EX300_x64_python',\n" \
+        config_str = "{'savePath': 'C:/测试报告',\n" \
                      "'currentIndex': 0,\n" \
                      "'AO_型号': 0,\n" \
                      "'AO_CAN_修改参数': False,\n" \
@@ -985,18 +993,18 @@ class Ui_Control(QMainWindow, Ui_Form):
                      "'选项板232':0,\n" \
                      "'选项板485':0,\n" \
                      "'可编程电源':0}"
-        self.configFile = open(f'{self.current_dir}/config.txt', 'w', encoding='utf-8')
+        self.configFile = open(f'{self.config_dir}/config.txt', 'w', encoding='utf-8')
         self.configFile.write(config_str)
         self.configFile.close()
 
     def loadConfig(self):
         try:
-            with open(f'{self.current_dir}/config.txt', 'r+', encoding='utf-8') as file:
+            with open(f'{self.config_dir}/config.txt', 'r+', encoding='utf-8') as file:
                 config_content = file.read()
         except:
             self.showInf("配置文件不存在，初始化界面！" + self.HORIZONTAL_LINE)
             self.generateDefaultConfigFile()
-            with open(f'{self.current_dir}/config.txt', 'r+', encoding='utf-8') as file:
+            with open(f'{self.config_dir}/config.txt', 'r+', encoding='utf-8') as file:
                 config_content = file.read()
 
         self.config_param = eval(config_content)
@@ -1152,7 +1160,7 @@ class Ui_Control(QMainWindow, Ui_Form):
             config_str1 = config_str1 + config_str[:pos + 1] + '\n'
             config_str = config_str[pos + 1:]
         config_str = config_str1 + config_str
-        self.configFile = open(f'{self.current_dir}/config.txt', 'w', encoding='utf-8')
+        self.configFile = open(f'{self.config_dir}/config.txt', 'w', encoding='utf-8')
         self.configFile.write(config_str)
         self.configFile.close()
 
@@ -1329,6 +1337,8 @@ class Ui_Control(QMainWindow, Ui_Form):
                 self.lineEdit_32.setText(self.lineEdit_REV.text())
             elif self.tabIndex == 4:
                 self.lineEdit_MA0202_REV.setText(self.lineEdit_REV.text())
+            self.pushButton_4.setDefault(True)
+            # setShortcut(QKeySequence::InsertParagraphSeparator )
             self.pushButton_4.setFocus()
         else:
             # time.sleep(0.5)
@@ -1407,6 +1417,9 @@ class Ui_Control(QMainWindow, Ui_Form):
                                                 color:rgb(0, 0, 0)
                                             }}
                                         """)
+        self.pushButton_3.setDefault(True)
+        self.pushButton_3.setFocus()
+
         self.pushButton_4.setEnabled(False)
         self.pushButton_4.setVisible(False)
 
@@ -1421,6 +1434,7 @@ class Ui_Control(QMainWindow, Ui_Form):
                                             """)
         self.pushButton_pause.setVisible(True)
         self.pushButton_pause.setEnabled(True)
+
         self.textBrowser_5.clear()
         global isMainRunning
         isMainRunning = True
@@ -1468,9 +1482,7 @@ class Ui_Control(QMainWindow, Ui_Form):
         # self.work_thread.bresume()
 
     def stop_button(self):
-        # self.textBrowser_5.insertPlainText(self.HORIZONTAL_LINE + '停止测试\n' + self.HORIZONTAL_LINE)
-        # self.move_to_end()
-        # self.showInf(self.HORIZONTAL_LINE + '停止测试\n' + self.HORIZONTAL_LINE)
+
         self.stop_signal.emit(True)
         self.pushButton_3.setEnabled(False)
         self.pushButton_3.setStyleSheet(self.topButton_qss['off'])
@@ -1484,6 +1496,7 @@ class Ui_Control(QMainWindow, Ui_Form):
         self.reInputPNSNREV()
         # self.pushButton_9.setStyleSheet(self.topButton_qss['off'])
         # self.subRunFlag = False
+
 
         CAN_option.receiveStop()
 
@@ -1513,29 +1526,20 @@ class Ui_Control(QMainWindow, Ui_Form):
                 return False
             QApplication.processEvents()
 
-            # 控制可编程电源自动上电
-            # if self.powerControl(baudRate=9600, transmitData=self.vol_24v):
-            #     self.showInf('成功设置电压为24V。\n')
-            #     if self.powerControl(baudRate=9600, transmitData=self.cur_2a):
-            #         self.showInf('成功设置电流为2A。\n')
-            #         if self.powerControl(baudRate=9600, transmitData=self.power_on):
-            #             self.showInf('成功上电，等待设备初始化。\n')
-            #             if self.tabIndex == 0 or self.tabIndex == 1 or self.tabIndex == 2:
-            #                 waitTime = 3
-            #             elif self.tabIndex == 3 or self.tabIndex == 4:
-            #                 waitTime = 6
-            #             for i in range(waitTime):
-            #                 self.showInf(f'剩余等待时间：{waitTime-i}秒……\n')
-            #                 # time.sleep(1)
-            #         else:
-            #             self.showInf('上电失败，测试取消。\n')
-            #             return False
-            #     else:
-            #         self.showInf('电流设置失败，测试取消。\n')
-            #         return False
-            # else:
-            #     self.showInf('电压设置失败，测试取消。\n')
-            #     return False
+            if self.tabIndex ==3:
+                image_lever = self.CPU_pic_dir+'/拨杆_RUN.png'
+                self.pic_MessageBox(['操作提示','请将红框中的拨杆拨至RUN位置（上）',image_lever])
+                reply = self.result_queue.get()
+                if reply == QMessageBox.AcceptRole:
+                    # # 控制可编程电源自动上电
+                    # if not self.logicalPower():
+                    #     return False
+                    pass
+            else:
+                # # 控制可编程电源自动上电
+                # if not self.logicalPower():
+                #     return False
+                pass
 
             # 检查三码信息
             if not mainThreadRunning():
@@ -1547,7 +1551,7 @@ class Ui_Control(QMainWindow, Ui_Form):
                 reply = QMessageBox.warning(None, '警告', '产品三码信息不全，请重新扫入！',
                                             QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
                 return False
-            self.tabIndex = self.tabWidget.currentIndex()
+            # self.tabIndex = self.tabWidget.currentIndex()
             # 节点分配+心跳检测
             if self.tabIndex == 0:
                 if not self.configCANAddr([int(self.lineEdit_6.text()), int(self.lineEdit_7.text()), '', '', '']):
@@ -1674,10 +1678,10 @@ class Ui_Control(QMainWindow, Ui_Form):
                     elif not self.isTestRunErr:
                         if not mainThreadRunning():
                             return False
-                        self.AI_itemOperation([1, 0, 0, ''])
+                        # self.AI_itemOperation([0, 0, 0, ''])
                         if not mainThreadRunning():
                             return False
-                        self.AI_itemOperation([2, 0, 0, ''])
+                        # self.AI_itemOperation([1, 0, 0, ''])
                     # self.showInf(f'RunErrself.testNum = {self.testNum}\n\n')
                     if self.isTestCANRunErr:
                         self.testNum = self.testNum - 1
@@ -1685,10 +1689,10 @@ class Ui_Control(QMainWindow, Ui_Form):
                     elif not self.isTestCANRunErr:
                         if not mainThreadRunning():
                             return False
-                        self.AI_itemOperation([3, 0, 0, ''])
+                        # self.AI_itemOperation([2, 0, 0, ''])
                         if not mainThreadRunning():
                             return False
-                        self.AI_itemOperation([4, 0, 0, ''])
+                        # self.AI_itemOperation([3, 0, 0, ''])
                         # self.itemOperation(mTable, 3, 0, 0, '')
                         # self.itemOperation(mTable, 4, 0, 0, '')
                     if self.isAITestVol:
@@ -1696,13 +1700,13 @@ class Ui_Control(QMainWindow, Ui_Form):
                     elif not self.isAITestVol:
                         if not mainThreadRunning():
                             return False
-                        self.AI_itemOperation([7, 0, 0, ''])
+                        # self.AI_itemOperation([6, 0, 0, ''])
                     if self.isAITestCur:
                         self.testNum = self.testNum - 1
                     elif not self.isAITestCur:
                         if not mainThreadRunning():
                             return False
-                        self.AI_itemOperation([8, 0, 0, ''])
+                        # self.AI_itemOperation([7, 0, 0, ''])
 
                 # if self.isCalibrate:
                 # self.calibrateAI(mTable)
@@ -1779,8 +1783,6 @@ class Ui_Control(QMainWindow, Ui_Form):
             elif self.tabWidget.currentIndex() == 3:
                 self.testFlag = 'CPU'
                 mTable = self.tableWidget_CPU
-                # CPU的外观检测选项放在子线程里进行并且可选
-                # self.appearanceTest(self.testFlag)
                 self.CPU_thread = None
                 self.worker = None
                 if not self.CPU_thread or not self.worker_thread.isRunning():
@@ -1833,7 +1835,7 @@ class Ui_Control(QMainWindow, Ui_Form):
                                          int(self.lineEdit_MA0202_AQ.text())],
                                         ['', '', self.comboBox_MA0202_typeC.currentText(), self.saveDir, '', '', ''],
                                         [self.inf_MA0202_test, ''],
-                                        self.current_dir, 'MA0202']
+                                        self.CPU_pic_dir, 'MA0202']
                     self.CPU_thread = QThread()
                     from thread_CPU import CPUThread
                     self.CPU_option = CPUThread(self.inf_CPUlist, self.result_queue)
@@ -2212,6 +2214,7 @@ class Ui_Control(QMainWindow, Ui_Form):
         finally:
             self.lineEdit_SN.setReadOnly(False)
             self.lineEdit_REV.setReadOnly(False)
+
 
     def DIDOCANAddr_stateChanged(self):
         self.lineEdit_6.setEnabled(self.checkBox_27.isChecked())
@@ -2596,35 +2599,35 @@ class Ui_Control(QMainWindow, Ui_Form):
                 self.isTestRunErr = False
             self.inf_test = [self.isTest, self.isAITestVol, self.isAITestCur, self.isTestCANRunErr, self.isTestRunErr]
 
-            self.itemOperation(mTable, 0, 3, 0, '')
+            # self.itemOperation(mTable, 0, 3, 0, '')
             if self.isTestRunErr:
+                self.itemOperation(mTable, 0, 3, 0, '')
                 self.itemOperation(mTable, 1, 3, 0, '')
-                self.itemOperation(mTable, 2, 3, 0, '')
             elif not self.isTestRunErr:
+                self.itemOperation(mTable, 0, 0, 0, '')
                 self.itemOperation(mTable, 1, 0, 0, '')
-                self.itemOperation(mTable, 2, 0, 0, '')
             if self.isTestCANRunErr:
+                self.itemOperation(mTable, 2, 3, 0, '')
                 self.itemOperation(mTable, 3, 3, 0, '')
-                self.itemOperation(mTable, 4, 3, 0, '')
             elif not self.isTestCANRunErr:
+                self.itemOperation(mTable, 2, 0, 0, '')
                 self.itemOperation(mTable, 3, 0, 0, '')
-                self.itemOperation(mTable, 4, 0, 0, '')
             if self.isCalibrateVol:
-                self.itemOperation(mTable, 5, 3, 0, '')
+                self.itemOperation(mTable, 4, 3, 0, '')
             elif not self.isCalibrateVol:
-                self.itemOperation(mTable, 5, 0, 0, '')
+                self.itemOperation(mTable, 4, 0, 0, '')
             if self.isCalibrateCur:
-                self.itemOperation(mTable, 6, 3, 0, '')
+                self.itemOperation(mTable, 5, 3, 0, '')
             elif not self.isCalibrateCur:
-                self.itemOperation(mTable, 6, 0, 0, '')
+                self.itemOperation(mTable, 5, 0, 0, '')
             if self.isAITestVol:
-                self.itemOperation(mTable, 7, 3, 0, '')
+                self.itemOperation(mTable, 6, 3, 0, '')
             elif not self.isAITestVol:
-                self.itemOperation(mTable, 7, 0, 0, '')
+                self.itemOperation(mTable, 6, 0, 0, '')
             if self.isAITestCur:
-                self.itemOperation(mTable, 8, 3, 0, '')
+                self.itemOperation(mTable, 7, 3, 0, '')
             elif not self.isAITestCur:
-                self.itemOperation(mTable, 8, 0, 0, '')
+                self.itemOperation(mTable, 7, 0, 0, '')
 
             self.inf_AIlist = [self.inf_param, self.inf_product, self.inf_CANAdrr,
                                self.inf_additional, self.inf_calibrate, self.inf_test]
@@ -2709,35 +2712,35 @@ class Ui_Control(QMainWindow, Ui_Form):
                 self.isTestRunErr = False
             self.inf_test = [self.isTest, self.isAOTestVol, self.isAOTestCur, self.isTestCANRunErr, self.isTestRunErr]
 
-            self.itemOperation(mTable, 0, 3, 0, '')
+            # self.itemOperation(mTable, 0, 3, 0, '')
             if self.isTestRunErr:
+                self.itemOperation(mTable, 0, 3, 0, '')
                 self.itemOperation(mTable, 1, 3, 0, '')
-                self.itemOperation(mTable, 2, 3, 0, '')
             elif not self.isTestRunErr:
+                self.itemOperation(mTable, 0, 0, 0, '')
                 self.itemOperation(mTable, 1, 0, 0, '')
-                self.itemOperation(mTable, 2, 0, 0, '')
             if self.isTestCANRunErr:
+                self.itemOperation(mTable, 2, 3, 0, '')
                 self.itemOperation(mTable, 3, 3, 0, '')
-                self.itemOperation(mTable, 4, 3, 0, '')
             elif not self.isTestCANRunErr:
+                self.itemOperation(mTable, 2, 0, 0, '')
                 self.itemOperation(mTable, 3, 0, 0, '')
-                self.itemOperation(mTable, 4, 0, 0, '')
             if self.isCalibrateVol:
-                self.itemOperation(mTable, 5, 3, 0, '')
+                self.itemOperation(mTable, 4, 3, 0, '')
             elif not self.isCalibrateVol:
-                self.itemOperation(mTable, 5, 0, 0, '')
+                self.itemOperation(mTable, 4, 0, 0, '')
             if self.isCalibrateCur:
-                self.itemOperation(mTable, 6, 3, 0, '')
+                self.itemOperation(mTable, 5, 3, 0, '')
             elif not self.isCalibrateCur:
-                self.itemOperation(mTable, 6, 0, 0, '')
+                self.itemOperation(mTable, 5, 0, 0, '')
             if self.isAOTestVol:
-                self.itemOperation(mTable, 7, 3, 0, '')
+                self.itemOperation(mTable, 6, 3, 0, '')
             elif not self.isAOTestVol:
-                self.itemOperation(mTable, 7, 0, 0, '')
+                self.itemOperation(mTable, 6, 0, 0, '')
             if self.isAOTestCur:
-                self.itemOperation(mTable, 8, 3, 0, '')
+                self.itemOperation(mTable, 7, 3, 0, '')
             elif not self.isAOTestCur:
-                self.itemOperation(mTable, 8, 0, 0, '')
+                self.itemOperation(mTable, 7, 0, 0, '')
 
             self.inf_AOlist = [self.inf_param, self.inf_product, self.inf_CANAdrr,
                                self.inf_additional, self.inf_calibrate, self.inf_test]
@@ -2751,7 +2754,7 @@ class Ui_Control(QMainWindow, Ui_Form):
             self.module_3 = '工装3（QN0016）'
             self.module_4 = '工装4（AE0400）'
             self.module_5 = '工装5（AQ0004）'
-            self.testNum = 18  # ["外观检测", "型号检查", "SRAM", "FLASH", "拨杆测试", "MFK按键",
+            self.testNum = 17  # ["型号检查", "SRAM", "FLASH", "拨杆测试", "MFK按键",
             #  "掉电保存", "RTC测试", "FPGA","各指示灯", "本体IN", "本体OUT", "以太网",
             # "RS-232C", "RS-485","右扩CAN", "MAC/三码写入", "MA0202"]
 
@@ -2819,13 +2822,13 @@ class Ui_Control(QMainWindow, Ui_Form):
             # col2 = ['', '通过', '未通过']
             # :param
             # operationTime: 测试时间
-            for i in range(len(self.CPU_test_array)):
+            for i in range(1,len(self.CPU_test_array)):
                 if self.inf_CPU_test[i]:
-                    self.itemOperation(mTable, i, 3, 0, '')
+                    self.itemOperation(mTable, i-1, 3, 0, '')
                 else:
-                    self.itemOperation(mTable, i, 0, 0, '')
+                    self.itemOperation(mTable, i-1, 0, 0, '')
             self.inf_CPUlist = [self.inf_param, self.inf_product, self.inf_CANIPAdrr,
-                                self.inf_serialPort, self.inf_test, self.current_dir, 'CPU']
+                                self.inf_serialPort, self.inf_test, self.CPU_pic_dir, 'CPU']
         elif self.tabIndex == 4:  # MA0202界面
             # mTable = self.tableWidget_CPU
             self.module_pn = self.lineEdit_MA0202_PN.text()
@@ -3011,7 +3014,12 @@ class Ui_Control(QMainWindow, Ui_Form):
         self.reInputPNSNREV()
 
     def saveExcel(self, saveList):
-        saveList[0].save(str(self.label_41.text()) + saveList[1])
+        # 判断测试保存保存路径是否存在，若不存在则创建该文件夹
+        if os.path.exists(self.label_41.text()):
+            saveList[0].save(str(self.label_41.text()) + saveList[1])
+        else:
+            os.makedirs(self.label_41.text())
+            saveList[0].save(str(self.label_41.text()) + saveList[1])
         # book.save(self.label_41.text() + saveDir)
 
     # def printResult(self,list):
@@ -3069,7 +3077,7 @@ class Ui_Control(QMainWindow, Ui_Form):
             default_section.left_margin = Cm(0.5)
 
             # 添加图片（注意路径和图片必须要存在）
-            document.add_picture(self.current_dir + '/logo.png', width=Cm(6.1))
+            document.add_picture(self. pic_dir+ '/logo.png', width=Cm(6.1))
 
             # # 添加带样式的段落
             p = document.add_paragraph('')
@@ -3110,7 +3118,7 @@ class Ui_Control(QMainWindow, Ui_Form):
             Time.bold = True
             if list[1] == 'FAIL':
                 # 添加图片（注意路径和图片必须要存在）
-                document.add_picture(self.current_dir + '/fail.png', width=Cm(5.5))
+                document.add_picture(self. pic_dir + '/fail.png', width=Cm(5.5))
                 pFail = document.add_paragraph('')
                 pFail.paragraph_format.line_spacing = 1
                 Fail = pFail.add_run('FAILED ITEMS：')
@@ -3125,7 +3133,7 @@ class Ui_Control(QMainWindow, Ui_Form):
                 fail_inf.font.size = Pt(10)
             elif list[1] == 'PASS':
                 # 添加图片（注意路径和图片必须要存在）
-                document.add_picture(self.current_dir + '/pass.png', width=Cm(5.5))
+                document.add_picture(self.pic_dir + '/pass.png', width=Cm(5.5))
             document.paragraphs[6].alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
             # 保存文档
@@ -3463,50 +3471,50 @@ class Ui_Control(QMainWindow, Ui_Form):
             #         self.killUi()
 
     def userLogin(self):
-        global isMainRunning
+        # global isMainRunning
+        #
+        # if isMainRunning:
+        msg_box = QMessageBox()
+        msg_box.setStandardButtons(QMessageBox.Ok)
+        user_widget = QWidget()
 
-        if isMainRunning:
-            msg_box = QMessageBox()
-            msg_box.setStandardButtons(QMessageBox.Ok)
-            user_widget = QWidget()
+        layout_user = QHBoxLayout()
+        label_user = QLabel('<h2>当前员工：<h2>')
+        self.label_userName.setText(f'<h2>{self.label_33.text()}<h2>')
 
-            layout_user = QHBoxLayout()
-            label_user = QLabel('<h2>当前员工：<h2>')
-            self.label_userName.setText(f'<h2>{self.label_33.text()}<h2>')
+        layout_user.addWidget(label_user)
+        layout_user.addWidget(self.label_userName)
 
-            layout_user.addWidget(label_user)
-            layout_user.addWidget(self.label_userName)
+        self.checkBox_admin.setChecked(self.adminState)
 
-            self.checkBox_admin.setChecked(self.adminState)
+        pushButton_login = QPushButton('更换员工账号')
 
-            pushButton_login = QPushButton('更换员工账号')
+        layout = QVBoxLayout()
+        layout.addLayout(layout_user)
+        layout.addWidget(self.checkBox_admin)
+        layout.addWidget(pushButton_login)
 
-            layout = QVBoxLayout()
-            layout.addLayout(layout_user)
-            layout.addWidget(self.checkBox_admin)
-            layout.addWidget(pushButton_login)
+        user_widget.setLayout(layout)
 
-            user_widget.setLayout(layout)
-
-            # 将QWidget对象添加到QMessageBox中
-            msg_box.layout().addWidget(user_widget)
-            # msg_box.setText(f'<center><h2>当前员工：{self.label_33.text()}</h2></center>')
+        # 将QWidget对象添加到QMessageBox中
+        msg_box.layout().addWidget(user_widget)
+        # msg_box.setText(f'<center><h2>当前员工：{self.label_33.text()}</h2></center>')
 
 
-            msg_box.setWindowTitle('员工登录')
-            # 设置样式表
-            msg_box.setStyleSheet('QLabel{font-size: 18px;}')
-            msg_box.button(QMessageBox.Ok).setHidden(True)
-            #登录管理员账号
-            self.checkBox_admin.toggled.connect(lambda: self.workerChange(['admin','管理员登录', '请输入管理员密码：']))
-            self.checkBox_admin.toggled.connect(self.saveAdminState)
-            #更换员工账号
-            pushButton_login.clicked.connect(lambda: self.workerChange(['worker','测试人员登录', '请输入员工工号：']))
+        msg_box.setWindowTitle('员工登录')
+        # 设置样式表
+        msg_box.setStyleSheet('QLabel{font-size: 18px;}')
+        msg_box.button(QMessageBox.Ok).setHidden(True)
+        #登录管理员账号
+        self.checkBox_admin.toggled.connect(lambda: self.workerChange(['admin','管理员登录', '请输入管理员密码：']))
+        self.checkBox_admin.toggled.connect(self.saveAdminState)
+        #更换员工账号
+        pushButton_login.clicked.connect(lambda: self.workerChange(['worker','测试人员登录', '请输入员工工号：']))
 
-            # 显示消息框
-            reply = msg_box.exec_()
-            # # 将弹窗结果放入队列
-            self.result_queue.put([reply])
+        # 显示消息框
+        reply = msg_box.exec_()
+        # # 将弹窗结果放入队列
+        self.result_queue.put([reply])
 
     def saveAdminState(self):
         self.adminState = self.checkBox_admin.isChecked()
@@ -3597,6 +3605,33 @@ class Ui_Control(QMainWindow, Ui_Form):
         self.chPrecision = [0, 0, 0, 0]
 
         self.subRunFlag = True
+
+    def logicalPower(self):
+        # 控制可编程电源自动上电
+        if self.powerControl(baudRate=9600, transmitData=self.vol_24v):
+            self.showInf('成功设置电压为24V。\n')
+            if self.powerControl(baudRate=9600, transmitData=self.cur_2a):
+                self.showInf('成功设置电流为2A。\n')
+                if self.powerControl(baudRate=9600, transmitData=self.power_on):
+                    self.showInf('成功上电，等待设备初始化。\n')
+                    if self.tabIndex == 0 or self.tabIndex == 1 or self.tabIndex == 2:
+                        waitTime = 3
+                    elif self.tabIndex == 3 or self.tabIndex == 4:
+                        waitTime = 6
+                    for i in range(waitTime):
+                        self.showInf(f'剩余等待时间：{waitTime-i}秒……\n')
+                        # time.sleep(1)
+                else:
+                    self.showInf('上电失败，测试取消。\n')
+                    return False
+            else:
+                self.showInf('电流设置失败，测试取消。\n')
+                return False
+        else:
+            self.showInf('电压设置失败，测试取消。\n')
+            return False
+
+        return True
 
 
 def CAN_init(CAN_channel: list):
@@ -3767,6 +3802,8 @@ def write3codeToPLC(addr, code_list):
             return False
 
     return True
+
+
 
 
 def get3codeFromPLC(addr):

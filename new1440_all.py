@@ -2584,10 +2584,10 @@ class Ui_Form(object):
         AI_item = ["Run指示灯","Error指示灯","CAN_Run指示灯","CAN_Error指示灯",
                    "标定AI通道电压","标定AI通道电流","检测AI通道电压","检测AI通道电流"]
         for i in range(len(AI_item)):
-                item = self.tableWidget_AI.item(i+1, 0)
-                item.setText(AI_item[0])
+                item = self.tableWidget_AI.item(i, 0)
+                item.setText(AI_item[i])
                 item.setTextAlignment(QtCore.Qt.AlignCenter)
-                item = self.tableWidget_AI.item(i+1, 1)
+                item = self.tableWidget_AI.item(i, 1)
                 item.setText("无需测试")
                 item.setTextAlignment(QtCore.Qt.AlignCenter)
         # item = self.tableWidget_AI.item(2, 0)
@@ -2690,10 +2690,10 @@ class Ui_Form(object):
         AO_item = ["Run指示灯", "Error指示灯", "CAN_Run指示灯", "CAN_Error指示灯",
                    "标定AO通道电压", "标定AO通道电流", "检测AO通道电压", "检测AO通道电流"]
         for i in range(len(AO_item)):
-                item = self.tableWidget_AO.item(i + 1, 0)
-                item.setText(AO_item[0])
+                item = self.tableWidget_AO.item(i, 0)
+                item.setText(AO_item[i])
                 item.setTextAlignment(QtCore.Qt.AlignCenter)
-                item = self.tableWidget_AO.item(i + 1, 1)
+                item = self.tableWidget_AO.item(i, 1)
                 item.setText("无需测试")
                 item.setTextAlignment(QtCore.Qt.AlignCenter)
 
@@ -2765,7 +2765,7 @@ class Ui_Form(object):
         brush.setStyle(QtCore.Qt.NoBrush)
         item.setBackground(brush)
         tabIndex = self.tabWidget.currentIndex()
-        itemText_array = ["外观","型号","SRAM","FLASH","拨杆","MFK按键","掉电保存",
+        itemText_array = ["型号","SRAM","FLASH","拨杆","MFK按键","掉电保存",
                           "RTC","FPGA","各指示灯","本体IN","本体OUT","以太网","RS-232C","RS-485","右扩CAN",
                           "MAC/三码写入","选项板"]
         for i in range(29):

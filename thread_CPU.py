@@ -20,6 +20,7 @@ class CPUThread(QObject):
     messageBox_signal = pyqtSignal(list)
     pic_messageBox_signal = pyqtSignal(list)
     messageBox_oneButton_signal = pyqtSignal(list)
+    checkBox_messageBox_signal = pyqtSignal(list)
     # excel_signal = pyqtSignal(list)
     allFinished_signal = pyqtSignal()
     label_signal = pyqtSignal(list)
@@ -184,6 +185,8 @@ class CPUThread(QObject):
         self.current_dir = inf_CPUlist[5]
         self.testType = inf_CPUlist[6]
 
+        self.itemOffset = 1
+
         self.pic_dir = current_dir + '/pic'
         self.CPU_pic_dir = self.pic_dir + '/CPU'
         # #初始化表格状态
@@ -196,6 +199,9 @@ class CPUThread(QObject):
         #         self.item_signal.emit([i, 0, 0, ''])
 
     def CPU_start(self):
+        # 先通过弹窗提示用户将拨码拨到run位置
+        self.messageBox_oneButton_signal.emit(['操作提示', '请将红框中的拨码拨到RUN位置'])
+
         thread_signal = self.CPUOption()
         # if not thread_signal:
         #     self.label_signal.emit(['fail', '未通过'])
@@ -293,9 +299,9 @@ class CPUThread(QObject):
                         self.isPassAll &= self.isPassAppearance
                         self.CPU_passItem[i] = self.isPassAppearance
                     elif i == 1:#型号检查
-                        self.moveToRow_signal.emit([i, 0])
+                        self.moveToRow_signal.emit([i-self.itemOffset, 0])
                         testStartTime = time.time()
-                        self.item_signal.emit([i, 1, 0, ''])
+                        self.item_signal.emit([i-self.itemOffset, 1, 0, ''])
                         self.pauseOption()
                         if not self.is_running:
                             self.cancelAllTest()
@@ -322,16 +328,16 @@ class CPUThread(QObject):
                             self.testNum = self.testNum - 1
                             if self.isPassTypeTest:
                                 self.result_signal.emit("型号检查通过"+self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=1)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=1)
                             else:
                                 self.result_signal.emit("型号检查未通过"+self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=2)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=2)
                             if self.isCancelAllTest:
                                 break
                     elif i == 2:#SRAM
-                        self.moveToRow_signal.emit([i, 0])
+                        self.moveToRow_signal.emit([i-self.itemOffset, 0])
                         testStartTime = time.time()
-                        self.item_signal.emit([i, 1, 0, ''])
+                        self.item_signal.emit([i-self.itemOffset, 1, 0, ''])
                         self.result_signal.emit(f'----------------SRAM测试----------------')
                         try:
                             serial_transmitData = [0xAC, 5, 0x00, 0x01, 0x53]
@@ -348,16 +354,16 @@ class CPUThread(QObject):
                             self.testNum = self.testNum - 1
                             if self.isPassSRAM:
                                 self.result_signal.emit("SRAM测试通过"+self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=1)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=1)
                             else:
                                 self.result_signal.emit("SRAM测试未通过"+self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=2)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=2)
                             if self.isCancelAllTest:
                                 break
                     elif i == 3:#FLASH
-                        self.moveToRow_signal.emit([i, 0])
+                        self.moveToRow_signal.emit([i-self.itemOffset, 0])
                         testStartTime = time.time()
-                        self.item_signal.emit([i, 1, 0, ''])
+                        self.item_signal.emit([i-self.itemOffset, 1, 0, ''])
                         self.result_signal.emit(f'----------------FLASH测试----------------')
                         try:
                             self.CPU_FLASHTest(serial_transmitData = [0xAC, 5, 0x00, 0x02, 0x53,
@@ -372,16 +378,16 @@ class CPUThread(QObject):
                             self.testNum = self.testNum - 1
                             if self.isPassFLASH:
                                 self.result_signal.emit("FLASH测试通过" + self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=1)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=1)
                             else:
                                 self.result_signal.emit("FLASH测试未通过" + self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=2)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=2)
                             if self.isCancelAllTest:
                                 break
                     elif i == 4:#拨杆测试
-                        self.moveToRow_signal.emit([i, 0])
+                        self.moveToRow_signal.emit([i-self.itemOffset, 0])
                         testStartTime = time.time()
-                        self.item_signal.emit([i, 1, 0, ''])
+                        self.item_signal.emit([i-self.itemOffset, 1, 0, ''])
                         self.result_signal.emit(f'----------------拨杆测试----------------')
                         try:
                             self.messageBox_signal.emit(["操作提示","请将拨杆拨至STOP位置（下）。"])
@@ -406,16 +412,16 @@ class CPUThread(QObject):
                             self.testNum = self.testNum - 1
                             if self.isPassLever:
                                 self.result_signal.emit("拨杆测试通过" + self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=1)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=1)
                             else:
                                 self.result_signal.emit("拨杆测试未通过" + self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=2)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=2)
                             if self.isCancelAllTest:
                                 break
                     elif i == 5:#MFK按钮
-                        self.moveToRow_signal.emit([i, 0])
+                        self.moveToRow_signal.emit([i-self.itemOffset, 0])
                         testStartTime = time.time()
-                        self.item_signal.emit([i, 1, 0, ''])
+                        self.item_signal.emit([i-self.itemOffset, 1, 0, ''])
                         self.result_signal.emit(f'----------------MFK测试----------------')
                         try:
                             self.CPU_MFKTest(0,serial_transmitData = [0xAC, 6, 0x00, 0x06, 0x0E, 0x00,
@@ -441,10 +447,10 @@ class CPUThread(QObject):
                             self.testNum = self.testNum - 1
                             if self.isPassMFK:
                                 self.result_signal.emit("MFK测试通过" + self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=1)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=1)
                             else:
                                 self.result_signal.emit("MFK测试未通过" + self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=2)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=2)
                             image_485boma = self.CPU_pic_dir+'/485拨码.png'
                             self.pic_messageBox_signal.emit(['操作提示','请将如图所示的485拨码拨至左侧。',image_485boma])
                             reply = self.result_queue.get()
@@ -452,9 +458,9 @@ class CPUThread(QObject):
                                 if self.isCancelAllTest:
                                     break
                     elif i == 6:#掉电保存
-                        self.moveToRow_signal.emit([i, 0])
+                        self.moveToRow_signal.emit([i-self.itemOffset, 0])
                         testStartTime = time.time()
-                        self.item_signal.emit([i, 1, 0, ''])
+                        self.item_signal.emit([i-self.itemOffset, 1, 0, ''])
                         self.result_signal.emit(f'----------------掉电保存测试----------------')
                         try:
                             serial_transmitData0 = [0xAC, 6, 0x00, 0x08, 0x53, 0x00,
@@ -545,18 +551,18 @@ class CPUThread(QObject):
                             self.testNum = self.testNum - 1
                             if self.isPassPowerOffSave:
                                 self.result_signal.emit("掉电保存测试通过" + self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=1)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=1)
                             else:
                                 self.result_signal.emit("掉电保存测试未通过" + self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=2)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=2)
                             if self.isCancelAllTest:
                                 break
 
 
                     elif i == 7:#RTC
-                        self.moveToRow_signal.emit([i, 0])
+                        self.moveToRow_signal.emit([i-self.itemOffset, 0])
                         testStartTime = time.time()
-                        self.item_signal.emit([i, 1, 0, ''])
+                        self.item_signal.emit([i-self.itemOffset, 1, 0, ''])
                         self.result_signal.emit(f'----------------RTC测试----------------')
                         try:
                             if not self.CPU_isTest[6]:
@@ -603,16 +609,16 @@ class CPUThread(QObject):
                             self.testNum = self.testNum - 1
                             if self.isPassRTC:
                                 self.result_signal.emit("RTC测试通过" + self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=1)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=1)
                             else:
                                 self.result_signal.emit("RTC测试未通过" + self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=2)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=2)
                             if self.isCancelAllTest:
                                 break
                     elif i == 8:#FPGA
-                        self.moveToRow_signal.emit([i, 0])
+                        self.moveToRow_signal.emit([i-self.itemOffset, 0])
                         testStartTime = time.time()
-                        self.item_signal.emit([i, 1, 0, ''])
+                        self.item_signal.emit([i-self.itemOffset, 1, 0, ''])
                         self.result_signal.emit(f'----------------FPGA测试----------------')
                         try:
                             self.messageBox_signal.emit(["操作提示","请插入U盘，并观察HOST指示灯是否点亮？"])
@@ -667,17 +673,17 @@ class CPUThread(QObject):
                             self.testNum = self.testNum - 1
                             if self.isPassFPGA:
                                 self.result_signal.emit("FPGA测试通过" + self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=1)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=1)
                             else:
                                 self.result_signal.emit("FPGA测试未通过" + self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=2)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=2)
                             if self.isCancelAllTest:
                                 break
                     elif i == 9:#各指示灯
                         self.stopChannel = 2
-                        self.moveToRow_signal.emit([i, 0])
+                        self.moveToRow_signal.emit([i-self.itemOffset, 0])
                         testStartTime = time.time()
-                        self.item_signal.emit([i, 1, 0, ''])
+                        self.item_signal.emit([i-self.itemOffset, 1, 0, ''])
                         self.result_signal.emit(f'----------------各指示灯测试----------------')
                         try:
                             w_transmitData = [0xAC, 7, 0x00, 0x09, 0x10, 0x00, 0x01,
@@ -750,16 +756,16 @@ class CPUThread(QObject):
                             self.CPU_LEDTest(transmitData=outTest_transmitData, LED_name='')
                             if self.isPassLED:
                                 self.result_signal.emit("LED测试通过" + self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=1)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=1)
                             else:
                                 self.result_signal.emit("LED测试未通过" + self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=2)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=2)
                             if self.isCancelAllTest:
                                 break
                     elif i == 10:#本体IN
-                        self.moveToRow_signal.emit([i, 0])
+                        self.moveToRow_signal.emit([i-self.itemOffset, 0])
                         testStartTime = time.time()
-                        self.item_signal.emit([i, 1, 0, ''])
+                        self.item_signal.emit([i-self.itemOffset, 1, 0, ''])
                         self.result_signal.emit(f'----------------本体输入测试----------------')
                         r_transmitData = [0xAC, 7,0x00, 0x0A, 0x0E, 0x00, 0xAA,
                                           self.getCheckNum([0xAC, 7,0x00, 0x0A, 0x0E, 0x00, 0xAA])]
@@ -814,16 +820,16 @@ class CPUThread(QObject):
                             self.testNum = self.testNum - 1
                             if self.isPassIn:
                                 self.result_signal.emit("本体输入测试通过" + self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=1)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=1)
                             else:
                                 self.result_signal.emit("本体输入测试未通过" + self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=2)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=2)
                             if self.isCancelAllTest:
                                 break
                     elif i == 11:#本体OUT
-                        self.moveToRow_signal.emit([i, 0])
+                        self.moveToRow_signal.emit([i-self.itemOffset, 0])
                         testStartTime = time.time()
-                        self.item_signal.emit([i, 1, 0, ''])
+                        self.item_signal.emit([i-self.itemOffset, 1, 0, ''])
                         self.result_signal.emit(f'----------------本体输出测试----------------')
                         w_transmitData = [0xAC, 10, 0x00, 0x0A, 0x10, 0x01, 0xAA, 2, 0xaa, 0xaa,
                               self.getCheckNum([0xAC, 10, 0x00, 0x0A, 0x10, 0x01, 0xAA, 2, 0xaa, 0xaa])]
@@ -868,15 +874,15 @@ class CPUThread(QObject):
                             self.testNum = self.testNum - 1
                             if self.isPassOut:
                                 self.result_signal.emit("本体输出测试通过" + self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=1)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=1)
                             else:
                                 self.result_signal.emit("本体输出测试未通过" + self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=2)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=2)
                             if self.isCancelAllTest:
                                 break
                     elif i == 12:#以太网
-                        self.moveToRow_signal.emit([i, 0])
-                        self.item_signal.emit([i, 1, 0, ''])
+                        self.moveToRow_signal.emit([i-self.itemOffset, 0])
+                        self.item_signal.emit([i-self.itemOffset, 1, 0, ''])
                         testStartTime = time.time()
                         self.result_signal.emit(f'----------------以太网测试----------------')
                         # defaultIP_0 = 192
@@ -922,15 +928,15 @@ class CPUThread(QObject):
                             self.testNum = self.testNum - 1
                             if self.isPassETH:
                                 self.result_signal.emit('本体以太网测试通过。'+ self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=1)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=1)
                             else:
                                 self.result_signal.emit('本体以太网测试未通过。'+ self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=2)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=2)
                             if self.isCancelAllTest:
                                 break
                     elif i == 13:#RS-232C
-                        self.moveToRow_signal.emit([i, 0])
-                        self.item_signal.emit([i, 1, 0, ''])
+                        self.moveToRow_signal.emit([i-self.itemOffset, 0])
+                        self.item_signal.emit([i-self.itemOffset, 1, 0, ''])
                         testStartTime = time.time()
                         self.result_signal.emit(f'----------------本体232测试----------------')
                         # 115200 57600 38400 19200 9600  4800
@@ -980,15 +986,15 @@ class CPUThread(QObject):
                             self.testNum = self.testNum - 1
                             if self.isPass232:
                                 self.result_signal.emit('本体232测试通过。'+self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=1)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=1)
                             else:
                                 self.result_signal.emit('本体232测试未通过。'+self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=2)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=2)
                             if self.isCancelAllTest:
                                 break
                     elif i == 14:#RS-485
-                        self.moveToRow_signal.emit([i, 0])
-                        self.item_signal.emit([i, 1, 0, ''])
+                        self.moveToRow_signal.emit([i-self.itemOffset, 0])
+                        self.item_signal.emit([i-self.itemOffset, 1, 0, ''])
                         testStartTime = time.time()
                         self.result_signal.emit(f'----------------本体485测试----------------')
                         # 115200 57600 38400 19200 9600  4800
@@ -1040,15 +1046,15 @@ class CPUThread(QObject):
                             self.testNum = self.testNum - 1
                             if self.isPass485:
                                 self.result_signal.emit('本体485测试通过。' + self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=1)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=1)
                             else:
                                 self.result_signal.emit('本体485测试未通过。' + self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=2)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=2)
                             if self.isCancelAllTest:
                                 break
                     elif i == 15:#右扩CAN
-                        self.moveToRow_signal.emit([i, 0])
-                        self.item_signal.emit([i, 1, 0, ''])
+                        self.moveToRow_signal.emit([i-self.itemOffset, 0])
+                        self.item_signal.emit([i-self.itemOffset, 1, 0, ''])
                         testStartTime = time.time()
 
                         transmitData_reset = [0xAC,7, 0x00, 0x0E, 0x10, 0x00, 0x00,
@@ -1176,16 +1182,16 @@ class CPUThread(QObject):
                             self.testNum = self.testNum - 1
                             if self.isPassRightCAN:
                                 self.result_signal.emit('本体右扩CAN测试通过。' + self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=1)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=1)
                             else:
                                 self.result_signal.emit('本体右扩CAN测试未通过。' + self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=2)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=2)
                             if self.isCancelAllTest:
                                 break
                     elif i == 16:#MAC/三码写入
-                        self.moveToRow_signal.emit([i,0])
+                        self.moveToRow_signal.emit([i-self.itemOffset,0])
                         testStartTime = time.time()
-                        self.item_signal.emit([i, 1, 0, ''])
+                        self.item_signal.emit([i-self.itemOffset, 1, 0, ''])
                         #写MAC
                         now_MAC = datetime.datetime.now()
                         self.MAC_array = [(now_MAC.year-2000), now_MAC.month,
@@ -1272,21 +1278,21 @@ class CPUThread(QObject):
                             self.testNum = self.testNum - 1
                             if self.isPassConfig:
                                 self.result_signal.emit('三码与MAC地址写入测试通过。' + self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=1)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=1)
                             else:
                                 self.result_signal.emit('三码与MAC地址写入测试未通过。' + self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=2)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=2)
                             if self.isCancelAllTest:
                                 break
                     elif i == 17:#MA0202
-                        self.moveToRow_signal.emit([i, 0])
+                        self.moveToRow_signal.emit([i-self.itemOffset, 0])
                         opType = ''
                         testStartTime = time.time()
                         self.pauseOption()
                         if not self.is_running:
                             self.cancelAllTest()
                             break
-                        self.item_signal.emit([i, 1, 0, ''])
+                        self.item_signal.emit([i-self.itemOffset, 1, 0, ''])
                         self.pauseOption()
 
                         if not self.is_running:
@@ -2006,10 +2012,10 @@ class CPUThread(QObject):
                             self.testNum = self.testNum - 1
                             if self.isPassOp:
                                 self.result_signal.emit('选项板测试通过。' + self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=1)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=1)
                             else:
                                 self.result_signal.emit('选项板测试未通过。' + self.HORIZONTAL_LINE)
-                                self.changeTabItem(testStartTime, row=i, state=2, result=2)
+                                self.changeTabItem(testStartTime, row=i-self.itemOffset, state=2, result=2)
                             if self.isCancelAllTest:
                                 break
 

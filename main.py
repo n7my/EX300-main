@@ -1,7 +1,7 @@
 # This Python file uses the following encoding: utf-8
 import sys
 from PySide2.QtWidgets import QApplication
-
+import os
 # 添加的所需库文件
 # from PyQt5 import QtCore, QtGui, QtWidgets
 # from PyQt5.QtCore import *
@@ -28,8 +28,9 @@ if __name__ == "__main__":
     # ui = uWindow()
 
     # 结束
-
     sys.exit(app.exec_())
+
+    #
 
 
 

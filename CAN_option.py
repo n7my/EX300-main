@@ -7,6 +7,7 @@ from typing import Type
 import os
 
 current_dir = os.getcwd().replace('\\','/')+"/_internal"
+lib_dir = current_dir+'/lib'
 # current_dir = os.getcwd().replace('\\','/')
 # from DIDOAIAOControl import Ui_Control
 STATUS_OK = 1
@@ -14,7 +15,7 @@ RESERVED = 0  # 保留字段
 
 """1.读取动态链接库"""
 # 依赖的DLL文件(存放在根目录下)
-CAN_DLL_PATH = f'{current_dir}/ControlCAN.dll'
+CAN_DLL_PATH = f'{lib_dir }/ControlCAN.dll'
 # 读取DLL文件
 Can_DLL = windll.LoadLibrary(CAN_DLL_PATH)
 """2.设置初始化CAN的配置参数"""

@@ -110,7 +110,7 @@ class MA0202Thread(QObject):
         self.isTestModule = inf_MA0202list[5]
         self.testModuleType = inf_MA0202list[6]
         self.serialPort_typeC = inf_MA0202list[7]
-        self.current_dir = current_dir = os.getcwd().replace('\\','/')+"/_internal"
+        self.current_dir = os.getcwd().replace('\\','/')+"/_internal"
 
         #信号等待时间(ms)
         self.waiting_time = 2000
@@ -548,7 +548,8 @@ class MA0202Thread(QObject):
                                                     if not self.is_running:
                                                         self.isCancelAllTest = True
                                                         return False
-
+                                                    self.result_signal.emit(
+                                                        f'-----------AE0400接收的值为{int(AE_value)}。-----------\n')
                                                     self.result_signal.emit(
                                                         f'-----------AE0400接收值转换比例后的值为{int(AE_value / rate)}。-----------\n')
                                                     try:
